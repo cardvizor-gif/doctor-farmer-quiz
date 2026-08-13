@@ -1,25 +1,356 @@
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+/* Doctor Farmer Quiz — Corporate Modern Agro: editorial agriculture imagery, forest-green hierarchy, asymmetric test workspace. */
+import { useEffect, useMemo, useState } from "react";
+import emailjs from "@emailjs/browser";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  Clock3,
+  FlaskConical,
+  Leaf,
+  Mail,
+  MousePointerClick,
+  RotateCcw,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  Trophy,
+  X,
+} from "lucide-react";
+import { EMAIL_CONFIG } from "@/data/emailConfig";
+import {
+  buildQuestions,
+  DEFAULT_MODES,
+  formatScore,
+  MODE_META,
+  type Mode,
+  type Question,
+} from "@/lib/quiz";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Best Practices, Design Guide and Common Pitfalls
- */
-export default function Home() {
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+type Screen = "start" | "quiz" | "result";
+type Stat = { correct: number; total: number; label: string };
+type Stats = Record<string, Stat>;
+type MatchSelection = { side: "left" | "right"; index: number } | null;
 
+const HERO_IMAGE = "/manus-storage/doctor-farmer-hero_f547dfc1.jpg";
+const LAB_IMAGE = "/manus-storage/doctor-farmer-lab_b5f6314f.jpg";
+const RESULT_IMAGE = "/manus-storage/doctor-farmer-result_aa3b4871.jpg";
+const MARK_IMAGE = "/manus-storage/doctor-farmer-mark_e0697c15.png";
+const PATTERN_IMAGE = "/manus-storage/doctor-farmer-pattern_4d62f1f2.jpg";
+
+const modeOrder: Mode[] = ["dv", "prep", "cult", "group", "norma", "match"];
+
+function addStat(stats: Stats, type: string, label: string, correct: boolean): Stats {
+  const next: Stats = { ...stats };
+  const current = next[type] ?? { correct: 0, total: 0, label };
+  next[type] = {
+    correct: current.correct + (correct ? 1 : 0),
+    total: current.total + 1,
+    label,
+  };
+  return next;
+}
+
+function formatDuration(seconds: number) {
+  return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function ButtonArrow({ children, onClick, variant = "primary", type = "button" }: { children: React.ReactNode; onClick?: () => void; variant?: "primary" | "quiet" | "outline"; type?: "button" | "submit" }) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
+    <button type={type} onClick={onClick} className={`action-button action-${variant}`}>
+      <span>{children}</span>
+      <ArrowRight size={17} strokeWidth={2.4} />
+    </button>
+  );
+}
+
+export default function Home() {
+  const [screen, setScreen] = useState<Screen>("start");
+  const [name, setName] = useState("");
+  const [selectedModes, setSelectedModes] = useState<Mode[]>(DEFAULT_MODES);
+  const [questionCount, setQuestionCount] = useState("30");
+  const [timerEnabled, setTimerEnabled] = useState(true);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [stats, setStats] = useState<Stats>({});
+  const [streak, setStreak] = useState(0);
+  const [answered, setAnswered] = useState(false);
+  const [timerLeft, setTimerLeft] = useState(15);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [matchSelection, setMatchSelection] = useState<MatchSelection>(null);
+  const [matchedLeft, setMatchedLeft] = useState<number[]>([]);
+  const [matchedRight, setMatchedRight] = useState<number[]>([]);
+  const [wrongPair, setWrongPair] = useState<[number, number] | null>(null);
+  const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "ok" | "fail">("idle");
+  const [emailMessage, setEmailMessage] = useState("");
+
+  const currentQuestion = questions[currentIndex];
+  const percent = questions.length ? Math.round((currentIndex / questions.length) * 100) : 0;
+  const currentMeta = currentQuestion ? MODE_META[currentQuestion.type] : MODE_META.dv;
+  const currentMatchRight = useMemo(() => {
+    if (!currentQuestion || currentQuestion.kind !== "match") return [];
+    return currentQuestion.items.map((item, index) => ({ ...item, originalIndex: index })).sort(() => Math.random() - 0.5);
+  }, [currentQuestion]);
+  const currentOptions = useMemo(() => {
+    if (!currentQuestion || currentQuestion.kind !== "choice") return [];
+    return [currentQuestion.correct, ...currentQuestion.wrong].sort(() => Math.random() - 0.5);
+  }, [currentQuestion]);
+
+  useEffect(() => {
+    if (screen !== "quiz" || !timerEnabled || answered || !currentQuestion) return;
+    let remaining = 15;
+    setTimerLeft(remaining);
+    const interval = window.setInterval(() => {
+      remaining -= 1;
+      setTimerLeft(remaining);
+      if (remaining <= 0) {
+        window.clearInterval(interval);
+        handleTimeout();
+      }
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [screen, timerEnabled, currentIndex, answered, currentQuestion]);
+
+  function toggleMode(mode: Mode) {
+    setSelectedModes((previous) => {
+      if (previous.includes(mode)) return previous.length > 1 ? previous.filter((item) => item !== mode) : previous;
+      return [...previous, mode];
+    });
+  }
+
+  function startQuiz() {
+    if (!name.trim()) return;
+    const generated = buildQuestions(selectedModes);
+    const count = Number(questionCount);
+    const selected = count >= 999 ? generated : generated.slice(0, Math.min(count, generated.length));
+    setQuestions(selected.sort(() => Math.random() - 0.5));
+    setCurrentIndex(0);
+    setScore(0);
+    setStats({});
+    setStreak(0);
+    setAnswered(false);
+    setSelectedOption(null);
+    setMatchSelection(null);
+    setMatchedLeft([]);
+    setMatchedRight([]);
+    setWrongPair(null);
+    setEmailStatus("idle");
+    setScreen("quiz");
+  }
+
+  function registerAnswer(isCorrect: boolean, question: Question) {
+    const nextScore = score + (isCorrect ? 1 : 0);
+    const nextStats = addStat(stats, question.type, question.typeLabel, isCorrect);
+    setScore(nextScore);
+    setStats(nextStats);
+    setStreak((value) => (isCorrect ? value + 1 : 0));
+    setAnswered(true);
+    if (currentIndex === questions.length - 1) {
+      finishQuiz(nextScore, nextStats);
+    }
+  }
+
+  function finishQuiz(finalScore: number, finalStats: Stats) {
+    setScore(finalScore);
+    setStats(finalStats);
+    setScreen("result");
+    const percentage = formatScore(finalScore, questions.length);
+    const details = Object.values(finalStats)
+      .map((item) => `${item.label}: ${item.correct}/${item.total} (${Math.round((item.correct / item.total) * 100)}%)`)
+      .join("\n");
+    sendResult(percentage, details, finalScore);
+  }
+
+  function handleChoice(option: string) {
+    if (answered || !currentQuestion || currentQuestion.kind !== "choice") return;
+    setSelectedOption(option);
+    registerAnswer(option === currentQuestion.correct, currentQuestion);
+  }
+
+  function handleTimeout() {
+    if (answered || !currentQuestion) return;
+    setTimerLeft(0);
+    setSelectedOption(null);
+    setMatchSelection(null);
+    registerAnswer(false, currentQuestion);
+  }
+
+  function handleMatchClick(side: "left" | "right", index: number) {
+    if (answered || !currentQuestion || currentQuestion.kind !== "match") return;
+    const isAlreadyMatched = side === "left" ? matchedLeft.includes(index) : matchedRight.includes(index);
+    if (isAlreadyMatched) return;
+    if (!matchSelection) {
+      setMatchSelection({ side, index });
+      return;
+    }
+    if (matchSelection.side === side) {
+      setMatchSelection({ side, index });
+      return;
+    }
+
+    const leftIndex = side === "left" ? index : matchSelection.index;
+    const rightIndex = side === "right" ? index : matchSelection.index;
+    const leftItem = currentQuestion.items[leftIndex];
+    const rightItem = currentQuestion.items[rightIndex];
+    const isCorrect = leftItem.name === rightItem.name && leftItem.dv === rightItem.dv;
+    setMatchSelection(null);
+    if (isCorrect) {
+      const nextLeft = [...matchedLeft, leftIndex];
+      const nextRight = [...matchedRight, rightIndex];
+      setMatchedLeft(nextLeft);
+      setMatchedRight(nextRight);
+      if (nextLeft.length === currentQuestion.items.length) registerAnswer(true, currentQuestion);
+    } else {
+      setWrongPair([leftIndex, rightIndex]);
+      window.setTimeout(() => setWrongPair(null), 650);
+    }
+  }
+
+  function goNext() {
+    if (currentIndex >= questions.length - 1) return;
+    setCurrentIndex((value) => value + 1);
+    setAnswered(false);
+    setSelectedOption(null);
+    setMatchSelection(null);
+    setMatchedLeft([]);
+    setMatchedRight([]);
+    setWrongPair(null);
+    setTimerLeft(15);
+  }
+
+  function restartQuiz() {
+    startQuiz();
+  }
+
+  function goStart() {
+    setScreen("start");
+    setEmailStatus("idle");
+    setEmailMessage("");
+  }
+
+  function sendResult(percentage: number, details: string, finalScore: number) {
+    if (!EMAIL_CONFIG.publicKey || EMAIL_CONFIG.publicKey === "YOUR_PUBLIC_KEY") {
+      setEmailStatus("fail");
+      setEmailMessage("Результат сохранён на экране. Отправка почты пока не настроена.");
+      return;
+    }
+    setEmailStatus("sending");
+    const date = new Date().toLocaleString("ru-RU", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    emailjs
+      .send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, {
+        to_email: EMAIL_CONFIG.recipient,
+        employee: name.trim(),
+        date,
+        score: finalScore,
+        total: questions.length,
+        percent: percentage,
+        details,
+        modes: selectedModes.map((mode) => MODE_META[mode].label).join(", "),
+      }, EMAIL_CONFIG.publicKey)
+      .then(() => {
+        setEmailStatus("ok");
+        setEmailMessage(`Результат отправлен на ${EMAIL_CONFIG.recipient}`);
+      })
+      .catch(() => {
+        setEmailStatus("fail");
+        setEmailMessage("Не удалось отправить письмо. Результат доступен на этой странице.");
+      });
+  }
+
+  if (screen === "start") {
+    return (
+      <main className="site-shell start-shell">
+        <header className="site-header">
+          <div className="brand-lockup">
+            <img src={MARK_IMAGE} alt="" className="brand-mark" />
+            <div><span className="brand-name">DOCTOR FARMER</span><span className="brand-caption">knowledge lab / 2026</span></div>
+          </div>
+          <div className="header-note"><ShieldCheck size={15} /> Внутренний тренинг команды</div>
+        </header>
+
+        <section className="start-layout">
+          <div className="start-main">
+            <div className="hero-panel" style={{ backgroundImage: `url(${HERO_IMAGE})` }}>
+              <div className="hero-overlay" />
+              <div className="hero-copy">
+                <div className="eyebrow light"><span className="eyebrow-dot" /> price knowledge / field edition</div>
+                <h1>Знания, которые<br /><em>работают на поле.</em></h1>
+                <p>Короткая проверка продуктовой экспертизы для команды Doctor Farmer. От действующего вещества — к точному решению.</p>
+                <div className="hero-metrics"><span><strong>68</strong> препаратов</span><span><strong>6</strong> форматов вопросов</span><span><strong>15</strong> секунд на вопрос</span></div>
+              </div>
+              <div className="hero-stamp"><Leaf size={18} /><span>agro<br />science</span></div>
+            </div>
+
+            <section className="setup-card">
+              <div className="section-kicker">01 / configure session</div>
+              <div className="setup-heading"><div><h2>Соберите свой маршрут</h2><p>Выберите темы, которые хотите проверить сегодня.</p></div><span className="selected-counter">{selectedModes.length} из {modeOrder.length} тем</span></div>
+              <div className="name-input-wrap"><label htmlFor="employee-name">Имя сотрудника</label><div className="field-with-icon"><Target size={17} /><input id="employee-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Например, Иванов Иван" /></div></div>
+              <div className="mode-grid">
+                {modeOrder.map((mode) => {
+                  const meta = MODE_META[mode];
+                  const active = selectedModes.includes(mode);
+                  return <button key={mode} type="button" className={`mode-tile ${active ? "is-active" : ""}`} onClick={() => toggleMode(mode)} style={{ "--mode-color": meta.color, "--mode-tint": meta.tint } as React.CSSProperties}><span className="mode-icon">{meta.icon}</span><span className="mode-name">{meta.short}</span><span className="mode-check">{active && <Check size={13} />}</span></button>;
+                })}
+              </div>
+              <div className="settings-line"><label>Вопросов <select value={questionCount} onChange={(event) => setQuestionCount(event.target.value)}><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option><option value="999">Все доступные</option></select></label><label className="timer-setting"><span className={`toggle ${timerEnabled ? "on" : ""}`}><input type="checkbox" checked={timerEnabled} onChange={(event) => setTimerEnabled(event.target.checked)} /><span /></span><span>Таймер 15 сек</span></label><ButtonArrow onClick={startQuiz}>Начать тест</ButtonArrow></div>
+              <div className="setup-footnote"><MousePointerClick size={14} /> Тест можно пройти по ссылке в любом браузере — без установки приложения.</div>
+            </section>
+          </div>
+
+          <aside className="start-aside">
+            <div className="aside-photo" style={{ backgroundImage: `url(${LAB_IMAGE})` }}><div className="photo-label">01 / field notes</div></div>
+            <div className="aside-copy"><div className="section-kicker">как это работает</div><h3>Одна сессия.<br /><em>Понятный результат.</em></h3><div className="process-list"><div><span>01</span><p>Выберите темы и количество вопросов.</p></div><div><span>02</span><p>Отвечайте в удобном темпе — таймер можно отключить.</p></div><div><span>03</span><p>Итог автоматически уйдёт руководителю на почту.</p></div></div></div>
+            <div className="aside-note" style={{ backgroundImage: `url(${PATTERN_IMAGE})` }}><Sparkles size={16} /><span>Ваши ответы помогают видеть, где команде нужна дополнительная практика.</span></div>
+          </aside>
+        </section>
+        <footer className="site-footer"><span>DOCTOR FARMER / internal learning tool</span><span>Сделано для команды, которая знает культуру.</span></footer>
       </main>
-    </div>
+    );
+  }
+
+  if (screen === "quiz" && currentQuestion) {
+    const options = currentOptions;
+    const matchItems = currentQuestion.kind === "match" ? currentQuestion.items : [];
+    return (
+      <main className="site-shell quiz-shell">
+        <header className="quiz-topbar"><button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> Завершить сессию</button><div className="quiz-brand"><img src={MARK_IMAGE} alt="" /><span>DOCTOR FARMER <i>/ quiz lab</i></span></div><div className="quiz-score"><span>Счёт</span><strong>{score}</strong></div></header>
+        <div className="progress-meta"><span>Вопрос <strong>{currentIndex + 1}</strong> из {questions.length}</span><span>{percent}% пройдено</span></div><div className="progress-track"><div className="progress-value" style={{ width: `${Math.max(percent, 3)}%` }} /></div>
+        <section className="quiz-layout">
+          <div className="question-panel">
+            <div className="question-meta"><span className="question-tag" style={{ color: currentMeta.color, background: currentMeta.tint }}><span>{currentMeta.icon}</span>{currentQuestion.typeLabel}</span>{streak >= 3 && <span className="streak"><Sparkles size={14} /> серия {streak}</span>}</div>
+            <h1 className="question-title">{currentQuestion.prompt}</h1>
+            {currentQuestion.kind === "choice" && <div className="answer-options">{options.map((option, index) => { const isCorrect = option === currentQuestion.correct; const isWrong = answered && selectedOption === option && !isCorrect; return <button type="button" key={`${option}-${index}`} disabled={answered} className={`answer-option ${answered && isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`} onClick={() => handleChoice(option)}><span className="option-index">{String.fromCharCode(65 + index)}</span><span>{option}</span>{answered && isCorrect && <CheckCircle2 size={18} />}{isWrong && <X size={18} />}</button>; })}</div>}
+            {currentQuestion.kind === "match" && <div className="match-area"><div className="match-instruction">Выберите препарат слева, затем соответствующее действующее вещество справа.</div><div className="match-columns"><div><div className="match-label">Препарат</div>{matchItems.map((item, index) => <button key={item.name} type="button" className={`match-option ${matchedLeft.includes(index) ? "matched" : ""} ${matchSelection?.side === "left" && matchSelection.index === index ? "selected" : ""} ${wrongPair?.[0] === index ? "wrong" : ""}`} onClick={() => handleMatchClick("left", index)} disabled={answered || matchedLeft.includes(index)}><span>{item.name}</span>{matchedLeft.includes(index) && <Check size={16} />}</button>)}</div><div><div className="match-label">Действующее вещество</div>{currentMatchRight.map((item) => <button key={`${item.dv}-${item.originalIndex}`} type="button" className={`match-option ${matchedRight.includes(item.originalIndex) ? "matched" : ""} ${matchSelection?.side === "right" && matchSelection.index === item.originalIndex ? "selected" : ""} ${wrongPair?.[1] === item.originalIndex ? "wrong" : ""}`} onClick={() => handleMatchClick("right", item.originalIndex)} disabled={answered || matchedRight.includes(item.originalIndex)}><span>{item.dv}</span>{matchedRight.includes(item.originalIndex) && <Check size={16} />}</button>)}</div></div><div className="match-progress-line"><span>Сопоставлено</span><strong>{matchedLeft.length} / {matchItems.length}</strong></div></div>}
+            <div className={`answer-feedback ${answered ? "visible" : ""}`}>{answered ? <><CheckCircle2 size={17} /><span>{currentQuestion.kind === "match" ? "Все пары сопоставлены." : selectedOption === (currentQuestion.kind === "choice" ? currentQuestion.correct : "") ? "Верно. Отличный ориентир." : `Правильный ответ: ${currentQuestion.kind === "choice" ? currentQuestion.correct : "см. пояснение"}`}</span></> : <><FlaskConical size={17} /><span>Выберите один вариант ответа.</span></>}</div>
+            {answered && <div className="explanation"><span>пояснение</span><p>{currentQuestion.explanation}</p></div>}
+            {answered && currentIndex < questions.length - 1 && <ButtonArrow onClick={goNext}>Следующий вопрос</ButtonArrow>}
+            {answered && currentIndex === questions.length - 1 && <ButtonArrow onClick={() => finishQuiz(score, stats)}>К результатам</ButtonArrow>}
+          </div>
+          <aside className="quiz-rail"><div className="rail-number">{String(currentIndex + 1).padStart(2, "0")}</div><div className="rail-line" /><div className="rail-copy"><span>сейчас проверяем</span><strong>{currentQuestion.typeLabel}</strong><p>Не спешите: точность важнее скорости.</p></div>{timerEnabled && <div className={`timer-card ${timerLeft <= 5 ? "critical" : timerLeft <= 8 ? "warning" : ""}`}><Clock3 size={17} /><div><span>время на ответ</span><strong>{formatDuration(timerLeft)}</strong></div></div>}<div className="rail-quote">«Сильная экспертиза — это когда правильное решение приходит вовремя.»</div></aside>
+        </section>
+      </main>
+    );
+  }
+
+  const percentage = formatScore(score, questions.length);
+  const resultMessage = percentage >= 90 ? "Мастер продуктовой карты" : percentage >= 75 ? "Сильный результат" : percentage >= 55 ? "Хороший старт" : "Время для практики";
+  const resultSub = percentage >= 75 ? "Вы уверенно ориентируетесь в ключевых характеристиках препаратов." : "Повторите темы с наименьшим результатом и пройдите сессию ещё раз.";
+  return (
+    <main className="site-shell result-shell">
+      <header className="quiz-topbar"><button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> К настройкам</button><div className="quiz-brand"><img src={MARK_IMAGE} alt="" /><span>DOCTOR FARMER <i>/ result lab</i></span></div><div className="quiz-score"><span>Сотрудник</span><strong className="score-name">{name}</strong></div></header>
+      <section className="result-hero" style={{ backgroundImage: `url(${RESULT_IMAGE})` }}><div className="result-overlay" /><div className="result-content"><div className="eyebrow light"><span className="eyebrow-dot" /> session complete</div><div className="result-scoreline"><strong>{score}</strong><span>/ {questions.length}<small>правильных ответов</small></span></div><h1>{resultMessage}</h1><p>{resultSub}</p><div className={`email-state ${emailStatus}`}><Mail size={16} />{emailStatus === "sending" ? "Отправляем итог руководителю…" : emailMessage}</div></div><div className="result-badge"><Trophy size={20} /><span>{percentage}%<small>точность</small></span></div></section>
+      <section className="result-body"><div className="result-section-heading"><div><div className="section-kicker">02 / your field report</div><h2>Разбор по темам</h2></div><span>{questions.length} вопросов · {selectedModes.length} тем</span></div><div className="result-grid"><div className="stats-list">{Object.entries(stats).map(([key, item]) => { const rate = Math.round((item.correct / item.total) * 100); const meta = MODE_META[key as Mode] ?? MODE_META.dv; return <div className="stat-row" key={key}><div className="stat-title"><span className="stat-icon" style={{ color: meta.color, background: meta.tint }}>{meta.icon}</span><span>{item.label}</span><strong>{item.correct}/{item.total}</strong></div><div className="stat-track"><div style={{ width: `${rate}%`, background: meta.color }} /></div></div>; })}</div><aside className="result-next"><div className="section-kicker">следующий шаг</div><h3>Закрепите результат<br /><em>в следующем поле.</em></h3><p>Повторите только те разделы, где точность ниже 75%.</p><div className="result-actions"><button type="button" className="action-button action-primary" onClick={restartQuiz}><span>Пройти ещё раз</span><RotateCcw size={17} /></button><button type="button" className="action-button action-outline" onClick={goStart}><span>Изменить темы</span><ChevronRight size={17} /></button></div></aside></div></section>
+      <footer className="site-footer"><span>DOCTOR FARMER / internal learning tool</span><span><Send size={13} /> результаты направлены в рабочую почту</span></footer>
+    </main>
   );
 }
