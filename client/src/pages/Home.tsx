@@ -24,6 +24,7 @@ import { EMAIL_CONFIG } from "@/data/emailConfig";
 import {
   buildQuestions,
   DEFAULT_MODES,
+  shuffle,
   formatScore,
   MODE_META,
   type Mode,
@@ -38,7 +39,7 @@ type MatchSelection = { side: "left" | "right"; index: number } | null;
 const HERO_IMAGE = "/manus-storage/doctor-farmer-hero_f547dfc1.jpg";
 const LAB_IMAGE = "/manus-storage/doctor-farmer-lab_b5f6314f.jpg";
 const RESULT_IMAGE = "/manus-storage/doctor-farmer-result_aa3b4871.jpg";
-const LOGO_IMAGE = "/manus-storage/doctor-farmer-logo-cropped_5c0ef60f.png";
+const LOGO_IMAGE = "/manus-storage/doctor-farmer-symbol_e62fc728.png";
 const PATTERN_IMAGE = "/manus-storage/doctor-farmer-pattern_4d62f1f2.jpg";
 
 const modeOrder: Mode[] = ["dv", "prep", "cult", "group", "norma", "match"];
@@ -130,9 +131,10 @@ export default function Home() {
     }
     setNameError(false);
     const generated = buildQuestions(selectedModes);
+    const randomized = shuffle(generated);
     const count = Number(questionCount);
-    const selected = count >= 999 ? generated : generated.slice(0, Math.min(count, generated.length));
-    setQuestions(selected.sort(() => Math.random() - 0.5));
+    const selected = count >= 999 ? randomized : randomized.slice(0, Math.min(count, randomized.length));
+    setQuestions(selected);
     setCurrentIndex(0);
     setScore(0);
     setStats({});
