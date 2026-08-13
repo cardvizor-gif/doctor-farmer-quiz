@@ -292,7 +292,7 @@ export default function Home() {
               <div className="hero-copy">
                 <div className="eyebrow light"><span className="eyebrow-dot" /> price knowledge / field edition</div>
                 <h1>Знания, которые<br /><em>работают на поле.</em></h1>
-                <p>Короткая проверка продуктовой экспертизы для команды Doctor Farmer.</p>
+                <p>Проверка знаний и продуктовой линейки ДФ.</p>
               </div>
             </div>
 
