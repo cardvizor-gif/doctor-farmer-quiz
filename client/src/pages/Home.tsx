@@ -38,7 +38,7 @@ type MatchSelection = { side: "left" | "right"; index: number } | null;
 const HERO_IMAGE = "/manus-storage/doctor-farmer-hero_f547dfc1.jpg";
 const LAB_IMAGE = "/manus-storage/doctor-farmer-lab_b5f6314f.jpg";
 const RESULT_IMAGE = "/manus-storage/doctor-farmer-result_aa3b4871.jpg";
-const MARK_IMAGE = "/manus-storage/doctor-farmer-mark_e0697c15.png";
+const LOGO_IMAGE = "/manus-storage/doctor-farmer-logo-cropped_5c0ef60f.png";
 const PATTERN_IMAGE = "/manus-storage/doctor-farmer-pattern_4d62f1f2.jpg";
 
 const modeOrder: Mode[] = ["dv", "prep", "cult", "group", "norma", "match"];
@@ -272,7 +272,7 @@ export default function Home() {
       <main className="site-shell start-shell">
         <header className="site-header">
           <div className="brand-lockup">
-            <img src={MARK_IMAGE} alt="" className="brand-mark" />
+            <img src={LOGO_IMAGE} alt="Doctor Farmer" className="brand-mark" />
             <div><span className="brand-name">DOCTOR FARMER</span><span className="brand-caption">knowledge lab / 2026</span></div>
           </div>
           <div className="header-note"><ShieldCheck size={15} /> Внутренний тренинг команды</div>
@@ -323,7 +323,7 @@ export default function Home() {
     const matchItems = currentQuestion.kind === "match" ? currentQuestion.items : [];
     return (
       <main className="site-shell quiz-shell">
-        <header className="quiz-topbar"><button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> Завершить сессию</button><div className="quiz-brand"><img src={MARK_IMAGE} alt="" /><span>DOCTOR FARMER <i>/ quiz lab</i></span></div><div className="quiz-score"><span>Счёт</span><strong>{score}</strong></div></header>
+        <header className="quiz-topbar"><button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> Завершить сессию</button><div className="quiz-brand"><img src={LOGO_IMAGE} alt="Doctor Farmer" /><span><i>/ quiz lab</i></span></div><div className="quiz-score"><span>Счёт</span><strong>{score}</strong></div></header>
         <div className="progress-meta"><span>Вопрос <strong>{currentIndex + 1}</strong> из {questions.length}</span><span>{percent}% пройдено</span></div><div className="progress-track"><div className="progress-value" style={{ width: `${Math.max(percent, 3)}%` }} /></div>
         <section className="quiz-layout">
           <div className="question-panel">
@@ -347,7 +347,7 @@ export default function Home() {
   const resultSub = percentage >= 75 ? "Вы уверенно ориентируетесь в ключевых характеристиках препаратов." : "Повторите темы с наименьшим результатом и пройдите сессию ещё раз.";
   return (
     <main className="site-shell result-shell">
-      <header className="quiz-topbar"><button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> К настройкам</button><div className="quiz-brand"><img src={MARK_IMAGE} alt="" /><span>DOCTOR FARMER <i>/ result lab</i></span></div><div className="quiz-score"><span>Сотрудник</span><strong className="score-name">{name}</strong></div></header>
+      <header className="quiz-topbar"><button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> К настройкам</button><div className="quiz-brand"><img src={LOGO_IMAGE} alt="Doctor Farmer" /><span><i>/ result lab</i></span></div><div className="quiz-score"><span>Сотрудник</span><strong className="score-name">{name}</strong></div></header>
       <section className="result-hero" style={{ backgroundImage: `url(${RESULT_IMAGE})` }}><div className="result-overlay" /><div className="result-content"><div className="eyebrow light"><span className="eyebrow-dot" /> session complete</div><div className="result-scoreline"><strong>{score}</strong><span>/ {questions.length}<small>правильных ответов</small></span></div><h1>{resultMessage}</h1><p>{resultSub}</p><div className={`email-state ${emailStatus}`}><Mail size={16} />{emailStatus === "sending" ? "Отправляем итог руководителю…" : emailMessage}</div></div><div className="result-badge"><Trophy size={20} /><span>{percentage}%<small>точность</small></span></div></section>
       <section className="result-body"><div className="result-section-heading"><div><div className="section-kicker">02 / your field report</div><h2>Разбор по темам</h2></div><span>{questions.length} вопросов · {selectedModes.length} тем</span></div><div className="result-grid"><div className="stats-list">{Object.entries(stats).map(([key, item]) => { const rate = Math.round((item.correct / item.total) * 100); const meta = MODE_META[key as Mode] ?? MODE_META.dv; return <div className="stat-row" key={key}><div className="stat-title"><span className="stat-icon" style={{ color: meta.color, background: meta.tint }}>{meta.icon}</span><span>{item.label}</span><strong>{item.correct}/{item.total}</strong></div><div className="stat-track"><div style={{ width: `${rate}%`, background: meta.color }} /></div></div>; })}</div><aside className="result-next"><div className="section-kicker">следующий шаг</div><h3>Закрепите результат<br /><em>в следующем поле.</em></h3><p>Повторите только те разделы, где точность ниже 75%.</p><div className="result-actions"><button type="button" className="action-button action-primary" onClick={restartQuiz}><span>Пройти ещё раз</span><RotateCcw size={17} /></button><button type="button" className="action-button action-outline" onClick={goStart}><span>Изменить темы</span><ChevronRight size={17} /></button></div></aside></div></section>
       <footer className="site-footer"><span>DOCTOR FARMER / internal learning tool</span><span><Send size={13} /> результаты направлены в рабочую почту</span></footer>
