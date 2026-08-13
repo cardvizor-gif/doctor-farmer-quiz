@@ -70,6 +70,7 @@ function ButtonArrow({ children, onClick, variant = "primary", type = "button" }
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("start");
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState(false);
   const [selectedModes, setSelectedModes] = useState<Mode[]>(DEFAULT_MODES);
   const [questionCount, setQuestionCount] = useState("30");
   const [timerEnabled, setTimerEnabled] = useState(true);
@@ -123,7 +124,11 @@ export default function Home() {
   }
 
   function startQuiz() {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setNameError(true);
+      return;
+    }
+    setNameError(false);
     const generated = buildQuestions(selectedModes);
     const count = Number(questionCount);
     const selected = count >= 999 ? generated : generated.slice(0, Math.min(count, generated.length));
@@ -278,23 +283,26 @@ export default function Home() {
           <div className="header-note"><ShieldCheck size={15} /> Внутренний тренинг команды</div>
         </header>
 
-        <section className="start-layout">
+        <section className="start-layout-single">
           <div className="start-main">
             <div className="hero-panel" style={{ backgroundImage: `url(${HERO_IMAGE})` }}>
               <div className="hero-overlay" />
               <div className="hero-copy">
                 <div className="eyebrow light"><span className="eyebrow-dot" /> price knowledge / field edition</div>
                 <h1>Знания, которые<br /><em>работают на поле.</em></h1>
-                <p>Короткая проверка продуктовой экспертизы для команды Doctor Farmer. От действующего вещества — к точному решению.</p>
-                <div className="hero-metrics"><span><strong>68</strong> препаратов</span><span><strong>6</strong> форматов вопросов</span><span><strong>15</strong> секунд на вопрос</span></div>
+                <p>Короткая проверка продуктовой экспертизы для команды Doctor Farmer.</p>
               </div>
-              <div className="hero-stamp"><Leaf size={18} /><span>agro<br />science</span></div>
             </div>
 
             <section className="setup-card">
-              <div className="section-kicker">01 / configure session</div>
-              <div className="setup-heading"><div><h2>Соберите свой маршрут</h2><p>Выберите темы, которые хотите проверить сегодня.</p></div><span className="selected-counter">{selectedModes.length} из {modeOrder.length} тем</span></div>
-              <div className="name-input-wrap"><label htmlFor="employee-name">Имя сотрудника</label><div className="field-with-icon"><Target size={17} /><input id="employee-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Например, Иванов Иван" /></div></div>
+              <div className="rules-strip">
+                <div className="rule-item"><strong>01</strong> Выберите темы и количество вопросов.</div>
+                <div className="rule-item"><strong>02</strong> Отвечайте в удобном темпе — таймер можно отключить.</div>
+                <div className="rule-item"><strong>03</strong> Результат автоматически уйдёт руководителю на почту.</div>
+              </div>
+
+              <div className="setup-heading"><div><h2>Тест на знание прайса Доктор Фармер</h2><p>Выберите разделы для проверки знаний.</p></div><span className="selected-counter">{selectedModes.length} из {modeOrder.length} тем</span></div>
+              <div className="name-input-wrap"><label htmlFor="employee-name">Фамилия Имя (обязательно)</label><div className={`field-with-icon ${nameError ? "has-error" : ""}`}><Target size={17} /><input id="employee-name" value={name} onChange={(event) => { setName(event.target.value); if (event.target.value.trim()) setNameError(false); }} placeholder="Например, Иванов Иван" /></div>{nameError && <div className="error-hint">Пожалуйста, укажите Фамилию и Имя перед началом теста.</div>}</div>
               <div className="mode-grid">
                 {modeOrder.map((mode) => {
                   const meta = MODE_META[mode];
@@ -303,15 +311,9 @@ export default function Home() {
                 })}
               </div>
               <div className="settings-line"><label>Вопросов <select value={questionCount} onChange={(event) => setQuestionCount(event.target.value)}><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option><option value="999">Все доступные</option></select></label><label className="timer-setting"><span className={`toggle ${timerEnabled ? "on" : ""}`}><input type="checkbox" checked={timerEnabled} onChange={(event) => setTimerEnabled(event.target.checked)} /><span /></span><span>Таймер 15 сек</span></label><ButtonArrow onClick={startQuiz}>Начать тест</ButtonArrow></div>
-              <div className="setup-footnote"><MousePointerClick size={14} /> Тест можно пройти по ссылке в любом браузере — без установки приложения.</div>
+              <div className="setup-footnote"><MousePointerClick size={14} /> Откройте ссылку на любом устройстве — тест работает в браузере.</div>
             </section>
           </div>
-
-          <aside className="start-aside">
-            <div className="aside-photo" style={{ backgroundImage: `url(${LAB_IMAGE})` }}><div className="photo-label">01 / field notes</div></div>
-            <div className="aside-copy"><div className="section-kicker">как это работает</div><h3>Одна сессия.<br /><em>Понятный результат.</em></h3><div className="process-list"><div><span>01</span><p>Выберите темы и количество вопросов.</p></div><div><span>02</span><p>Отвечайте в удобном темпе — таймер можно отключить.</p></div><div><span>03</span><p>Итог автоматически уйдёт руководителю на почту.</p></div></div></div>
-            <div className="aside-note" style={{ backgroundImage: `url(${PATTERN_IMAGE})` }}><Sparkles size={16} /><span>Ваши ответы помогают видеть, где команде нужна дополнительная практика.</span></div>
-          </aside>
         </section>
         <footer className="site-footer"><span>DOCTOR FARMER / internal learning tool</span><span>Сделано для команды, которая знает культуру.</span></footer>
       </main>
