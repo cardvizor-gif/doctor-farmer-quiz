@@ -4,7 +4,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-01",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В посевах яровой пшеницы массово появились двудольные сорняки. Какой комбинированный гербицид выбрать?",
     correct: "Элант Экстра, СЭ",
@@ -14,7 +14,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-02",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В озимой пшенице появилась падалица подсолнечника. Какой препарат из прайса выбрать для решения задачи?",
     correct: "Элант Премиум, КЭ",
@@ -24,7 +24,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-03",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В яровой пшенице сильное засорение овсюгом и метлицей. Какой специализированный граминицид выбрать?",
     correct: "Тайпан, КЭ",
@@ -34,7 +34,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-04",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "На флаговом листе озимой пшеницы развиваются пятнистости и бурая ржавчина. Какой трёхкомпонентный фунгицид выбрать?",
     correct: "Вернер, КС",
@@ -44,7 +44,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-05",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В период налива зерна пшеницы численность клопа вредная черепашка выше экономического порога вредоносности. Какой инсектицид выбрать?",
     correct: "Алтын, КЭ",
@@ -54,7 +54,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-06",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Нужно протравить семена зерновых от комплекса семенной и почвенной инфекции. Какой трёхкомпонентный протравитель выбрать?",
     correct: "Турион, КЭ",
@@ -64,7 +64,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-07",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В яровом ячмене необходимо подавить злаковые сорняки и сохранить селективность для культуры. Какой препарат выбрать?",
     correct: "Ибис, ЭМВ",
@@ -74,7 +74,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-08",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Нужен гербицид на зерновых с нормой расхода порядка 8–10 г/га на основе метсульфурон-метила. Что выбрать?",
     correct: "МетАлт, ВДГ",
@@ -84,7 +84,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-09",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В зерновых преобладают подмаренник цепкий и осоты. Какой двухкомпонентный гербицид выбрать?",
     correct: "КлопЭфир, КЭ",
@@ -94,7 +94,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-10",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Возделывается гибрид подсолнечника, устойчивый к имидазолинонам. Какой системный гербицид выбрать?",
     correct: "Сотейра, ВРК",
@@ -104,7 +104,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-11",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Перед посевом подсолнечника нужно сдержать первую волну сорняков почвенным гербицидом. Какой препарат выбрать?",
     correct: "Кратерр, КС",
@@ -114,7 +114,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-12",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В подсолнечнике отрастает падалица зерновых и другие злаковые сорняки. Какой граминицид выбрать?",
     correct: "Злак Супер, КЭ",
@@ -124,7 +124,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-13",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В подсолнечнике наблюдается угроза повреждения гусеницами лугового мотылька. Какой комбинированный инсектицид выбрать?",
     correct: "Фэнсди, КС",
@@ -134,7 +134,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-14",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Перед уборкой подсолнечника требуется ускорить и выровнять подсушивание посева. Какой препарат выбрать?",
     correct: "Ламонд, ВР",
@@ -144,7 +144,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-15",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В вегетирующем подсолнечнике требуется фунгицидная защита от комплекса грибных болезней. Какой препарат выбрать?",
     correct: "ПроТэб, КМЭ",
@@ -154,7 +154,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-16",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В рапсе развиваются ромашка, ярутка и другие двудольные сорняки. Какой селективный гербицид выбрать?",
     correct: "Гуарил, ВДГ",
@@ -164,7 +164,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-17",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В рапсе необходимо убрать злаковые сорняки и падалицу зерновых. Какой граминицид выбрать?",
     correct: "Софт, КЭ",
@@ -174,7 +174,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-18",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Посевы рапса повреждаются крестоцветными блошками и скрытохоботником. Какой инсектицид двойного действия выбрать?",
     correct: "Тайсон, КС",
@@ -184,7 +184,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-19",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Осенью нужно сдержать перерастание озимого рапса и одновременно решить задачу защиты от болезней. Какой препарат рассмотреть?",
     correct: "Редут, КС",
@@ -194,7 +194,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-20",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Перед уборкой рапса требуется провести десикацию и снизить риск потерь от неравномерного созревания. Какой препарат выбрать?",
     correct: "Ламонд, ВР",
@@ -204,7 +204,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-21",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Перед посевом рапса требуется защитить семена от почвенных и ранних наземных вредителей. Какой препарат выбрать?",
     correct: "Битрин, КС",
@@ -214,7 +214,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-22",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В посевах льна масличного необходимо подавить двудольные сорняки без угнетения культуры. Какой гербицид выбрать?",
     correct: "Тифи, ВДГ",
@@ -224,7 +224,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-23",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Посевы льна засорены злаковыми сорняками. Какой граминицид из прайса выбрать?",
     correct: "Клегал, МКЭ",
@@ -234,7 +234,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-24",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "На посевах льна отмечены блошки. Какой пиретроидный инсектицид выбрать?",
     correct: "Фэнс, КЭ",
@@ -244,7 +244,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-25",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Для профилактики болезней льна в период вегетации требуется подобрать фунгицид. Какой препарат выбрать?",
     correct: "ПроТэб, КМЭ",
@@ -254,7 +254,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-26",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Перед уборкой льна требуется выровнять созревание и подсушить посев. Какой препарат выбрать?",
     correct: "Ламонд, ВР",
@@ -264,7 +264,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-27",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В посевах сои необходимо подавить двудольные сорняки. Какой гербицид из прайса выбрать?",
     correct: "Фомус, ВР",
@@ -274,7 +274,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-28",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "В посевах кукурузы требуется уничтожить злаковые сорняки. Какой гербицид выбрать?",
     correct: "Стратег, КС",
@@ -284,7 +284,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-29",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Перед посевом нужно уничтожить многолетние сорняки на поле. Какой гербицид сплошного действия выбрать?",
     correct: "Кэйталин, ВР",
@@ -294,7 +294,7 @@ export const SITUATIONAL_QUESTIONS: ChoiceQuestion[] = [
   {
     id: "situation-30",
     type: "situation",
-    typeLabel: "Ситуационные вопросы",
+    typeLabel: "Практика применения",
     kind: "choice",
     prompt: "Вода для рабочего раствора жёсткая и содержит много солей кальция и магния. Какой продукт выбрать для подготовки воды?",
     correct: "Гласис, ВР",

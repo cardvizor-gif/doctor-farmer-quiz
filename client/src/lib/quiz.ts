@@ -25,12 +25,12 @@ export type MatchQuestion = {
 export type Question = ChoiceQuestion | MatchQuestion;
 
 export const MODE_META: Record<Mode, { label: string; short: string; icon: string; color: string; tint: string }> = {
-  dv: { label: "Действующее вещество", short: "ДВ препарата", icon: "✦", color: "#166534", tint: "#E8F5E9" },
-  prep: { label: "Препарат по ДВ", short: "Препарат по ДВ", icon: "⌕", color: "#2F6F60", tint: "#E8F1ED" },
-  cult: { label: "Культуры применения", short: "Культуры", icon: "⌁", color: "#A16207", tint: "#FFF7E8" },
-  group: { label: "Группа препарата", short: "Группа", icon: "▦", color: "#61705B", tint: "#EEF2EA" },
-  norma: { label: "Норма расхода", short: "Норма расхода", icon: "◌", color: "#55706A", tint: "#EEF3F0" },
-  situation: { label: "Ситуационные вопросы", short: "Ситуации", icon: "⌁", color: "#9A6C2F", tint: "#FFF4D6" },
+  dv: { label: "Действующее вещество", short: "ДВ препарата", icon: "✦", color: "#23633F", tint: "#E8F5E9" },
+  prep: { label: "Препарат по ДВ", short: "Препарат по ДВ", icon: "⌕", color: "#2F6F60", tint: "#E4F2EE" },
+  cult: { label: "Культуры применения", short: "Культуры", icon: "⌁", color: "#9A650F", tint: "#FFF3DD" },
+  group: { label: "Группа препарата", short: "Группа", icon: "▦", color: "#6B5B8E", tint: "#F1ECF8" },
+  norma: { label: "Норма расхода", short: "Норма расхода", icon: "◌", color: "#3F6E98", tint: "#E9F2FA" },
+  situation: { label: "Практика применения", short: "Практика применения", icon: "⌁", color: "#A15E48", tint: "#FFF0EA" },
   match: { label: "Сопоставление", short: "Сопоставление", icon: "↔", color: "#A16207", tint: "#FEFCE8" },
 };
 
