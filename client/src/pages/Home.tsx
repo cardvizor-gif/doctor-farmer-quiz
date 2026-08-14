@@ -365,8 +365,8 @@ export default function Home() {
                 <div className="rule-item"><strong>03</strong> Результат автоматически уйдёт руководителю на почту.</div>
               </div>
 
-              <div className="setup-heading"><div><h2>Тест на знание прайса Доктор Фармер</h2><p>Выберите разделы для проверки знаний.</p></div><span className="selected-counter">{selectedModes.length} из {modeOrder.length} тем</span></div>
               <div className="name-input-wrap"><label htmlFor="employee-name">Фамилия Имя (обязательно)</label><div className={`field-with-icon ${nameError ? "has-error" : ""}`}><Target size={17} /><input id="employee-name" value={name} onChange={(event) => { setName(event.target.value); if (event.target.value.trim()) setNameError(false); }} placeholder="Например, Иванов Иван" /></div>{nameError && <div className="error-hint">Пожалуйста, укажите Фамилию и Имя перед началом теста.</div>}</div>
+              <div className="mode-section-heading"><span>Темы теста</span><span className="selected-counter">{selectedModes.length} из {modeOrder.length} тем</span></div>
               <div className="mode-grid">
                 {modeOrder.map((mode) => {
                   const meta = MODE_META[mode];
