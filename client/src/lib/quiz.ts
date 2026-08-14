@@ -83,7 +83,7 @@ export function buildQuestions(modes: Mode[]): Question[] {
         explanation: `${drug.dv} → ${drug.name} (${drug.group})`,
       });
     }
-    if (modes.includes("cult")) {
+    if (modes.includes("cult") && !drug.name.startsWith("Контур")) {
       questions.push({
         id: `cult-${drug.n}-${drugIndex}`,
         type: "cult",

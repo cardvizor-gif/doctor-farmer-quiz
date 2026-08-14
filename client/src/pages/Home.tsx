@@ -313,6 +313,7 @@ export default function Home() {
       hour: "2-digit",
       minute: "2-digit",
     });
+    const resultMessage = percentage >= 90 ? "Мастер продуктовой карты" : percentage >= 75 ? "Сильный результат" : percentage >= 55 ? "Хороший старт" : "Время для практики";
     emailjs
       .send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, {
         to_email: EMAIL_CONFIG.recipient,
@@ -322,11 +323,12 @@ export default function Home() {
         total: questions.length,
         percent: percentage,
         details,
+        rank: resultMessage,
         modes: selectedModes.map((mode) => MODE_META[mode].label).join(", "),
       }, EMAIL_CONFIG.publicKey)
       .then(() => {
         setEmailStatus("ok");
-        setEmailMessage(`Результат отправлен на ${EMAIL_CONFIG.recipient}`);
+        setEmailMessage(`Результат успешно отправлен на адреса руководителей (${EMAIL_CONFIG.recipient})`);
       })
       .catch(() => {
         setEmailStatus("fail");
