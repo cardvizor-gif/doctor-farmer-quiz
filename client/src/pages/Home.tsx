@@ -36,6 +36,7 @@ type Screen = "start" | "quiz" | "result";
 type Stat = { correct: number; total: number; label: string };
 type Stats = Record<string, Stat>;
 type MatchSelection = { side: "left" | "right"; index: number } | null;
+type ReviewRecord = { answer: string | null; isCorrect: boolean };
 
 const HERO_IMAGE = "/manus-storage/doctor-farmer-hero_f547dfc1.jpg";
 const LAB_IMAGE = "/manus-storage/doctor-farmer-lab_b5f6314f.jpg";
@@ -61,6 +62,15 @@ const FIXED_TIME_SECONDS: Record<number, number> = { 20: 7 * 60, 30: 10 * 60, 50
 
 function formatDuration(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function getCorrectAnswer(question: Question) {
+  if (question.kind === "choice") return question.correct;
+  return question.items.map((item) => `${item.name} → ${item.dv}`).join("; ");
+}
+
+function getMatchAnswer(question: Extract<Question, { kind: "match" }>) {
+  return question.items.map((item) => `${item.name} → ${item.dv}`).join("; ");
 }
 
 function getTimeLimitSeconds(questionCount: number, selectedLength: number) {
@@ -100,6 +110,8 @@ export default function Home() {
   const [wrongPair, setWrongPair] = useState<[number, number] | null>(null);
   const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "ok" | "fail">("idle");
   const [emailMessage, setEmailMessage] = useState("");
+  const [answerRecords, setAnswerRecords] = useState<Record<string, ReviewRecord>>({});
+  const answerRecordsRef = useRef<Record<string, ReviewRecord>>({});
 
   const currentQuestion = questions[currentIndex];
   const percent = questions.length ? Math.round((currentIndex / questions.length) * 100) : 0;
@@ -158,6 +170,8 @@ export default function Home() {
     setMatchedLeft([]);
     setMatchedRight([]);
     setWrongPair(null);
+    setAnswerRecords({});
+    answerRecordsRef.current = {};
     setTimeExpired(false);
     const duration = getTimeLimitSeconds(count, selected.length);
     setTimeLimitSeconds(duration);
@@ -166,9 +180,20 @@ export default function Home() {
     setScreen("quiz");
   }
 
-  function registerAnswer(isCorrect: boolean, question: Question) {
+  function saveReviewRecord(question: Question, answer: string | null, isCorrect: boolean) {
+    const nextRecords = {
+      ...answerRecordsRef.current,
+      [question.id]: { answer, isCorrect },
+    };
+    answerRecordsRef.current = nextRecords;
+    setAnswerRecords(nextRecords);
+    return nextRecords;
+  }
+
+  function registerAnswer(isCorrect: boolean, question: Question, answer: string | null = null) {
     const nextScore = score + (isCorrect ? 1 : 0);
     const nextStats = addStat(stats, question.type, question.typeLabel, isCorrect);
+    const nextRecords = saveReviewRecord(question, answer, isCorrect);
     setScore(nextScore);
     setStats(nextStats);
     scoreRef.current = nextScore;
@@ -176,13 +201,15 @@ export default function Home() {
     setStreak((value) => (isCorrect ? value + 1 : 0));
     setAnswered(true);
     if (currentIndex === questions.length - 1) {
-      finishQuiz(nextScore, nextStats);
+      finishQuiz(nextScore, nextStats, nextRecords);
     }
   }
 
-  function finishQuiz(finalScore: number, finalStats: Stats) {
+  function finishQuiz(finalScore: number, finalStats: Stats, finalRecords = answerRecordsRef.current) {
     setScore(finalScore);
     setStats(finalStats);
+    setAnswerRecords(finalRecords);
+    answerRecordsRef.current = finalRecords;
     setScreen("result");
     const percentage = formatScore(finalScore, questions.length);
     const details = Object.values(finalStats)
@@ -194,7 +221,7 @@ export default function Home() {
   function handleChoice(option: string) {
     if (answered || !currentQuestion || currentQuestion.kind !== "choice") return;
     setSelectedOption(option);
-    registerAnswer(option === currentQuestion.correct, currentQuestion);
+    registerAnswer(option === currentQuestion.correct, currentQuestion, option);
   }
 
   function playTimeoutTone() {
@@ -270,7 +297,7 @@ export default function Home() {
       const nextRight = [...matchedRight, rightIndex];
       setMatchedLeft(nextLeft);
       setMatchedRight(nextRight);
-      if (nextLeft.length === currentQuestion.items.length) registerAnswer(true, currentQuestion);
+      if (nextLeft.length === currentQuestion.items.length) registerAnswer(true, currentQuestion, getMatchAnswer(currentQuestion));
     } else {
       setWrongPair([leftIndex, rightIndex]);
       window.setTimeout(() => setWrongPair(null), 650);
@@ -402,7 +429,7 @@ export default function Home() {
             {answered && currentIndex < questions.length - 1 && <ButtonArrow onClick={goNext} disabled={timeExpired}>{timeExpired ? "Время истекло" : "Следующий вопрос"}</ButtonArrow>}
             {answered && currentIndex === questions.length - 1 && <ButtonArrow onClick={() => finishQuiz(score, stats)} disabled={timeExpired}>{timeExpired ? "Время истекло" : "К результатам"}</ButtonArrow>}
           </div>
-          <aside className="quiz-rail"><div className="rail-number">{String(currentIndex + 1).padStart(2, "0")}</div><div className="rail-line" /><div className="rail-copy"><span>сейчас проверяем</span><strong>{currentQuestion.typeLabel}</strong><p>Не спешите: точность важнее скорости.</p></div><div className={`timer-card ${timerLeft <= 60 ? "critical" : timerLeft <= 180 ? "warning" : ""}`}><Clock3 size={17} /><div><span>время на тест</span><strong>{formatDuration(timerLeft)}</strong></div></div><div className="rail-quote">«Сильная экспертиза — это когда правильное решение приходит вовремя.»</div></aside>
+          <aside className="quiz-rail"><div className="rail-number">{String(currentIndex + 1).padStart(2, "0")}</div><div className="rail-line" /><div className="rail-copy"><span>сейчас проверяем</span><strong>{currentQuestion.typeLabel}</strong><p>Не спешите: точность важнее скорости.</p></div><div className={`timer-card ${timerLeft <= 60 ? "critical" : timerLeft <= 180 ? "warning" : ""}`} role="status" aria-live="polite"><Clock3 size={17} /><div><span>{timerLeft <= 60 ? "последняя минута" : "время на тест"}</span><strong>{formatDuration(timerLeft)}</strong></div></div><div className="rail-quote">«Сильная экспертиза — это когда правильное решение приходит вовремя.»</div></aside>
         </section>
       </main>
     );
@@ -416,6 +443,7 @@ export default function Home() {
       <header className="quiz-topbar"><button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> К настройкам</button><div className="quiz-brand"><img src={LOGO_IMAGE} alt="Doctor Farmer" /><span><i>/ result lab</i></span></div><div className="quiz-score"><span>Сотрудник</span><strong className="score-name">{name}</strong></div></header>
       <section className="result-hero" style={{ backgroundImage: `url(${RESULT_IMAGE})` }}><div className="result-overlay" /><div className="result-content"><div className="eyebrow light"><span className="eyebrow-dot" /> session complete</div><div className="result-scoreline"><strong>{score}</strong><span>/ {questions.length}<small>правильных ответов</small></span></div><h1>{resultMessage}</h1><p>{resultSub}</p><div className={`email-state ${emailStatus}`}><Mail size={16} />{emailStatus === "sending" ? "Отправляем итог руководителю…" : emailMessage}</div></div><div className="result-badge"><Trophy size={20} /><span>{percentage}%<small>точность</small></span></div></section>
       <section className="result-body"><div className="result-section-heading"><div><div className="section-kicker">02 / your field report</div><h2>Разбор по темам</h2></div><span>{questions.length} вопросов · {selectedModes.length} тем</span></div><div className="result-grid"><div className="stats-list">{Object.entries(stats).map(([key, item]) => { const rate = Math.round((item.correct / item.total) * 100); const meta = MODE_META[key as Mode] ?? MODE_META.dv; return <div className="stat-row" key={key}><div className="stat-title"><span className="stat-icon" style={{ color: meta.color, background: meta.tint }}>{meta.icon}</span><span>{item.label}</span><strong>{item.correct}/{item.total}</strong></div><div className="stat-track"><div style={{ width: `${rate}%`, background: meta.color }} /></div></div>; })}</div><aside className="result-next"><div className="section-kicker">следующий шаг</div><h3>Закрепите результат<br /><em>в следующем поле.</em></h3><p>Повторите только те разделы, где точность ниже 75%.</p><div className="result-actions"><button type="button" className="action-button action-primary" onClick={restartQuiz}><span>Пройти ещё раз</span><RotateCcw size={17} /></button><button type="button" className="action-button action-outline" onClick={goStart}><span>Изменить темы</span><ChevronRight size={17} /></button></div></aside></div></section>
+      <section className="review-section"><div className="result-section-heading review-heading"><div><div className="section-kicker">03 / learn from the field</div><h2>Правильные ответы и пояснения</h2></div><span>Проверьте каждый вопрос и закрепите материал</span></div><div className="review-list">{questions.map((question, index) => { const record = answerRecords[question.id]; const isCorrect = record?.isCorrect ?? false; const userAnswer = record?.answer ?? "Ответ не выбран — время истекло."; const correctAnswer = getCorrectAnswer(question); const meta = MODE_META[question.type]; return <article className={`review-card ${isCorrect ? "is-correct" : "is-missed"}`} key={question.id}><div className="review-card-top"><span className="review-index">{String(index + 1).padStart(2, "0")}</span><span className="question-tag" style={{ color: meta.color, background: meta.tint }}><span>{meta.icon}</span>{question.typeLabel}</span><span className={`review-result ${isCorrect ? "is-correct" : "is-missed"}`}>{isCorrect ? "Верно" : "Повторить"}</span></div><h3>{question.prompt}</h3><div className="review-answer-grid"><div className={`review-answer ${isCorrect ? "is-positive" : "is-negative"}`}><span className="review-label">Ваш ответ</span><p>{userAnswer}</p></div><div className="review-answer is-positive"><span className="review-label">Правильный ответ</span><p>{correctAnswer}</p></div></div><div className="review-explanation"><span>Агрономическое пояснение</span><p>{question.explanation}</p></div></article>; })}</div></section>
       <footer className="site-footer"><span>DOCTOR FARMER / internal learning tool</span><span><Send size={13} /> результаты направлены в рабочую почту</span></footer>
     </main>
   );
