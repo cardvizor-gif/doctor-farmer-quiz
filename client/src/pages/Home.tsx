@@ -56,8 +56,8 @@ function addStat(stats: Stats, type: string, label: string, correct: boolean): S
   return next;
 }
 
-const SECONDS_PER_QUESTION = 30;
-const FIXED_TIME_SECONDS: Record<number, number> = { 20: 10 * 60, 30: 15 * 60, 50: 25 * 60, 100: 50 * 60 };
+const SECONDS_PER_QUESTION = 20;
+const FIXED_TIME_SECONDS: Record<number, number> = { 20: 7 * 60, 30: 10 * 60, 50: 17 * 60, 100: 34 * 60 };
 
 function formatDuration(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
@@ -202,21 +202,34 @@ export default function Home() {
       const AudioContextClass = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextClass) return;
       const context = new AudioContextClass();
+      void context.resume();
       const now = context.currentTime;
-      [880, 660].forEach((frequency, index) => {
+      const bellNotes = [
+        { frequency: 660, start: 0, duration: 0.72 },
+        { frequency: 880, start: 0.16, duration: 0.72 },
+        { frequency: 660, start: 0.58, duration: 0.72 },
+        { frequency: 880, start: 0.74, duration: 0.82 },
+      ];
+      bellNotes.forEach(({ frequency, start, duration }) => {
         const oscillator = context.createOscillator();
+        const overtone = context.createOscillator();
         const gain = context.createGain();
-        oscillator.type = "sine";
+        oscillator.type = "triangle";
+        overtone.type = "sine";
         oscillator.frequency.value = frequency;
-        gain.gain.setValueAtTime(0.0001, now + index * 0.16);
-        gain.gain.exponentialRampToValueAtTime(0.12, now + index * 0.16 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.16 + 0.14);
+        overtone.frequency.value = frequency * 2.01;
+        gain.gain.setValueAtTime(0.0001, now + start);
+        gain.gain.exponentialRampToValueAtTime(0.22, now + start + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
         oscillator.connect(gain);
+        overtone.connect(gain);
         gain.connect(context.destination);
-        oscillator.start(now + index * 0.16);
-        oscillator.stop(now + index * 0.16 + 0.15);
+        oscillator.start(now + start);
+        overtone.start(now + start);
+        oscillator.stop(now + start + duration + 0.03);
+        overtone.stop(now + start + duration + 0.03);
       });
-      window.setTimeout(() => void context.close(), 700);
+      window.setTimeout(() => void context.close(), 2200);
     } catch {
       // Some browsers may block synthesized audio; the visual timeout state still works.
     }
@@ -359,7 +372,7 @@ export default function Home() {
                   return <button key={mode} type="button" className={`mode-tile ${active ? "is-active" : ""}`} onClick={() => toggleMode(mode)} style={{ "--mode-color": meta.color, "--mode-tint": meta.tint } as React.CSSProperties}><span className="mode-icon">{meta.icon}</span><span className="mode-name">{meta.short}</span><span className="mode-check">{active && <Check size={13} />}</span></button>;
                 })}
               </div>
-              <div className="settings-line"><label>Вопросов <select value={questionCount} onChange={(event) => setQuestionCount(event.target.value)}><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option><option value="999">Все доступные</option></select></label><div className="timer-fixed"><Clock3 size={16} /><span>Фиксированное время: {questionCount === "999" ? "30 сек/вопрос" : formatDuration(getTimeLimitSeconds(Number(questionCount), Number(questionCount)))}</span></div><ButtonArrow onClick={startQuiz}>Начать тест</ButtonArrow></div>
+              <div className="settings-line"><label>Вопросов <select value={questionCount} onChange={(event) => setQuestionCount(event.target.value)}><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option><option value="999">Все доступные</option></select></label><div className="timer-fixed"><Clock3 size={16} /><span>Фиксированное время: {questionCount === "999" ? "20 сек/вопрос" : formatDuration(getTimeLimitSeconds(Number(questionCount), Number(questionCount)))}</span></div><ButtonArrow onClick={startQuiz}>Начать тест</ButtonArrow></div>
               <div className="setup-footnote"><MousePointerClick size={14} /> Откройте ссылку на любом устройстве — тест работает в браузере.</div>
             </section>
           </div>
