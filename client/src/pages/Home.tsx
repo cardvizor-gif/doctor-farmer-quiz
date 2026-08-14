@@ -1,5 +1,5 @@
 /* Doctor Farmer Quiz — Corporate Modern Agro: editorial agriculture imagery, forest-green hierarchy, asymmetric test workspace. */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 import {
   ArrowLeft,
@@ -29,6 +29,7 @@ import {
   MODE_META,
   type Mode,
   type Question,
+  selectBalancedQuestions,
 } from "@/lib/quiz";
 
 type Screen = "start" | "quiz" | "result";
@@ -42,7 +43,7 @@ const RESULT_IMAGE = "/manus-storage/doctor-farmer-result_aa3b4871.jpg";
 const LOGO_IMAGE = "/manus-storage/doctor-farmer-symbol_e62fc728.png";
 const PATTERN_IMAGE = "/manus-storage/doctor-farmer-pattern_4d62f1f2.jpg";
 
-const modeOrder: Mode[] = ["dv", "prep", "cult", "group", "norma", "match"];
+const modeOrder: Mode[] = ["dv", "prep", "cult", "group", "norma", "situation"];
 
 function addStat(stats: Stats, type: string, label: string, correct: boolean): Stats {
   const next: Stats = { ...stats };
@@ -55,13 +56,20 @@ function addStat(stats: Stats, type: string, label: string, correct: boolean): S
   return next;
 }
 
+const SECONDS_PER_QUESTION = 30;
+const FIXED_TIME_SECONDS: Record<number, number> = { 20: 10 * 60, 30: 15 * 60, 50: 25 * 60, 100: 50 * 60 };
+
 function formatDuration(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
-function ButtonArrow({ children, onClick, variant = "primary", type = "button" }: { children: React.ReactNode; onClick?: () => void; variant?: "primary" | "quiet" | "outline"; type?: "button" | "submit" }) {
+function getTimeLimitSeconds(questionCount: number, selectedLength: number) {
+  return questionCount >= 999 ? selectedLength * SECONDS_PER_QUESTION : FIXED_TIME_SECONDS[questionCount] ?? questionCount * SECONDS_PER_QUESTION;
+}
+
+function ButtonArrow({ children, onClick, variant = "primary", type = "button", disabled = false }: { children: React.ReactNode; onClick?: () => void; variant?: "primary" | "quiet" | "outline"; type?: "button" | "submit"; disabled?: boolean }) {
   return (
-    <button type={type} onClick={onClick} className={`action-button action-${variant}`}>
+    <button type={type} onClick={onClick} disabled={disabled} className={`action-button action-${variant} ${disabled ? "is-disabled" : ""}`}>
       <span>{children}</span>
       <ArrowRight size={17} strokeWidth={2.4} />
     </button>
@@ -74,14 +82,17 @@ export default function Home() {
   const [nameError, setNameError] = useState(false);
   const [selectedModes, setSelectedModes] = useState<Mode[]>(DEFAULT_MODES);
   const [questionCount, setQuestionCount] = useState("30");
-  const [timerEnabled, setTimerEnabled] = useState(true);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [stats, setStats] = useState<Stats>({});
   const [streak, setStreak] = useState(0);
   const [answered, setAnswered] = useState(false);
-  const [timerLeft, setTimerLeft] = useState(15);
+  const [timerLeft, setTimerLeft] = useState(0);
+  const [timeLimitSeconds, setTimeLimitSeconds] = useState(0);
+  const [timeExpired, setTimeExpired] = useState(false);
+  const scoreRef = useRef(0);
+  const statsRef = useRef<Stats>({});
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [matchSelection, setMatchSelection] = useState<MatchSelection>(null);
   const [matchedLeft, setMatchedLeft] = useState<number[]>([]);
@@ -103,19 +114,20 @@ export default function Home() {
   }, [currentQuestion]);
 
   useEffect(() => {
-    if (screen !== "quiz" || !timerEnabled || answered || !currentQuestion) return;
-    let remaining = 15;
-    setTimerLeft(remaining);
+    if (screen !== "quiz" || !timeLimitSeconds || timeExpired) return;
+    setTimerLeft(timeLimitSeconds);
     const interval = window.setInterval(() => {
-      remaining -= 1;
-      setTimerLeft(remaining);
-      if (remaining <= 0) {
-        window.clearInterval(interval);
-        handleTimeout();
-      }
+      setTimerLeft((remaining) => {
+        if (remaining <= 1) {
+          window.clearInterval(interval);
+          handleTimeout();
+          return 0;
+        }
+        return remaining - 1;
+      });
     }, 1000);
     return () => window.clearInterval(interval);
-  }, [screen, timerEnabled, currentIndex, answered, currentQuestion]);
+  }, [screen, timeLimitSeconds, timeExpired]);
 
   function toggleMode(mode: Mode) {
     setSelectedModes((previous) => {
@@ -131,13 +143,14 @@ export default function Home() {
     }
     setNameError(false);
     const generated = buildQuestions(selectedModes);
-    const randomized = shuffle(generated);
     const count = Number(questionCount);
-    const selected = count >= 999 ? randomized : randomized.slice(0, Math.min(count, randomized.length));
+    const selected = selectBalancedQuestions(generated, selectedModes, count);
     setQuestions(selected);
     setCurrentIndex(0);
     setScore(0);
     setStats({});
+    scoreRef.current = 0;
+    statsRef.current = {};
     setStreak(0);
     setAnswered(false);
     setSelectedOption(null);
@@ -145,6 +158,10 @@ export default function Home() {
     setMatchedLeft([]);
     setMatchedRight([]);
     setWrongPair(null);
+    setTimeExpired(false);
+    const duration = getTimeLimitSeconds(count, selected.length);
+    setTimeLimitSeconds(duration);
+    setTimerLeft(duration);
     setEmailStatus("idle");
     setScreen("quiz");
   }
@@ -154,6 +171,8 @@ export default function Home() {
     const nextStats = addStat(stats, question.type, question.typeLabel, isCorrect);
     setScore(nextScore);
     setStats(nextStats);
+    scoreRef.current = nextScore;
+    statsRef.current = nextStats;
     setStreak((value) => (isCorrect ? value + 1 : 0));
     setAnswered(true);
     if (currentIndex === questions.length - 1) {
@@ -178,12 +197,40 @@ export default function Home() {
     registerAnswer(option === currentQuestion.correct, currentQuestion);
   }
 
+  function playTimeoutTone() {
+    try {
+      const AudioContextClass = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const context = new AudioContextClass();
+      const now = context.currentTime;
+      [880, 660].forEach((frequency, index) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(0.0001, now + index * 0.16);
+        gain.gain.exponentialRampToValueAtTime(0.12, now + index * 0.16 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.16 + 0.14);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(now + index * 0.16);
+        oscillator.stop(now + index * 0.16 + 0.15);
+      });
+      window.setTimeout(() => void context.close(), 700);
+    } catch {
+      // Some browsers may block synthesized audio; the visual timeout state still works.
+    }
+  }
+
   function handleTimeout() {
-    if (answered || !currentQuestion) return;
+    if (timeExpired || screen !== "quiz") return;
+    setTimeExpired(true);
     setTimerLeft(0);
+    setAnswered(true);
     setSelectedOption(null);
     setMatchSelection(null);
-    registerAnswer(false, currentQuestion);
+    playTimeoutTone();
+    window.setTimeout(() => finishQuiz(scoreRef.current, statsRef.current), 850);
   }
 
   function handleMatchClick(side: "left" | "right", index: number) {
@@ -226,7 +273,6 @@ export default function Home() {
     setMatchedLeft([]);
     setMatchedRight([]);
     setWrongPair(null);
-    setTimerLeft(15);
   }
 
   function restartQuiz() {
@@ -235,6 +281,7 @@ export default function Home() {
 
   function goStart() {
     setScreen("start");
+    setTimeExpired(false);
     setEmailStatus("idle");
     setEmailMessage("");
   }
@@ -299,7 +346,7 @@ export default function Home() {
             <section className="setup-card">
               <div className="rules-strip">
                 <div className="rule-item"><strong>01</strong> Выберите темы и количество вопросов.</div>
-                <div className="rule-item"><strong>02</strong> Отвечайте в удобном темпе — таймер можно отключить.</div>
+                <div className="rule-item"><strong>02</strong> На весь тест отводится фиксированное время.</div>
                 <div className="rule-item"><strong>03</strong> Результат автоматически уйдёт руководителю на почту.</div>
               </div>
 
@@ -312,7 +359,7 @@ export default function Home() {
                   return <button key={mode} type="button" className={`mode-tile ${active ? "is-active" : ""}`} onClick={() => toggleMode(mode)} style={{ "--mode-color": meta.color, "--mode-tint": meta.tint } as React.CSSProperties}><span className="mode-icon">{meta.icon}</span><span className="mode-name">{meta.short}</span><span className="mode-check">{active && <Check size={13} />}</span></button>;
                 })}
               </div>
-              <div className="settings-line"><label>Вопросов <select value={questionCount} onChange={(event) => setQuestionCount(event.target.value)}><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option><option value="999">Все доступные</option></select></label><label className="timer-setting"><span className={`toggle ${timerEnabled ? "on" : ""}`}><input type="checkbox" checked={timerEnabled} onChange={(event) => setTimerEnabled(event.target.checked)} /><span /></span><span>Таймер 15 сек</span></label><ButtonArrow onClick={startQuiz}>Начать тест</ButtonArrow></div>
+              <div className="settings-line"><label>Вопросов <select value={questionCount} onChange={(event) => setQuestionCount(event.target.value)}><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option><option value="999">Все доступные</option></select></label><div className="timer-fixed"><Clock3 size={16} /><span>Фиксированное время: {questionCount === "999" ? "30 сек/вопрос" : formatDuration(getTimeLimitSeconds(Number(questionCount), Number(questionCount)))}</span></div><ButtonArrow onClick={startQuiz}>Начать тест</ButtonArrow></div>
               <div className="setup-footnote"><MousePointerClick size={14} /> Откройте ссылку на любом устройстве — тест работает в браузере.</div>
             </section>
           </div>
@@ -333,14 +380,14 @@ export default function Home() {
           <div className={`question-panel ${answered ? "is-answered" : ""}`}>
             <div className="question-meta"><span className="question-tag" style={{ color: currentMeta.color, background: currentMeta.tint }}><span>{currentMeta.icon}</span>{currentQuestion.typeLabel}</span>{streak >= 3 && <span className="streak"><Sparkles size={14} /> серия {streak}</span>}</div>
             <h1 className="question-title">{currentQuestion.prompt}</h1>
-            {currentQuestion.kind === "choice" && <div className="answer-options">{options.map((option, index) => { const isCorrect = option === currentQuestion.correct; const isWrong = answered && selectedOption === option && !isCorrect; return <button type="button" key={`${option}-${index}`} disabled={answered} className={`answer-option ${answered && isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`} onClick={() => handleChoice(option)}><span className="option-index">{String.fromCharCode(65 + index)}</span><span>{option}</span>{answered && isCorrect && <CheckCircle2 size={18} />}{isWrong && <X size={18} />}</button>; })}</div>}
-            {currentQuestion.kind === "match" && <div className="match-area"><div className="match-instruction">Выберите препарат слева, затем соответствующее действующее вещество справа.</div><div className="match-columns"><div><div className="match-label">Препарат</div>{matchItems.map((item, index) => <button key={item.name} type="button" className={`match-option ${matchedLeft.includes(index) ? "matched" : ""} ${matchSelection?.side === "left" && matchSelection.index === index ? "selected" : ""} ${wrongPair?.[0] === index ? "wrong" : ""}`} onClick={() => handleMatchClick("left", index)} disabled={answered || matchedLeft.includes(index)}><span>{item.name}</span>{matchedLeft.includes(index) && <Check size={16} />}</button>)}</div><div><div className="match-label">Действующее вещество</div>{currentMatchRight.map((item) => <button key={`${item.dv}-${item.originalIndex}`} type="button" className={`match-option ${matchedRight.includes(item.originalIndex) ? "matched" : ""} ${matchSelection?.side === "right" && matchSelection.index === item.originalIndex ? "selected" : ""} ${wrongPair?.[1] === item.originalIndex ? "wrong" : ""}`} onClick={() => handleMatchClick("right", item.originalIndex)} disabled={answered || matchedRight.includes(item.originalIndex)}><span>{item.dv}</span>{matchedRight.includes(item.originalIndex) && <Check size={16} />}</button>)}</div></div><div className="match-progress-line"><span>Сопоставлено</span><strong>{matchedLeft.length} / {matchItems.length}</strong></div></div>}
+            {currentQuestion.kind === "choice" && <div className="answer-options">{options.map((option, index) => { const isCorrect = option === currentQuestion.correct; const isWrong = answered && selectedOption === option && !isCorrect; return <button type="button" key={`${option}-${index}`} disabled={answered || timeExpired} className={`answer-option ${answered && isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`} onClick={() => handleChoice(option)}><span className="option-index">{String.fromCharCode(65 + index)}</span><span>{option}</span>{answered && isCorrect && <CheckCircle2 size={18} />}{isWrong && <X size={18} />}</button>; })}</div>}
+            {currentQuestion.kind === "match" && <div className="match-area"><div className="match-instruction">Выберите препарат слева, затем соответствующее действующее вещество справа.</div><div className="match-columns"><div><div className="match-label">Препарат</div>{matchItems.map((item, index) => <button key={item.name} type="button" className={`match-option ${matchedLeft.includes(index) ? "matched" : ""} ${matchSelection?.side === "left" && matchSelection.index === index ? "selected" : ""} ${wrongPair?.[0] === index ? "wrong" : ""}`} onClick={() => handleMatchClick("left", index)} disabled={answered || timeExpired || matchedLeft.includes(index)}><span>{item.name}</span>{matchedLeft.includes(index) && <Check size={16} />}</button>)}</div><div><div className="match-label">Действующее вещество</div>{currentMatchRight.map((item) => <button key={`${item.dv}-${item.originalIndex}`} type="button" className={`match-option ${matchedRight.includes(item.originalIndex) ? "matched" : ""} ${matchSelection?.side === "right" && matchSelection.index === item.originalIndex ? "selected" : ""} ${wrongPair?.[1] === item.originalIndex ? "wrong" : ""}`} onClick={() => handleMatchClick("right", item.originalIndex)} disabled={answered || timeExpired || matchedRight.includes(item.originalIndex)}><span>{item.dv}</span>{matchedRight.includes(item.originalIndex) && <Check size={16} />}</button>)}</div></div><div className="match-progress-line"><span>Сопоставлено</span><strong>{matchedLeft.length} / {matchItems.length}</strong></div></div>}
             <div className={`answer-feedback ${answered ? "visible" : ""}`}>{answered ? <><CheckCircle2 size={17} /><span>{currentQuestion.kind === "match" ? "Все пары сопоставлены." : selectedOption === (currentQuestion.kind === "choice" ? currentQuestion.correct : "") ? "Верно. Отличный ориентир." : `Правильный ответ: ${currentQuestion.kind === "choice" ? currentQuestion.correct : "см. пояснение"}`}</span></> : <><FlaskConical size={17} /><span>Выберите один вариант ответа.</span></>}</div>
             {answered && <div className="explanation"><span>пояснение</span><p>{currentQuestion.explanation}</p></div>}
-            {answered && currentIndex < questions.length - 1 && <ButtonArrow onClick={goNext}>Следующий вопрос</ButtonArrow>}
-            {answered && currentIndex === questions.length - 1 && <ButtonArrow onClick={() => finishQuiz(score, stats)}>К результатам</ButtonArrow>}
+            {answered && currentIndex < questions.length - 1 && <ButtonArrow onClick={goNext} disabled={timeExpired}>{timeExpired ? "Время истекло" : "Следующий вопрос"}</ButtonArrow>}
+            {answered && currentIndex === questions.length - 1 && <ButtonArrow onClick={() => finishQuiz(score, stats)} disabled={timeExpired}>{timeExpired ? "Время истекло" : "К результатам"}</ButtonArrow>}
           </div>
-          <aside className="quiz-rail"><div className="rail-number">{String(currentIndex + 1).padStart(2, "0")}</div><div className="rail-line" /><div className="rail-copy"><span>сейчас проверяем</span><strong>{currentQuestion.typeLabel}</strong><p>Не спешите: точность важнее скорости.</p></div>{timerEnabled && <div className={`timer-card ${timerLeft <= 5 ? "critical" : timerLeft <= 8 ? "warning" : ""}`}><Clock3 size={17} /><div><span>время на ответ</span><strong>{formatDuration(timerLeft)}</strong></div></div>}<div className="rail-quote">«Сильная экспертиза — это когда правильное решение приходит вовремя.»</div></aside>
+          <aside className="quiz-rail"><div className="rail-number">{String(currentIndex + 1).padStart(2, "0")}</div><div className="rail-line" /><div className="rail-copy"><span>сейчас проверяем</span><strong>{currentQuestion.typeLabel}</strong><p>Не спешите: точность важнее скорости.</p></div><div className={`timer-card ${timerLeft <= 60 ? "critical" : timerLeft <= 180 ? "warning" : ""}`}><Clock3 size={17} /><div><span>время на тест</span><strong>{formatDuration(timerLeft)}</strong></div></div><div className="rail-quote">«Сильная экспертиза — это когда правильное решение приходит вовремя.»</div></aside>
         </section>
       </main>
     );

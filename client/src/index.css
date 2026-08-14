@@ -92,6 +92,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .settings-line label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; font-weight: 600; }
 .settings-line select { height: 35px; padding: 0 28px 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--sage-50); color: var(--ink); font-size: 12px; }
 .timer-setting { white-space: nowrap; }
+.timer-fixed { display: inline-flex; align-items: center; gap: 7px; min-height: 35px; padding: 0 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--sage-50); color: var(--green-800); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.timer-fixed svg { color: var(--green-700); }
 .toggle { position: relative; display: inline-flex; width: 34px; height: 20px; padding: 2px; border-radius: 20px; background: #c9d1ca; transition: background .2s var(--ease-out); }
 .toggle.on { background: var(--green-700); }
 .toggle input { position: absolute; opacity: 0; }
@@ -99,6 +101,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .toggle.on span { transform: translateX(14px); }
 .action-button { display: inline-flex; align-items: center; justify-content: center; gap: 13px; min-height: 44px; padding: 0 17px; border: 1px solid transparent; border-radius: 10px; font: 700 11px 'Manrope', sans-serif; letter-spacing: .02em; transition: transform .16s var(--ease-out), background .16s var(--ease-out), border-color .16s var(--ease-out), color .16s var(--ease-out); }
 .action-button:active { transform: scale(.97); }
+.action-button.is-disabled, .action-button:disabled { opacity: .52; pointer-events: none; box-shadow: none; }
 .action-primary { background: var(--green-900); color: #fff; box-shadow: 0 7px 18px rgba(25,79,56,.18); }
 .action-primary:hover { background: var(--green-950); transform: translateY(-1px); }
 .action-outline { border-color: var(--green-700); background: transparent; color: var(--green-800); }
@@ -271,7 +274,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .mode-icon { width: 24px; height: 24px; font-size: 14px; }
   .mode-name { font-size: 10px; }
   .mode-check { top: 6px; right: 6px; width: 15px; height: 15px; }
-  .settings-line { flex-wrap: wrap; gap: 14px 10px; }
+  .settings-line { flex-wrap: wrap; gap: 10px; }
+  .settings-line label, .timer-fixed { flex: 1 1 auto; }
+  .timer-fixed { min-width: 100%; justify-content: center; }
   .settings-line .action-button { width: 100%; }
   .start-aside { display: flex; }
   .aside-photo { min-height: 210px; }
@@ -293,6 +298,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .question-panel.is-answered .answer-options { gap: 5px; }
   .answer-option { min-height: 52px; padding: 8px 11px; font-size: 12px; }
   .question-panel > .action-button { bottom: 8px; margin-top: 11px; }
+  .timer-card { margin-top: 14px; }
+  .timer-card strong { font-size: 16px; }
   .match-columns { grid-template-columns: 1fr; gap: 12px; }
   .match-option { min-height: 48px; }
   .result-hero { min-height: 440px; border-radius: 19px; }

@@ -1,7 +1,8 @@
 /* Doctor Farmer Quiz — Corporate Modern Agro style: data-first quiz mechanics with clear, calm interactions. */
 import { DRUGS } from "@/data/drugs";
+import { SITUATIONAL_QUESTIONS } from "@/data/situations";
 
-export type Mode = "dv" | "prep" | "cult" | "group" | "norma" | "match";
+export type Mode = "dv" | "prep" | "cult" | "group" | "norma" | "situation" | "match";
 export type ChoiceQuestion = {
   id: string;
   type: Exclude<Mode, "match">;
@@ -29,10 +30,11 @@ export const MODE_META: Record<Mode, { label: string; short: string; icon: strin
   cult: { label: "Культуры применения", short: "Культуры", icon: "⌁", color: "#B45309", tint: "#FFF7ED" },
   group: { label: "Группа препарата", short: "Группа", icon: "▦", color: "#6D28D9", tint: "#F3E8FF" },
   norma: { label: "Норма расхода", short: "Норма расхода", icon: "◌", color: "#1D4ED8", tint: "#EFF6FF" },
+  situation: { label: "Ситуационные вопросы", short: "Ситуации", icon: "⌁", color: "#B45309", tint: "#FFF4D6" },
   match: { label: "Сопоставление", short: "Сопоставление", icon: "↔", color: "#A16207", tint: "#FEFCE8" },
 };
 
-export const DEFAULT_MODES: Mode[] = ["dv", "prep", "cult", "group", "norma", "match"];
+export const DEFAULT_MODES: Mode[] = ["dv", "prep", "cult", "group", "norma", "situation"];
 
 export function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -122,6 +124,10 @@ export function buildQuestions(modes: Mode[]): Question[] {
     }
   });
 
+  if (modes.includes("situation")) {
+    questions.push(...SITUATIONAL_QUESTIONS);
+  }
+
   if (modes.includes("match")) {
     const matchable = shuffle([...DRUGS]).slice(0, Math.min(DRUGS.length, 40));
     for (let i = 0; i < matchable.length - 3; i += 4) {
@@ -139,6 +145,33 @@ export function buildQuestions(modes: Mode[]): Question[] {
   }
 
   return questions;
+}
+
+export function selectBalancedQuestions(questions: Question[], modes: Mode[], count: number): Question[] {
+  const poolModes = modes.filter((mode) => mode !== "match");
+  if (count >= 999) return shuffle(questions);
+  if (!poolModes.length) return shuffle(questions).slice(0, Math.min(count, questions.length));
+
+  const pools = new Map<Mode, Question[]>();
+  poolModes.forEach((mode) => pools.set(mode, shuffle(questions.filter((question) => question.type === mode))));
+  const target = Math.min(count, questions.length);
+  const baseQuota = Math.floor(target / poolModes.length);
+  let remainder = target % poolModes.length;
+  const selected: Question[] = [];
+
+  poolModes.forEach((mode) => {
+    const pool = pools.get(mode) ?? [];
+    const quota = baseQuota + (remainder > 0 ? 1 : 0);
+    if (remainder > 0) remainder -= 1;
+    selected.push(...pool.slice(0, quota));
+  });
+
+  if (selected.length < target) {
+    const selectedIds = new Set(selected.map((question) => question.id));
+    selected.push(...shuffle(questions.filter((question) => !selectedIds.has(question.id))).slice(0, target - selected.length));
+  }
+
+  return shuffle(selected).slice(0, target);
 }
 
 export function formatScore(score: number, total: number): number {
