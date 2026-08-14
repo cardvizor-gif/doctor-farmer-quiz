@@ -48,10 +48,58 @@ export function shuffle<T>(items: T[]): T[] {
 type Drug = (typeof DRUGS)[number];
 type ChoiceKey = "dv" | "name" | "cult" | "norma";
 
+const RELATED_GROUPS: Record<string, string[]> = {
+  "Удобрение": ["Удобрение", "Вспомогательный"],
+  "Вспомогательный": ["Вспомогательный", "Удобрение"],
+  "Гербицид": ["Гербицид"],
+  "Фунгицид": ["Фунгицид"],
+  "Инсектицид": ["Инсектицид"],
+  "Протравитель": ["Протравитель"],
+  "Десикант": ["Десикант", "Гербицид"],
+  "Фумигант": ["Фумигант", "Протравитель", "Инсектицид"],
+};
+
+const GROUP_DISTRACTOR_ORDER: Record<string, string[]> = {
+  "Удобрение": ["Вспомогательный", "Гербицид", "Фунгицид"],
+  "Вспомогательный": ["Удобрение", "Десикант", "Гербицид"],
+  "Гербицид": ["Фунгицид", "Инсектицид", "Протравитель"],
+  "Фунгицид": ["Гербицид", "Протравитель", "Инсектицид"],
+  "Инсектицид": ["Фунгицид", "Гербицид", "Протравитель"],
+  "Протравитель": ["Фунгицид", "Инсектицид", "Гербицид"],
+  "Десикант": ["Гербицид", "Фунгицид", "Протравитель"],
+  "Фумигант": ["Протравитель", "Инсектицид", "Вспомогательный"],
+};
+
+function hasDistinctAnswer(drug: Drug, except: Drug, key: ChoiceKey) {
+  if (key === "name") return drug.dv !== except.dv;
+  return drug[key] !== except[key];
+}
+
+function getCandidatePool(except: Drug, key: ChoiceKey, count: number) {
+  const base = DRUGS.filter((drug) => drug !== except && hasDistinctAnswer(drug, except, key));
+  const relatedGroups = RELATED_GROUPS[except.group] ?? [except.group];
+  const sameGroup = base.filter((drug) => drug.group === except.group);
+  const sameUnit = key === "norma" ? sameGroup.filter((drug) => drug.normaUnit === except.normaUnit) : sameGroup;
+  const related = base.filter((drug) => relatedGroups.includes(drug.group));
+  const preferred = sameUnit.length >= count ? sameUnit : sameGroup.length >= count ? sameGroup : related;
+  const fallback = base.filter((drug) => !preferred.includes(drug));
+  const orderedPreferred = key === "norma"
+    ? [...preferred].sort((left, right) => {
+        const leftDistance = Math.abs(left.normaMin - except.normaMin) + Math.abs(left.normaMax - except.normaMax);
+        const rightDistance = Math.abs(right.normaMin - except.normaMin) + Math.abs(right.normaMax - except.normaMax);
+        return leftDistance - rightDistance;
+      })
+    : shuffle(preferred);
+  const unique = new Map<string, Drug>();
+  orderedPreferred.forEach((drug) => unique.set(String(drug[key]), drug));
+  if (unique.size < count) {
+    shuffle(fallback).forEach((drug) => unique.set(String(drug[key]), drug));
+  }
+  return Array.from(unique.values()).slice(0, count);
+}
+
 function wrongAnswers(except: Drug, key: ChoiceKey, count = 3): string[] {
-  return shuffle(DRUGS.filter((drug) => drug !== except && drug[key] !== except[key]))
-    .slice(0, count)
-    .map((drug) => String(drug[key]));
+  return getCandidatePool(except, key, count).map((drug) => String(drug[key]));
 }
 
 export function buildQuestions(modes: Mode[]): Question[] {
@@ -71,7 +119,8 @@ export function buildQuestions(modes: Mode[]): Question[] {
         explanation: `${drug.name} (${drug.group}): ${drug.dv}`,
       });
     }
-    if (modes.includes("prep")) {
+    const hasUniqueDv = DRUGS.filter((item) => item.dv === drug.dv).length === 1;
+    if (modes.includes("prep") && hasUniqueDv) {
       questions.push({
         id: `prep-${drug.n}-${drugIndex}`,
         type: "prep",
@@ -96,7 +145,9 @@ export function buildQuestions(modes: Mode[]): Question[] {
       });
     }
     if (modes.includes("group")) {
-      const wrongGroups = shuffle(groups.filter((group) => group !== drug.group)).slice(0, 3);
+      const preferredGroups = GROUP_DISTRACTOR_ORDER[drug.group] ?? groups.filter((group) => group !== drug.group);
+      const availableGroups = new Set<string>(groups);
+      const wrongGroups = shuffle(preferredGroups.filter((group) => availableGroups.has(group) && group !== drug.group)).slice(0, 3);
       if (wrongGroups.length === 3) {
         questions.push({
           id: `group-${drug.n}-${drugIndex}`,
