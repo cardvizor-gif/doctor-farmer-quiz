@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { CROP_OPTIONS, PROBLEM_CATEGORIES, CropOption } from "@/data/agropom";
-import { DRUGS_DATABASE } from "@/data/drugs";
+import { DRUGS } from "@/data/drugs";
+import { AGRONOMIC_RULES } from "@/data/agtorules";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sprout, ShieldAlert, Bug, Sun, Zap, Search, ArrowLeft, CheckCircle2, AlertCircle, HelpCircle } from "lucide-react";
+import { Sprout, ShieldAlert, Bug, Sun, Zap, Search, ArrowLeft, CheckCircle2, AlertCircle, HelpCircle, Info } from "lucide-react";
 import { Link } from "wouter";
 
 export default function AgroHelper() {
@@ -13,36 +14,90 @@ export default function AgroHelper() {
   const [selectedCategory, setSelectedCategory] = useState<string>("weeds");
   const [selectedIssue, setSelectedIssue] = useState<string>("");
 
-  // Подбор препаратов на основе выбранных параметров
-  const getRecommendations = (): any[] => {
+  // Строгий агрономический подбор препаратов из прайса
+  const getRecommendations = (): { drug: any; confidence: 'high' | 'medium' | 'review'; reason: string }[] => {
     if (!selectedCrop || !selectedIssue) return [];
 
-    let matched = DRUGS_DATABASE.filter((drug: any) => {
-      // Фильтрация по смыслу проблемы
-      const nameLower = drug.name.toLowerCase();
-      const groupLower = drug.group.toLowerCase();
-      const descLower = drug.description.toLowerCase();
+    const results: { drug: any; confidence: 'high' | 'medium' | 'review'; reason: string }[] = [];
 
-      if (selectedCategory === 'weeds') {
-        return groupLower.includes('гербицид') || descLower.includes('сорняк') || descLower.includes('злаков') || descLower.includes('двудоль');
+    // Ищем подходящее правило в матрице регламентов
+    const rule = AGRONOMIC_RULES.find(r => r.cropId === selectedCrop.id && r.category === selectedCategory);
+
+    DRUGS.forEach((drug: any) => {
+      const groupMatch = rule ? rule.allowedGroups.includes(drug.group) : (
+        (selectedCategory === 'weeds' && drug.group === 'Гербицид') ||
+        (selectedCategory === 'diseases' && (drug.group === 'Фунгицид' || drug.group === 'Протравитель')) ||
+        (selectedCategory === 'pests' && drug.group === 'Инсектицид') ||
+        (selectedCategory === 'desiccation' && drug.group === 'Десикант') ||
+        (selectedCategory === 'nutrition' && (drug.group === 'Удобрение' || drug.group === 'Вспомогательный'))
+      );
+
+      if (!groupMatch) return;
+
+      const dvLower = drug.dv.toLowerCase();
+      const cultLower = drug.cult.toLowerCase();
+      const cropNameLower = selectedCrop.name.toLowerCase();
+
+      // Проверяем технологию (например, Clearfield или Express)
+      if (selectedTech === 'Clearfield' && selectedCrop.name.includes('Подсолнечник') && !dvLower.includes('имазамокс') && !dvLower.includes('имазапир')) {
+        return;
       }
-      if (selectedCategory === 'diseases') {
-        return groupLower.includes('фунгицид') || groupLower.includes('протравитель') || descLower.includes('гниль') || descLower.includes('болезн');
+      if (selectedTech === 'Express (Трио/Экспресс)' && selectedCrop.name.includes('Подсолнечник') && !dvLower.includes('трибенурон')) {
+        return;
       }
-      if (selectedCategory === 'pests') {
-        return groupLower.includes('инсектицид') || descLower.includes('вредител') || descLower.includes('мух') || descLower.includes('Тли');
+
+      // Проверка по правилу
+      if (rule) {
+        const hasRequired = rule.requiredKeywords.some(kw => dvLower.includes(kw));
+        const hasExcluded = rule.excludedKeywords.some(kw => dvLower.includes(kw));
+        const matchesCult = cultLower.includes('все') || cultLower.split(/[, коммуна]+/).some((c: string) => cropNameLower.includes(c.trim()) || c.trim().includes(cropNameLower.split(' ')[0]));
+
+        if (hasExcluded) return;
+
+        if (hasRequired && matchesCult) {
+          results.push({
+            drug,
+            confidence: 'high',
+            reason: `Строгое соответствие регламенту: действующее вещество (${drug.dv}) и культура (${selectedCrop.name}) подтверждены по прайс-листу.`
+          });
+        } else if (hasRequired) {
+          results.push({
+            drug,
+            confidence: 'medium',
+            reason: `Действующее вещество (${drug.dv}) профильное для задачи, требуется уточнение спектра по региональному регламенту.`
+          });
+        }
+      } else {
+        // Базовый поиск по упоминанию культуры в прайсе
+        const matchesCult = cultLower.includes('все') || cultLower.includes(selectedCrop.name.toLowerCase().split(' ')[0]);
+        if (matchesCult) {
+          results.push({
+            drug,
+            confidence: 'medium',
+            reason: `Препарат зарегистрирован на культуру согласно данным прайс-листа.`
+          });
+        }
       }
-      if (selectedCategory === 'desiccation') {
-        return groupLower.includes('десикант') || descLower.includes('десикац');
-      }
-      if (selectedCategory === 'nutrition') {
-        return groupLower.includes('удобрени') || groupLower.includes('стимулятор') || groupLower.includes('аминокислот');
-      }
-      return true;
     });
 
-    // Возвращаем до 3 подходящих вариантов
-    return matched.slice(0, 3);
+    // Если точных совпадений по строгим правилам мало, добавляем профильные по группе с пометкой о проверке
+    if (results.length === 0) {
+      DRUGS.forEach((drug: any) => {
+        const isGroupOk = (selectedCategory === 'weeds' && drug.group === 'Гербицид') ||
+                          (selectedCategory === 'diseases' && (drug.group === 'Фунгицид' || drug.group === 'Протравитель')) ||
+                          (selectedCategory === 'pests' && drug.group === 'Инсектицид') ||
+                          (selectedCategory === 'desiccation' && drug.group === 'Десикант');
+        if (isGroupOk && results.length < 3) {
+          results.push({
+            drug,
+            confidence: 'review',
+            reason: `Общая позиция группы в прайсе. Требуется обязательная сверка регламента применения на культуре ${selectedCrop.name}.`
+          });
+        }
+      });
+    }
+
+    return results.slice(0, 3);
   };
 
   const recommendations = getRecommendations();
@@ -58,7 +113,7 @@ export default function AgroHelper() {
             </div>
             <div>
               <h1 className="font-bold text-lg tracking-tight text-[#1B4D3E]">АгроПомощник ДФ</h1>
-              <p className="text-xs text-gray-500">Интеллектуальный подбор решений из прайса</p>
+              <p className="text-xs text-gray-500">Агрономический подбор по регламентам и прайсу</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -77,11 +132,11 @@ export default function AgroHelper() {
         {/* Левая колонка: шаги выбора */}
         <div className="lg:col-span-5 space-y-6">
           
-          {/* Шаг 1: Культура */}
+          {/* Шаг 1: Культура и технология */}
           <Card className="border-[#E2E8DF] shadow-xs bg-white">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold text-[#1B4D3E] flex items-center justify-between">
-                <span>1. Выберите культуру</span>
+                <span>1. Культура и технология</span>
                 {selectedCrop && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
               </CardTitle>
             </CardHeader>
@@ -128,11 +183,11 @@ export default function AgroHelper() {
             </CardContent>
           </Card>
 
-          {/* Шаг 2: Проблема / Категория */}
+          {/* Шаг 2: Задача или проблема */}
           <Card className="border-[#E2E8DF] shadow-xs bg-white">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold text-[#1B4D3E] flex items-center justify-between">
-                <span>2. Задача или проблема</span>
+                <span>2. Агрономическая задача</span>
                 {selectedIssue && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
               </CardTitle>
             </CardHeader>
@@ -156,9 +211,8 @@ export default function AgroHelper() {
                 ))}
               </div>
 
-              {/* Уточнение проблемы */}
               <div className="pt-2 border-t border-gray-100">
-                <label className="text-xs font-medium text-gray-600 block mb-1.5">Уточните задачу:</label>
+                <label className="text-xs font-medium text-gray-600 block mb-1.5">Уточните проблему на поле:</label>
                 <select
                   value={selectedIssue}
                   onChange={(e) => setSelectedIssue(e.target.value)}
@@ -174,12 +228,12 @@ export default function AgroHelper() {
 
         </div>
 
-        {/* Правая колонка: результаты подбора */}
+        {/* Правая колонка: результаты подбора с матрицей уверенности */}
         <div className="lg:col-span-7 space-y-6">
           <Card className="border-[#E2E8DF] shadow-xs bg-white min-h-[500px] flex flex-col">
             <CardHeader className="border-b border-gray-100 bg-[#FBFDFC]">
               <CardTitle className="text-lg font-bold text-[#1B4D3E] flex items-center justify-between">
-                <span>Рекомендации прайса «Доктор Фармер»</span>
+                <span>Проверенные решения из прайса ДФ</span>
                 {selectedCrop && (
                   <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 font-normal">
                     {selectedCrop.name} {selectedTech ? `(${selectedTech})` : ''}
@@ -192,45 +246,54 @@ export default function AgroHelper() {
               {!selectedCrop ? (
                 <div className="text-center py-20 my-auto text-gray-400 space-y-3">
                   <Search className="w-12 h-12 mx-auto stroke-1 text-gray-300" />
-                  <p className="text-sm font-medium">Выберите культуру и задачу в левой панели,<br />чтобы получить агрономическое решение из прайса.</p>
+                  <p className="text-sm font-medium">Выберите культуру, технологию и задачу в левой панели,<br />чтобы получить регламентированный подбор.</p>
                 </div>
               ) : recommendations.length === 0 ? (
                 <div className="text-center py-20 my-auto text-gray-500 space-y-2">
                   <AlertCircle className="w-10 h-10 mx-auto text-amber-500" />
-                  <p className="font-medium text-sm">По вашему запросу точных позиций в текущем срезе не найдено.</p>
-                  <p className="text-xs text-gray-400">Попробуйте выбрать другую категорию или уточнить задачу.</p>
+                  <p className="font-medium text-sm">По выбранным параметрам в текущем прайсе совпадений не найдено.</p>
+                  <p className="text-xs text-gray-400">Попробуйте изменить категорию задачи или технологию.</p>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="text-xs text-gray-500 bg-emerald-50 border border-emerald-100 p-3 rounded-lg flex items-start space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-700 mt-0.5 shrink-0" />
-                    <span>Подобранные препараты проверены по прайсу и соответствуют заявленной агрономической задаче для культуры <b>{selectedCrop.name}</b>.</span>
+                  <div className="text-xs text-gray-600 bg-amber-50 border border-amber-200/60 p-3 rounded-lg flex items-start space-x-2">
+                    <Info className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
+                    <span>Подбор выполнен по действующим веществам и зарегистрированным регламентам прайс-листа Кинзябузов.xlsx с учетом технологии <b>{selectedTech || 'Классика'}</b>. Обязательно сверяйте фазу развития культуры перед внесением.</span>
                   </div>
 
                   <div className="space-y-4">
-                    {recommendations.map((drug: any, idx: number) => (
+                    {recommendations.map(({ drug, confidence, reason }) => (
                       <div key={drug.name} className="border border-gray-200 rounded-xl p-5 bg-white shadow-xs hover:border-emerald-700/50 transition-all">
                         <div className="flex items-start justify-between">
                           <div>
-                            <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md">
-                              {drug.group}
-                            </span>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md">
+                                {drug.group}
+                              </span>
+                              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${
+                                confidence === 'high' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                                confidence === 'medium' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                                'bg-amber-50 text-amber-700 border border-amber-200'
+                              }`}>
+                                {confidence === 'high' ? '✓ Строгий регламент' : confidence === 'medium' ? '○ Профильное ДВ' : '⚠ Требует сверки'}
+                              </span>
+                            </div>
                             <h3 className="font-bold text-lg text-[#1B4D3E] mt-1.5">{drug.name}</h3>
                           </div>
                           <div className="text-right">
                             <span className="text-xs text-gray-400 block">Норма применения</span>
-                            <span className="font-bold text-sm text-gray-800">{drug.rate}</span>
+                            <span className="font-bold text-sm text-gray-800">{drug.norma}</span>
                           </div>
                         </div>
 
                         <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                           <div>
                             <span className="text-gray-400 block font-medium">Действующее вещество:</span>
-                            <span className="text-gray-800 font-semibold">{drug.activeIngredient}</span>
+                            <span className="text-gray-800 font-semibold">{drug.dv}</span>
                           </div>
                           <div>
-                            <span className="text-gray-400 block font-medium">Назначение / Описание:</span>
-                            <span className="text-gray-700 line-clamp-2">{drug.description}</span>
+                            <span className="text-gray-400 block font-medium">Регламент / Обоснование:</span>
+                            <span className="text-gray-700">{reason}</span>
                           </div>
                         </div>
 
@@ -238,7 +301,7 @@ export default function AgroHelper() {
                           <span className="text-emerald-700 font-medium flex items-center">
                             <HelpCircle className="w-3.5 h-3.5 mr-1" /> Вопрос для клиента: «Какая фаза развития сорняка или культуры на поле?»
                           </span>
-                          <span className="text-gray-400">Артикул из прайса ДФ</span>
+                          <span className="text-gray-400">Зарегистрированные культуры: {drug.cult}</span>
                         </div>
                       </div>
                     ))}
@@ -247,7 +310,7 @@ export default function AgroHelper() {
               )}
 
               <div className="mt-8 pt-4 border-t border-gray-100 text-center text-xs text-gray-400">
-                АгроПомощник ДФ • Версия 1.0 MVP • На базе прайса Кинзябузов.xlsx
+                АгроПомощник ДФ • Версия 2.0 (Аудит по действующим веществам) • На базе прайса Кинзябузов.xlsx
               </div>
             </CardContent>
           </Card>
