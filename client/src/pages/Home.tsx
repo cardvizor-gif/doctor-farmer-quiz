@@ -1,5 +1,7 @@
 /* Doctor Farmer Quiz — Corporate Modern Agro: editorial agriculture imagery, forest-green hierarchy, asymmetric test workspace. */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState, useEffect, useRef, useTransition, useMemo } from "react";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 import emailjs from "@emailjs/browser";
 import {
   ArrowLeft,
@@ -371,7 +373,14 @@ export default function Home() {
             <img src={LOGO_IMAGE} alt="Doctor Farmer" className="brand-mark" />
             <div><span className="brand-name">DOCTOR FARMER</span><span className="brand-caption">knowledge lab / 2026</span></div>
           </div>
-          <div className="header-note"><ShieldCheck size={15} /> Внутренний тренинг команды</div>
+          <div className="flex items-center space-x-3">
+            <Link href="/agro-helper">
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
+                🌱 АгроПомощник ДФ
+              </Button>
+            </Link>
+            <div className="header-note"><ShieldCheck size={15} /> Внутренний тренинг команды</div>
+          </div>
         </header>
 
         <section className="start-layout-single">

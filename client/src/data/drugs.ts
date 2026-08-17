@@ -816,3 +816,12 @@ export const DRUGS = [
     "cult": "Антистрессант, стимулятор питания"
   }
 ] as const;
+
+export const DRUGS_DATABASE = DRUGS.map((d: any) => ({
+  name: d.name,
+  activeIngredient: d.dv,
+  rate: d.norma,
+  group: d.group,
+  crops: d.cult,
+  description: `${d.group}. ДВ: ${d.dv}. Культуры: ${d.cult}.`
+}));
