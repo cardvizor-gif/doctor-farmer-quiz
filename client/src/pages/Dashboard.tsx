@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { ArrowRight, ShieldCheck, Award, BookOpen, Layers } from "lucide-react";
 
 const LOGO_IMAGE = "/manus-storage/doctor-farmer-mark_1fd4bf89.png";
-const ILLUSTRATION_IMAGE = "/manus-storage/doctor-farmer-clean-bg_5968864e.png";
+const ILLUSTRATION_IMAGE = "/manus-storage/8bc6dbd5-1270-4733-b922-88eb93484a1b_6292d44e.webp";
 
 export default function Dashboard() {
   return (
@@ -43,7 +43,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Hero-секция с очищенной иллюстрацией без бирюзового фона */}
+      {/* Hero-секция с эталонным чистым коллажем */}
       <section className="relative overflow-hidden pt-12 pb-20 md:pt-16 md:pb-24 flex-1 flex items-center max-w-7xl mx-auto px-6 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center w-full">
           
