@@ -1,41 +1,45 @@
 import React from "react";
 import { Link } from "wouter";
-import { ArrowRight, ShieldCheck, Award, Layers, BookOpen } from "lucide-react";
+import { ArrowRight, ShieldCheck, Award, BookOpen, Layers } from "lucide-react";
 
 export default function Dashboard() {
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans selection:bg-emerald-100">
       
-      {/* Тонкая верхняя навигация как в референсе */}
+      {/* Тонкая верхняя навигация по образцу */}
       <header className="w-full border-b border-gray-100 bg-white/90 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           
-          {/* Логотип */}
+          {/* Логотип и название компании */}
           <div className="flex items-center gap-3">
             <img 
-              src="/manus-storage/doctor-farmer-hq-mark_7e96d17e.png" 
+              src="/manus-storage/Screenshot_1_35b5a2ee.png" 
               alt="Doctor Farmer" 
               className="w-10 h-10 object-contain" 
             />
-            <span className="font-bold tracking-tight text-xl text-gray-900 font-sans">
-              agronomic
+            <span className="font-bold tracking-tight text-lg sm:text-xl text-gray-900 font-sans">
+              Doctor Farmer
             </span>
           </div>
 
-          {/* Меню навигации */}
+          {/* Меню навигации (наши разделы) */}
           <nav className="hidden md:flex items-center space-x-8 text-sm text-gray-600 font-medium">
-            <span className="cursor-pointer hover:text-emerald-700 transition-colors">Agriculture</span>
-            <span className="cursor-pointer hover:text-emerald-700 transition-colors">Corporation</span>
-            <span className="cursor-pointer hover:text-emerald-700 transition-colors">Deploy</span>
-            <span className="cursor-pointer hover:text-emerald-700 transition-colors">Solutions</span>
+            <Link href="/agro-helper">
+              <span className="cursor-pointer hover:text-emerald-700 transition-colors">АгроПомощник</span>
+            </Link>
+            <Link href="/quiz">
+              <span className="cursor-pointer hover:text-emerald-700 transition-colors">Тест на знание прайса</span>
+            </Link>
           </nav>
 
           {/* Правая кнопка */}
           <div className="flex items-center gap-4">
-            <span className="hidden lg:inline-block text-sm text-gray-500 font-medium">Support</span>
+            <span className="hidden lg:inline-block text-xs font-mono text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
+              Служебный комплекс
+            </span>
             <Link href="/agro-helper">
               <button className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm px-6 py-2.5 rounded-full transition-all shadow-xs">
-                Open App
+                Открыть АгроПомощник
               </button>
             </Link>
           </div>
@@ -43,29 +47,29 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Hero-секция в точном соответствии с референсом */}
+      {/* Hero-секция по стилю референса с нашими русскими текстами */}
       <section className="relative overflow-hidden pt-12 pb-24 md:pt-20 md:pb-32 bg-white flex-1 flex items-center">
         <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          {/* Левая часть: заголовок и CTA */}
+          {/* Левая часть: наш заголовок и кнопки перехода */}
           <div className="lg:col-span-6 space-y-6 z-10">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold tracking-wide uppercase">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" /> Doctor Farmer Agronomy System
+              <ShieldCheck className="w-4 h-4 text-emerald-600" /> Рабочий кабинет команды
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 leading-[1.12]">
-              Clean your Agronomic <br />
-              <span className="text-emerald-700">Technology Systems</span>
+              Профессиональная <br />
+              <span className="text-emerald-700">экспертиза на поле</span>
             </h1>
 
             <p className="text-gray-600 text-base sm:text-lg max-w-lg leading-relaxed">
-              The status of professional agricultural regulation, fox genetics and farm chemistry management.
+              Единый цифровой инструмент для точного подбора регламентов защиты растений и оперативной аттестации продуктовых знаний команды.
             </p>
 
             <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <Link href="/agro-helper">
                 <button className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-base px-8 py-3.5 rounded-full transition-all shadow-md flex items-center justify-center gap-2 group">
-                  <span>АгроПомощник</span>
+                  <span>АгроПомощник ДФ</span>
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </Link>
@@ -78,7 +82,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Правая часть: векторная иллюстрация растений и почвенного среза как в референсе */}
+          {/* Правая часть: векторная иллюстрация растений и почвенного среза как в образце */}
           <div className="lg:col-span-6 relative flex justify-center lg:justify-end">
             <div className="w-full max-w-lg relative">
               {/* Облака на фоне */}
@@ -142,11 +146,11 @@ export default function Dashboard() {
                     <path d="M10 80 L2 75 L10 85 L18 75 Z" fill="#86efac" />
                   </g>
 
-                  {/* Почвенный срез (как в референсе) */}
+                  {/* Почвенный срез */}
                   <path d="M0 230 C120 210, 380 210, 500 230 L500 320 L0 320 Z" fill="#582f1d" />
                   <path d="M0 245 C130 230, 370 230, 500 245 L500 320 L0 320 Z" fill="#3d1c0b" />
                   
-                  {/* Текстура почвы (точки/комки) */}
+                  {/* Текстура почвы */}
                   <circle cx="80" cy="260" r="4" fill="#78350f" opacity="0.6" />
                   <circle cx="120" cy="280" r="6" fill="#78350f" opacity="0.5" />
                   <circle cx="210" cy="265" r="5" fill="#78350f" opacity="0.7" />
@@ -162,7 +166,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* Быстрые карточки модулей снизу */}
+      {/* Карточки модулей снизу */}
       <section className="bg-gray-50 py-16 border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -212,9 +216,8 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
           <div>© Doctor Farmer. Все права защищены.</div>
           <div className="flex items-center space-x-6">
-            <span className="cursor-pointer hover:text-gray-900">Privacy</span>
-            <span className="cursor-pointer hover:text-gray-900">Terms</span>
-            <span className="cursor-pointer hover:text-gray-900">Contact</span>
+            <span className="cursor-pointer hover:text-gray-900">Политика конфиденциальности</span>
+            <span className="cursor-pointer hover:text-gray-900">Поддержка</span>
           </div>
         </div>
       </footer>
