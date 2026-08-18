@@ -43,7 +43,7 @@ type ReviewRecord = { answer: string | null; isCorrect: boolean };
 const HERO_IMAGE = "/manus-storage/doctor-farmer-hero_f547dfc1.jpg";
 const LAB_IMAGE = "/manus-storage/doctor-farmer-lab_b5f6314f.jpg";
 const RESULT_IMAGE = "/manus-storage/doctor-farmer-result_aa3b4871.jpg";
-const LOGO_IMAGE = "/manus-storage/doctor-farmer-symbol_e62fc728.png";
+const LOGO_IMAGE = "/manus-storage/doctor-farmer-mark_1fd4bf89.png";
 const PATTERN_IMAGE = "/manus-storage/doctor-farmer-pattern_4d62f1f2.jpg";
 
 const modeOrder: Mode[] = ["dv", "prep", "cult", "group", "norma", "situation"];

@@ -90,10 +90,8 @@ export default function AgroHelper() {
       <header className="border-b border-[#DDE6DD] bg-[#FFFDF8] sticky top-0 z-20 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 py-3 sm:h-16 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="relative w-9 h-9 rounded-xl bg-[#194F38] flex items-center justify-center text-white shadow-sm" aria-label="Doctor Farmer">
-              <span className="absolute w-5 h-1.5 rounded-full bg-white" />
-              <span className="absolute h-5 w-1.5 rounded-full bg-white" />
-              <span className="absolute w-1.5 h-1.5 rounded-full bg-[#D6B75B]" />
+            <div className="w-10 h-10 flex items-center justify-center" aria-label="Doctor Farmer">
+              <img src="/manus-storage/doctor-farmer-mark_1fd4bf89.png" alt="Doctor Farmer" className="w-10 h-10 object-contain" />
             </div>
             <div className="leading-none">
               <div className="font-mono text-[10px] font-bold tracking-[0.18em] text-[#194F38]">DOCTOR FARMER</div>
