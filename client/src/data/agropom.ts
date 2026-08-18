@@ -14,6 +14,8 @@ export const CROP_OPTIONS: CropOption[] = [
   { id: 'flax_classic', name: 'Лён масличный', category: 'масличные', technologies: ['Классическая'] },
   { id: 'sunflower_express', name: 'Подсолнечник — Экспресс', category: 'масличные', technologies: ['Express'] },
   { id: 'sunflower_clearfield', name: 'Подсолнечник — Система Clearfield', category: 'масличные', technologies: ['Clearfield'] },
+  { id: 'rapeseed', name: 'Рапс', category: 'масличные', technologies: ['Классическая'] },
+  { id: 'corn', name: 'Кукуруза', category: 'зерновые', technologies: ['Классическая'] },
   { id: 'fallow', name: 'Чистый пар (глифосат)', category: 'зерновые', technologies: ['Глифосат'] },
 ];
 
