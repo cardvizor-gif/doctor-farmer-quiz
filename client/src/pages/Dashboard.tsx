@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { ArrowRight, ShieldCheck, Award, BookOpen, Layers } from "lucide-react";
 
 const LOGO_IMAGE = "/manus-storage/doctor-farmer-mark_1fd4bf89.png";
-const ILLUSTRATION_IMAGE = "/manus-storage/8bc6dbd5-1270-4733-b922-88eb93484a1b_6292d44e.webp";
+const ILLUSTRATION_IMAGE = "/manus-storage/doctor-farmer-clean-bg_5968864e.png";
 
 export default function Dashboard() {
   return (
@@ -43,7 +43,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Hero-секция с адаптированной иллюстрацией в тонах теста */}
+      {/* Hero-секция с очищенной иллюстрацией без бирюзового фона */}
       <section className="relative overflow-hidden pt-12 pb-20 md:pt-16 md:pb-24 flex-1 flex items-center max-w-7xl mx-auto px-6 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center w-full">
           
@@ -79,11 +79,10 @@ export default function Dashboard() {
 
           <div className="lg:col-span-6 relative flex justify-center lg:justify-end">
             <div className="w-full max-w-xl relative p-3 bg-white rounded-3xl border border-[#dde5dc] shadow-xl">
-              {/* Иллюстрация с фильтром синергии под тона теста */}
               <img 
                 src={ILLUSTRATION_IMAGE} 
                 alt="Agronomic Style Illustration" 
-                className="w-full h-auto rounded-2xl object-cover shadow-inner contrast-[1.05] brightness-[1.02]"
+                className="w-full h-auto rounded-2xl object-cover shadow-inner"
               />
             </div>
           </div>
