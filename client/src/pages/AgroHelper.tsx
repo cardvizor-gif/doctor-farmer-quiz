@@ -22,28 +22,26 @@ export default function AgroHelper() {
     s => s.cropId === selectedCrop?.id && (s.technology === selectedTech || s.technology === 'Классическая')
   ) ?? PROTECTION_SCHEMES.find(s => s.cropId === selectedCrop?.id);
 
-  // Строгая проверка регистрации и правил для зерновых (только 2-3 компонента против двудольных, без Сикурса)
+  // Строгая фильтрация замен: гербициды против двудольных меняются только на двудольные, граминициды — только на злаковые
   const getRegisteredAlternatives = (requiredGroup: string): PriceItem[] => {
     if (!selectedCrop) return [];
     const cropName = selectedCrop.name.toLowerCase();
     const isCereals = cropName.includes('пшениц') || cropName.includes('ячмен') || cropName.includes('овес');
 
     return PRICE_CATALOG.filter(item => {
-      // 1. Совпадение функциональной группы
+      // 1. Точное совпадение подгруппы (никаких смешиваний двудольных и злаковых)
       if (item.group !== requiredGroup) {
-        if (!(requiredGroup.includes('Гербицид') && item.group.includes('Гербицид'))) {
-          return false;
-        }
+        return false;
       }
 
-      // 2. Проверка регистрации на культуру
+      // 2. Проверка регистрации на культуру в прайсе
       const isRegistered = item.cultures.some(c => {
         const itemCulture = c.toLowerCase();
         return cropName.includes(itemCulture) || itemCulture.includes(cropName.split(' ')[0]);
       });
       if (!isRegistered) return false;
 
-      // 3. Правила для зерновых противодвудольных: только 2-3 компонента, без Сикурса и монопрепаратов (кроме бинарных упаковок)
+      // 3. Правила для зерновых противодвудольных: только 2-3 компонента, без Сикурса и монопрепаратов
       if (isCereals && requiredGroup === 'Гербицид (двудольные)') {
         if (item.name === 'Сикурс, ВР') return false;
         if (item.componentsCount && item.componentsCount < 2) return false;
@@ -80,7 +78,7 @@ export default function AgroHelper() {
             </div>
             <div>
               <h1 className="font-bold text-base sm:text-lg tracking-tight text-[#1B4D3E] leading-tight">АгроПомощник ДФ</h1>
-              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Схемы защиты с разделением двудольных и злаковых</p>
+              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Схемы защиты с точным расчетом литров и канистр</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 w-full sm:w-auto">
@@ -235,7 +233,7 @@ export default function AgroHelper() {
                 />
               </div>
               <p className="text-[11px] text-gray-500">
-                Автоматический пересчёт литража или канистр на заданную площадь поля.
+                Автоматический расчёт литража для жидких препаратов и канистр для бинарных упаковок.
               </p>
             </CardContent>
           </Card>
@@ -309,22 +307,24 @@ export default function AgroHelper() {
                               // Получаем строго отфильтрованные альтернативы для замен внутри той же группы
                               const alternatives = getRegisteredAlternatives(activeProd.group);
 
-                              // Расчет фасовки
-                              const isCanister = activeProd.name.includes('КлопЭфир') || activeProd.name.includes('Триатлон') || activeProd.name.includes('Биогем') || activeProd.name.includes('Магнум') || activeProd.rate.includes('га');
-                              let canisterCoverage = 12;
-                              if (activeProd.name.includes('Интенсив')) canisterCoverage = 14;
-                              else if (activeProd.name.includes('Микс') || activeProd.name.includes('Триатлон Плюс') || activeProd.name.includes('Биогем Макс')) canisterCoverage = 11;
-                              else if (activeProd.name.includes('Триатлон Экстра') || activeProd.name.includes('Магнум Твин')) canisterCoverage = 12;
-
+                              // Точный расчет расхода в зависимости от типа нормы (литры на га или канистры на га)
+                              const isCanister = activeProd.name.includes('КлопЭфир') || activeProd.name.includes('Триатлон') || activeProd.name.includes('Биогем') || activeProd.name.includes('Магнум Твин');
+                              
                               let calculatedDisplay = "";
                               if (isCanister) {
+                                let canisterCoverage = 12;
+                                if (activeProd.name.includes('Интенсив')) canisterCoverage = 14;
+                                else if (activeProd.name.includes('Микс') || activeProd.name.includes('Триатлон Плюс') || activeProd.name.includes('Биогем Макс')) canisterCoverage = 11;
+                                else if (activeProd.name.includes('Триатлон Экстра') || activeProd.name.includes('Магнум Твин')) canisterCoverage = 12;
+                                
                                 const totalCanisters = Math.ceil(fieldArea / canisterCoverage);
                                 calculatedDisplay = `${totalCanisters} канистр(-ы) (на ${fieldArea} га при норме 1 кан. на ${canisterCoverage} га)`;
                               } else {
+                                // Обычный расчет литров по норме л/га
                                 const rateVal = parseRateValue(activeProd.rate);
                                 if (rateVal > 0 && !activeProd.rate.includes('т')) {
                                   const totalVol = (rateVal * fieldArea).toFixed(1);
-                                  calculatedDisplay = `${totalVol} л (при норме ${activeProd.rate})`;
+                                  calculatedDisplay = `${totalVol} л (при норме ${activeProd.rate} л/га)`;
                                 } else {
                                   calculatedDisplay = activeProd.rate;
                                 }
@@ -360,7 +360,7 @@ export default function AgroHelper() {
                                     </div>
                                   </div>
 
-                                  {/* Замена препарата строго внутри своей группы */}
+                                  {/* Замена препарата строго внутри своей подгруппы без смешивания двудольных и злаковых */}
                                   {alternatives.length > 1 && (
                                     <div className="pt-2 border-t border-gray-200/60 space-y-1.5">
                                       <span className="text-[11px] text-gray-500 block italic">
