@@ -13,7 +13,7 @@ export default function Dashboard() {
           {/* Логотип и название компании */}
           <div className="flex items-center gap-3">
             <img 
-              src="/manus-storage/Screenshot_1_35b5a2ee.png" 
+              src="/manus-storage/Screenshot_1_c8d1047c.png" 
               alt="Doctor Farmer" 
               className="w-10 h-10 object-contain" 
             />
