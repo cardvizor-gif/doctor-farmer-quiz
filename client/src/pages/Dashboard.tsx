@@ -25,7 +25,7 @@ export default function Dashboard() {
               <span className="cursor-pointer hover:text-[#d5a642] transition-colors">АгроПомощник</span>
             </Link>
             <Link href="/quiz">
-              <span className="cursor-pointer hover:text-[#d5a642] transition-colors">Тест на знание прайса</span>
+              <span className="cursor-pointer hover:text-[#d5a642] transition-colors">Тест</span>
             </Link>
           </nav>
 
@@ -71,7 +71,7 @@ export default function Dashboard() {
               <Link href="/quiz">
                 <button className="bg-white hover:bg-[#e8efe5] text-[#194f38] font-bold text-sm px-8 py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 border border-[#dde5dc] shadow-xs">
                   <Award className="w-4 h-4 text-[#d5a642]" />
-                  <span>Тест на знание прайса</span>
+                  <span>Тест</span>
                 </button>
               </Link>
             </div>
@@ -119,7 +119,7 @@ export default function Dashboard() {
                   <div className="w-12 h-12 rounded-xl bg-[#e8efe5] flex items-center justify-center text-[#2e7d52] mb-6 group-hover:scale-105 transition-transform border border-[#dde5dc]">
                     <BookOpen className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#12352a] mb-2">Тест на знание прайса</h3>
+                  <h3 className="text-xl font-bold text-[#12352a] mb-2">Тест</h3>
                   <p className="text-[#6f7a73] text-sm leading-relaxed mb-6 font-medium">
                     Проверка продуктовой экспертизы сотрудников с фиксированным таймером, звуковым оповещением и детальным разбором ошибок.
                   </p>
