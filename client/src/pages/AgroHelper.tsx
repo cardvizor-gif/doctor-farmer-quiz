@@ -1,11 +1,32 @@
 import React, { useState } from "react";
-import { CROP_OPTIONS, CropOption, PROBLEM_CATEGORIES } from "@/data/agropom";
+import { CROP_OPTIONS, CropOption } from "@/data/agropom";
 import { PROTECTION_SCHEMES, CropProtectionScheme } from "@/data/protectionSchemes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowLeft, CheckCircle2, ShieldCheck, Layers, Droplet, Filter, Calculator, Download } from "lucide-react";
+import { Search, ArrowLeft, CheckCircle2, ShieldCheck, Layers, Droplet, Filter, Calculator, Download, RefreshCw } from "lucide-react";
 import { Link } from "wouter";
+
+interface HerbicideOption {
+  id: string;
+  name: string;
+  rate: string;
+  dv: string;
+  group: string;
+  canisterCoverage: number; // га на канистру
+}
+
+const ALTERNATIVE_HERBICIDES: Record<string, HerbicideOption[]> = {
+  wheat_winter: [
+    { id: 'klop_int', name: 'КлопЭфир Интенсив', rate: '14 га / канистра', dv: '2,4-Д 410 + клопиралид 40 г/л + флорасулам 150 г/л', group: 'Гербицид', canisterCoverage: 14 },
+    { id: 'taypan', name: 'Тайпан, КЭ', rate: '0,3 л/га', dv: 'Феноксапроп-П-этил 90 + клодинафоп 90 г/л', group: 'Гербицид (злак)', canisterCoverage: 0 },
+    { id: 'orell', name: 'Орель, ВР', rate: '0,5 л/га', dv: 'Имазамокс 40 г/л', group: 'Гербицид', canisterCoverage: 0 }
+  ],
+  wheat_spring: [
+    { id: 'klop_int', name: 'КлопЭфир Интенсив', rate: '14 га / канистра', dv: '2,4-Д 410 + клопиралид 40 г/л + флорасулам 150 г/л', group: 'Гербицид', canisterCoverage: 14 },
+    { id: 'taypan', name: 'Тайпан, КЭ', rate: '0,3 л/га', dv: 'Феноксапроп-П-этил 90 + клодинафоп 90 г/л', group: 'Гербицид (злак)', canisterCoverage: 0 }
+  ]
+};
 
 export default function AgroHelper() {
   const [selectedCrop, setSelectedCrop] = useState<CropOption | null>(CROP_OPTIONS[0]);
@@ -13,43 +34,40 @@ export default function AgroHelper() {
   const [selectedProblemCategory, setSelectedProblemCategory] = useState<string>("all");
   const [fieldArea, setFieldArea] = useState<number>(100); // га
 
+  // Состояние пользовательских замен препаратов (ключ: cropId-stepIndex, значение: выбранный препарат)
+  const [customHerbicides, setCustomHerbicides] = useState<Record<string, { name: string; rate: string; dv: string; group: string; canisterCoverage?: number }>>({});
+  
+  // Состояние фильтрации по сорнякам и фазам
+  const [weedType, setWeedType] = useState<string>("all");
+  const [weedPhase, setWeedPhase] = useState<string>("all");
+
   // Найти подходящую схему защиты
   const currentScheme: CropProtectionScheme | undefined = PROTECTION_SCHEMES.find(
     s => s.cropId === selectedCrop?.id && (s.technology === selectedTech || s.technology === 'Классическая')
   ) ?? PROTECTION_SCHEMES.find(s => s.cropId === selectedCrop?.id);
 
-  // Фильтрация этапов/шагов по выбранной категории проблем (если задана)
-  const filteredSteps = currentScheme?.steps.filter(step => {
-    if (selectedProblemCategory === "all") return true;
-    const taskLower = step.task.toLowerCase();
-    const stageLower = step.stage.toLowerCase();
-    const productsText = step.products.map(p => `${p.name} ${p.group} ${p.dv}`).join(" ").toLowerCase();
-    const combined = `${taskLower} ${stageLower} ${productsText}`;
-
-    if (selectedProblemCategory === "weeds") {
-      return combined.includes("гербицид") || combined.includes("сорняк") || combined.includes("глифосат") || combined.includes("злак");
-    }
-    if (selectedProblemCategory === "diseases") {
-      return combined.includes("фунгицид") || combined.includes("протравит") || combined.includes("болезн") || combined.includes("гниль") || combined.includes("склеротин");
-    }
-    if (selectedProblemCategory === "pests") {
-      return combined.includes("инсектицид") || combined.includes("вредител") || combined.includes("насеком");
-    }
-    if (selectedProblemCategory === "nutrition") {
-      return combined.includes("удобрени") || combined.includes("питани") || combined.includes("антистресс") || combined.includes("аминокислот");
-    }
-    return true;
-  });
-
-  // Функция экспорта в PDF (печатная форма браузера)
+  // Функция экспорта в PDF
   const handleExportPDF = () => {
     window.print();
   };
 
-  // Функция помощи в парсинге нормы (например, "0,5 л/га" -> число 0.5)
+  // Парсинг нормы
   const parseRateValue = (rateStr: string): number => {
     const match = rateStr.replace(',', '.').match(/([\d\.]+)/);
     return match ? parseFloat(match[1]) : 0;
+  };
+
+  const handleSelectHerbicide = (stepKey: string, herb: HerbicideOption) => {
+    setCustomHerbicides(prev => ({
+      ...prev,
+      [stepKey]: {
+        name: herb.name,
+        rate: herb.rate,
+        dv: herb.dv,
+        group: herb.group,
+        canisterCoverage: herb.canisterCoverage
+      }
+    }));
   };
 
   return (
@@ -63,7 +81,7 @@ export default function AgroHelper() {
             </div>
             <div>
               <h1 className="font-bold text-base sm:text-lg tracking-tight text-[#1B4D3E] leading-tight">АгроПомощник ДФ</h1>
-              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Готовые схемы защиты, фильтрация и калькулятор полей</p>
+              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Схемы защиты, выбор гербицидов и расчет канистр</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 w-full sm:w-auto">
@@ -79,7 +97,7 @@ export default function AgroHelper() {
       {/* Основной контент */}
       <main className="max-w-6xl mx-auto px-4 py-4 sm:py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
         
-        {/* Левая колонка: выбор культуры, фильтры и калькулятор площади */}
+        {/* Левая колонка */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-[#E2E8DF] shadow-xs bg-white">
             <CardHeader className="p-4 sm:p-6 pb-3">
@@ -96,6 +114,7 @@ export default function AgroHelper() {
                   if (crop) {
                     setSelectedCrop(crop);
                     setSelectedTech(crop.technologies[0]);
+                    setCustomHerbicides({});
                   }
                 }}
                 className="sm:hidden w-full rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm text-gray-800 focus:outline-none focus:border-[#1B4D3E]"
@@ -103,13 +122,14 @@ export default function AgroHelper() {
               >
                 {CROP_OPTIONS.map((crop) => <option key={crop.id} value={crop.id}>{crop.name}</option>)}
               </select>
-              <div className="hidden sm:grid grid-cols-1 gap-1.5 max-h-72 overflow-y-auto pr-1">
+              <div className="hidden sm:grid grid-cols-1 gap-1.5 max-h-64 overflow-y-auto pr-1">
                 {CROP_OPTIONS.map((crop) => (
                   <button
                     key={crop.id}
                     onClick={() => {
                       setSelectedCrop(crop);
                       setSelectedTech(crop.technologies[0]);
+                      setCustomHerbicides({});
                     }}
                     className={`text-left text-xs p-2.5 rounded-lg border transition-all ${
                       selectedCrop?.id === crop.id
@@ -145,54 +165,40 @@ export default function AgroHelper() {
             </CardContent>
           </Card>
 
-          {/* Фильтрация по вредным объектам */}
+          {/* Интерактивный подбор сорняков и фазы */}
           <Card className="border-[#E2E8DF] shadow-xs bg-white">
             <CardHeader className="p-4 sm:p-6 pb-3">
               <CardTitle className="text-base font-semibold text-[#1B4D3E] flex items-center gap-2">
-                <Filter className="w-4 h-4 text-emerald-600" /> Фильтр по задачам
+                <Filter className="w-4 h-4 text-emerald-600" /> Условия засорённости
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-2">
-              <button
-                onClick={() => setSelectedProblemCategory("all")}
-                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
-                  selectedProblemCategory === "all" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                }`}
-              >
-                Все задачи и этапы
-              </button>
-              <button
-                onClick={() => setSelectedProblemCategory("weeds")}
-                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
-                  selectedProblemCategory === "weeds" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                }`}
-              >
-                🌾 Сорняки (гербициды)
-              </button>
-              <button
-                onClick={() => setSelectedProblemCategory("diseases")}
-                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
-                  selectedProblemCategory === "diseases" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                }`}
-              >
-                🛡️ Болезни и протравливание
-              </button>
-              <button
-                onClick={() => setSelectedProblemCategory("pests")}
-                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
-                  selectedProblemCategory === "pests" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                }`}
-              >
-                🐛 Вредители (инсектициды)
-              </button>
-              <button
-                onClick={() => setSelectedProblemCategory("nutrition")}
-                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
-                  selectedProblemCategory === "nutrition" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                }`}
-              >
-                ⚡ Питание и антистресс
-              </button>
+            <CardContent className="p-4 sm:p-6 space-y-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600 block mb-1">Спектр сорняков на поле:</label>
+                <select
+                  value={weedType}
+                  onChange={(e) => setWeedType(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-[#1B4D3E]"
+                >
+                  <option value="all">Все типы (двудольные + злаковые)</option>
+                  <option value="dicot">Преимущественно двудольные (осот, марь, подмаренник)</option>
+                  <option value="grass">Злаковые сорняки (пырей, куриное просо)</option>
+                  <option value="mixed">Смешанный тип засорённости</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-gray-600 block mb-1">Фаза развития сорняков:</label>
+                <select
+                  value={weedPhase}
+                  onChange={(e) => setWeedPhase(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-[#1B4D3E]"
+                >
+                  <option value="all">Любая фаза (стандарт)</option>
+                  <option value="early">Ранняя фаза (2–4 листа, розетка)</option>
+                  <option value="overgrown">Переросшие / сложные многолетники</option>
+                </select>
+              </div>
             </CardContent>
           </Card>
 
@@ -216,7 +222,7 @@ export default function AgroHelper() {
                 />
               </div>
               <p className="text-[11px] text-gray-500">
-                Калькулятор автоматически пересчитает суммарный расход препаратов для выбранной площади.
+                Для препаратов с фасовкой в канистрах (например, КлопЭфир Интенсив на 14 га) калькулятор покажет точное количество необходимых канистр.
               </p>
             </CardContent>
           </Card>
@@ -246,78 +252,130 @@ export default function AgroHelper() {
                 </div>
               </div>
               <p className="text-xs sm:text-sm text-gray-600 mt-2">
-                {currentScheme?.description}
+                {currentScheme?.description} {weedType !== 'all' && <span className="text-emerald-700 font-medium">(фильтр по условиям активен)</span>}
               </p>
             </CardHeader>
 
             <CardContent className="p-4 sm:p-6 flex-1 space-y-6">
-              {!currentScheme || !filteredSteps || filteredSteps.length === 0 ? (
+              {!currentScheme || !currentScheme.steps || currentScheme.steps.length === 0 ? (
                 <div className="text-center py-16 text-gray-400">
                   <ShieldCheck className="w-12 h-12 mx-auto mb-3 opacity-40" />
-                  <p className="text-sm">Для выбранной культуры и задачи этапы защиты не найдены.</p>
+                  <p className="text-sm">Для выбранной культуры этапы защиты не найдены.</p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   <div className="space-y-4">
-                    {filteredSteps.map((step, sIdx) => (
-                      <div key={sIdx} className="border border-gray-200/80 rounded-xl p-4 sm:p-5 bg-white shadow-xs hover:border-[#1B4D3E]/30 transition-all">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3 pb-2 border-b border-gray-100">
-                          <h3 className="font-semibold text-sm sm:text-base text-[#1B4D3E] flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs flex items-center justify-center font-bold">
-                              {sIdx + 1}
+                    {currentScheme.steps.map((step, sIdx) => {
+                      const stepKey = `${selectedCrop?.id}-${sIdx}`;
+
+                      return (
+                        <div key={sIdx} className="border border-gray-200/80 rounded-xl p-4 sm:p-5 bg-white shadow-xs hover:border-[#1B4D3E]/30 transition-all">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3 pb-2 border-b border-gray-100">
+                            <h3 className="font-semibold text-sm sm:text-base text-[#1B4D3E] flex items-center gap-2">
+                              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs flex items-center justify-center font-bold">
+                                {sIdx + 1}
+                              </span>
+                              {step.stage}
+                            </h3>
+                            <span className="text-xs text-gray-500 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">
+                              {step.task}
                             </span>
-                            {step.stage}
-                          </h3>
-                          <span className="text-xs text-gray-500 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">
-                            {step.task}
-                          </span>
-                        </div>
+                          </div>
 
-                        {/* Список препаратов в этапе */}
-                        <div className="space-y-2.5 mt-3">
-                          {step.products.map((prod, pIdx) => {
-                            const rateVal = parseRateValue(prod.rate);
-                            const totalVolume = rateVal > 0 ? (rateVal * fieldArea).toFixed(1) : null;
-                            const isTons = prod.rate.includes('т');
+                          {/* Список препаратов в этапе */}
+                          <div className="space-y-3 mt-3">
+                            {step.products.map((prod, pIdx) => {
+                              // Проверим, не заменен ли этот препарат пользователем
+                              const isHerbicide = prod.name.includes('КлопЭфир') || prod.group.includes('Гербицид');
+                              const activeProd = (isHerbicide && customHerbicides[stepKey]) ? customHerbicides[stepKey] : prod;
 
-                            return (
-                              <div key={pIdx} className="bg-[#F9FBF8] border border-gray-200/60 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-bold text-sm text-gray-900">{prod.name}</span>
-                                    <Badge variant="outline" className="text-[10px] bg-white text-emerald-800 border-emerald-200">
-                                      {prod.group}
-                                    </Badge>
+                              // Расчет для КлопЭфир (1 канистра на 14 га в среднем)
+                              const isCanisterUnit = activeProd.name.includes('КлопЭфир') || activeProd.rate.includes('канистра') || activeProd.rate.includes('га');
+                              const canisterCoverage = ('canisterCoverage' in activeProd ? activeProd.canisterCoverage : undefined) ?? (activeProd.name.includes('КлопЭфир') ? 14 : 0);
+
+                              let calculatedDisplay = "";
+                              if (isCanisterUnit && canisterCoverage > 0) {
+                                const totalCanisters = Math.ceil(fieldArea / canisterCoverage);
+                                calculatedDisplay = `${totalCanisters} канистр(-ы) (на ${fieldArea} га при норме 1 кан. на ${canisterCoverage} га)`;
+                              } else {
+                                const rateVal = parseRateValue(activeProd.rate);
+                                if (rateVal > 0 && !activeProd.rate.includes('т')) {
+                                  const totalVol = (rateVal * fieldArea).toFixed(1);
+                                  calculatedDisplay = `${totalVol} л (при норме ${activeProd.rate})`;
+                                } else {
+                                  calculatedDisplay = activeProd.rate;
+                                }
+                              }
+
+                              return (
+                                <div key={pIdx} className="bg-[#F9FBF8] border border-gray-200/60 rounded-lg p-3.5 space-y-3">
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div className="space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-bold text-sm text-gray-900">{activeProd.name}</span>
+                                        <Badge variant="outline" className="text-[10px] bg-white text-emerald-800 border-emerald-200">
+                                          {activeProd.group}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-xs text-gray-600">
+                                        <b>ДВ:</b> {activeProd.dv}
+                                      </p>
+                                    </div>
+
+                                    <div className="flex items-sm sm:items-end justify-between sm:justify-end gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                                      <div className="text-left sm:text-right">
+                                        <div className="text-xs text-gray-500">Базовая норма / фасовка</div>
+                                        <div className="font-bold text-sm text-[#1B4D3E]">{activeProd.rate}</div>
+                                      </div>
+                                      <div className="text-left sm:text-right bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-100">
+                                        <div className="text-[10px] text-emerald-700 font-medium">Расход на {fieldArea} га</div>
+                                        <div className="font-bold text-xs sm:text-sm text-emerald-900">{calculatedDisplay}</div>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <p className="text-xs text-gray-600">
-                                    <b>ДВ:</b> {prod.dv}
-                                  </p>
-                                </div>
-                                <div className="flex items-sm sm:items-end justify-between sm:justify-end gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                                  <div className="text-left sm:text-right">
-                                    <div className="text-xs text-gray-500">Норма применения</div>
-                                    <div className="font-bold text-sm text-[#1B4D3E]">{prod.rate}</div>
-                                  </div>
-                                  {totalVolume && !isTons && (
-                                    <div className="text-left sm:text-right bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-100">
-                                      <div className="text-[10px] text-emerald-700 font-medium">На {fieldArea} га</div>
-                                      <div className="font-bold text-sm text-emerald-900">{totalVolume} л</div>
+
+                                  {/* Кнопка смены гербицида под условия поля */}
+                                  {isHerbicide && selectedCrop && (
+                                    <div className="pt-2 border-t border-gray-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                      <span className="text-[11px] text-gray-500 italic">
+                                        💡 Сорняки или фаза отличаются? Вы можете заменить гербицид под условия поля:
+                                      </span>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        <button
+                                          onClick={() => handleSelectHerbicide(stepKey, { id: 'klop_int', name: 'КлопЭфир Интенсив', rate: '14 га / канистра', dv: '2,4-Д + клопиралид + флорасулам', group: 'Гербицид', canisterCoverage: 14 })}
+                                          className={`text-[11px] px-2.5 py-1 rounded border transition-all ${activeProd.name.includes('КлопЭфир') ? 'bg-[#1B4D3E] text-white border-[#1B4D3E]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                                        >
+                                          КлопЭфир Интенсив (14 га/кан)
+                                        </button>
+                                        <button
+                                          onClick={() => handleSelectHerbicide(stepKey, { id: 'taypan', name: 'Тайпан, КЭ', rate: '0,3 л/га', dv: 'Феноксапроп-П-этил + клодинафоп', group: 'Гербицид (злак)', canisterCoverage: 0 })}
+                                          className={`text-[11px] px-2.5 py-1 rounded border transition-all ${activeProd.name.includes('Тайпан') ? 'bg-[#1B4D3E] text-white border-[#1B4D3E]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                                        >
+                                          Тайпан (против злаков)
+                                        </button>
+                                        <button
+                                          onClick={() => handleSelectHerbicide(stepKey, { id: 'orell', name: 'Орель, ВР', rate: '0,5 л/га', dv: 'Имазамокс 40 г/л', group: 'Гербицид', canisterCoverage: 0 })}
+                                          className={`text-[11px] px-2.5 py-1 rounded border transition-all ${activeProd.name.includes('Орель') ? 'bg-[#1B4D3E] text-white border-[#1B4D3E]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                                        >
+                                          Орель (имазамокс)
+                                        </button>
+                                      </div>
                                     </div>
                                   )}
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {step.tankMixNote && (
-                          <div className="mt-3 text-xs text-blue-800 bg-blue-50 p-2.5 rounded-lg border border-blue-100 flex items-start sm:items-center gap-2">
-                            <Droplet className="w-4 h-4 text-blue-600 shrink-0" />
-                            <span>{step.tankMixNote}</span>
+                              );
+                            })}
                           </div>
-                        )}
-                      </div>
-                    ))}
+
+                          {step.tankMixNote && (
+                            <div className="mt-3 text-xs text-blue-800 bg-blue-50 p-2.5 rounded-lg border border-blue-100 flex items-start sm:items-center gap-2">
+                              <Droplet className="w-4 h-4 text-blue-600 shrink-0" />
+                              <span>{step.tankMixNote}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
