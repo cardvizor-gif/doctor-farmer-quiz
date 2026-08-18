@@ -27,13 +27,13 @@ export default function AgroHelper() {
             </div>
             <div>
               <h1 className="font-bold text-base sm:text-lg tracking-tight text-[#1B4D3E] leading-tight">АгроПомощник ДФ</h1>
-              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Готовые схемы защиты и точные нормы из прайса</p>
+              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Готовые схемы защиты и нормы применения</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 w-full sm:w-auto">
             <Link href="/" className="w-full sm:w-auto">
               <Button variant="outline" size="sm" className="w-full sm:w-auto border-[#1B4D3E] text-[#1B4D3E] hover:bg-[#1B4D3E]/10">
-                <ArrowLeft className="w-4 h-4 mr-1.5" /> К тесту прайса
+                <ArrowLeft className="w-4 h-4 mr-1.5" /> К тесту
               </Button>
             </Link>
           </div>
@@ -135,8 +135,8 @@ export default function AgroHelper() {
               {!currentScheme ? (
                 <div className="text-center py-24 my-auto text-gray-500 space-y-2">
                   <Search className="w-12 h-12 mx-auto text-gray-300 stroke-1" />
-                  <p className="font-medium text-sm">Для выбранной культуры схема формируется в базовом каталоге прайса.</p>
-                  <p className="text-xs text-gray-400">Выберите озимую пшеницу, подсолнечник Clearfield/Express или рапс для просмотра детальной схемы.</p>
+                  <p className="font-medium text-sm">Для выбранной культуры готовая схема пока не добавлена.</p>
+                  <p className="text-xs text-gray-400">Выберите другую культуру, чтобы открыть доступную схему защиты.</p>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -176,7 +176,7 @@ export default function AgroHelper() {
                                 {prod.note && <p className="text-xs text-amber-700 mt-0.5 font-medium">{prod.note}</p>}
                               </div>
                               <div className="text-right shrink-0 bg-white px-3 py-2 rounded-lg border border-gray-200">
-                                <span className="text-[10px] text-gray-400 block">Норма из прайса</span>
+                                <span className="text-[10px] text-gray-400 block">Норма применения</span>
                                 <span className="font-bold text-sm text-[#1B4D3E]">{prod.rate}</span>
                               </div>
                             </div>
@@ -202,7 +202,7 @@ export default function AgroHelper() {
               )}
 
               <div className="mt-8 pt-4 border-t border-gray-100 text-center text-xs text-gray-400">
-                АгроПомощник ДФ • Готовые схемы защиты с точными нормами
+                АгроПомощник ДФ • Готовые схемы защиты и нормы применения
               </div>
             </CardContent>
           </Card>
