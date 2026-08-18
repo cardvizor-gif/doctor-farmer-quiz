@@ -1,4 +1,3 @@
-/* Doctor Farmer Quiz — Corporate Modern Agro: editorial agriculture imagery, forest-green hierarchy, asymmetric test workspace. */
 import { useState, useEffect, useRef, useTransition, useMemo } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -59,41 +58,47 @@ function addStat(stats: Stats, type: string, label: string, correct: boolean): S
   return next;
 }
 
-const SECONDS_PER_QUESTION = 20;
-const FIXED_TIME_SECONDS: Record<number, number> = { 20: 7 * 60, 30: 10 * 60, 50: 17 * 60, 100: 34 * 60 };
-
-function formatDuration(seconds: number) {
-  return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins === 0) return `${secs} сек`;
+  if (secs === 0) return `${mins} мин`;
+  return `${mins} мин ${secs} сек`;
 }
 
-function getCorrectAnswer(question: Question) {
-  if (question.kind === "choice") return question.correct;
-  return question.items.map((item) => `${item.name} → ${item.dv}`).join("; ");
+function getTimeLimitSeconds(questionCountNumber: number, selectedModesCount: number): number {
+  if (questionCountNumber <= 20) return 600; // 10 минут
+  if (questionCountNumber <= 30) return 900; // 15 минут
+  if (questionCountNumber <= 50) return 1500; // 25 минут
+  if (questionCountNumber <= 100) return 3000; // 50 минут
+  return questionCountNumber * 20; // 20 сек на вопрос
 }
 
-function getMatchAnswer(question: Extract<Question, { kind: "match" }>) {
-  return question.items.map((item) => `${item.name} → ${item.dv}`).join("; ");
-}
-
-function getTimeLimitSeconds(questionCount: number, selectedLength: number) {
-  return questionCount >= 999 ? selectedLength * SECONDS_PER_QUESTION : FIXED_TIME_SECONDS[questionCount] ?? questionCount * SECONDS_PER_QUESTION;
-}
-
-function ButtonArrow({ children, onClick, variant = "primary", type = "button", disabled = false }: { children: React.ReactNode; onClick?: () => void; variant?: "primary" | "quiet" | "outline"; type?: "button" | "submit"; disabled?: boolean }) {
+function ButtonArrow({ children, onClick, disabled = false }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={`action-button action-${variant} ${disabled ? "is-disabled" : ""}`}>
+    <button type="button" className={`action-button action-primary ${disabled ? "is-disabled" : ""}`} onClick={onClick} disabled={disabled}>
       <span>{children}</span>
-      <ArrowRight size={17} strokeWidth={2.4} />
+      <ArrowRight size={17} />
     </button>
   );
+}
+
+function getCorrectAnswer(question: Question): string {
+  if (question.kind === "choice") return question.correct;
+  return question.items.map(item => `${item.name} — ${item.dv}`).join("; ");
+}
+
+function getMatchAnswer(question: Question): string {
+  if (question.kind === "choice") return "";
+  return question.items.map(item => `${item.name} / ${item.dv}`).join(", ");
 }
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("start");
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState(false);
-  const [selectedModes, setSelectedModes] = useState<Mode[]>(DEFAULT_MODES);
-  const [questionCount, setQuestionCount] = useState("30");
+  const [selectedModes, setSelectedModes] = useState<Mode[]>([...modeOrder]);
+  const [questionCount, setQuestionCount] = useState<string>("30");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -159,11 +164,12 @@ export default function Home() {
     const generated = buildQuestions(selectedModes);
     const count = Number(questionCount);
     const selected = selectBalancedQuestions(generated, selectedModes, count);
+    const limit = getTimeLimitSeconds(selected.length, selectedModes.length);
     setQuestions(selected);
     setCurrentIndex(0);
     setScore(0);
-    setStats({});
     scoreRef.current = 0;
+    setStats({});
     statsRef.current = {};
     setStreak(0);
     setAnswered(false);
@@ -172,95 +178,70 @@ export default function Home() {
     setMatchedLeft([]);
     setMatchedRight([]);
     setWrongPair(null);
+    setTimeLimitSeconds(limit);
+    setTimerLeft(limit);
+    setTimeExpired(false);
+    setEmailStatus("idle");
+    setEmailMessage("");
     setAnswerRecords({});
     answerRecordsRef.current = {};
-    setTimeExpired(false);
-    const duration = getTimeLimitSeconds(count, selected.length);
-    setTimeLimitSeconds(duration);
-    setTimerLeft(duration);
-    setEmailStatus("idle");
     setScreen("quiz");
   }
 
-  function saveReviewRecord(question: Question, answer: string | null, isCorrect: boolean) {
-    const nextRecords = {
-      ...answerRecordsRef.current,
-      [question.id]: { answer, isCorrect },
-    };
-    answerRecordsRef.current = nextRecords;
-    setAnswerRecords(nextRecords);
-    return nextRecords;
+  function goStart() {
+    setScreen("start");
   }
 
-  function registerAnswer(isCorrect: boolean, question: Question, answer: string | null = null) {
-    const nextScore = score + (isCorrect ? 1 : 0);
-    const nextStats = addStat(stats, question.type, question.typeLabel, isCorrect);
-    const nextRecords = saveReviewRecord(question, answer, isCorrect);
-    setScore(nextScore);
-    setStats(nextStats);
-    scoreRef.current = nextScore;
-    statsRef.current = nextStats;
-    setStreak((value) => (isCorrect ? value + 1 : 0));
-    setAnswered(true);
-    if (currentIndex === questions.length - 1) {
-      finishQuiz(nextScore, nextStats, nextRecords);
+  function playSchoolBell() {
+    try {
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const context = new AudioContextClass();
+      const frequencies = [587.33, 880, 1174.66, 880, 587.33, 880];
+      frequencies.forEach((freq, index) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(freq, context.currentTime + index * 0.22);
+        gain.gain.setValueAtTime(0.001, context.currentTime + index * 0.22);
+        gain.gain.exponentialRampToValueAtTime(0.28, context.currentTime + index * 0.22 + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + index * 0.22 + 0.35);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(context.currentTime + index * 0.22);
+        oscillator.stop(context.currentTime + index * 0.22 + 0.4);
+      });
+      window.setTimeout(() => void context.close(), 2500);
+    } catch {
+      // Audio autoplay restrictions may apply
     }
-  }
-
-  function finishQuiz(finalScore: number, finalStats: Stats, finalRecords = answerRecordsRef.current) {
-    setScore(finalScore);
-    setStats(finalStats);
-    setAnswerRecords(finalRecords);
-    answerRecordsRef.current = finalRecords;
-    setScreen("result");
-    const percentage = formatScore(finalScore, questions.length);
-    const details = Object.values(finalStats)
-      .map((item) => `${item.label}: ${item.correct}/${item.total} (${Math.round((item.correct / item.total) * 100)}%)`)
-      .join("\n");
-    sendResult(percentage, details, finalScore);
-  }
-
-  function handleChoice(option: string) {
-    if (answered || !currentQuestion || currentQuestion.kind !== "choice") return;
-    setSelectedOption(option);
-    registerAnswer(option === currentQuestion.correct, currentQuestion, option);
   }
 
   function playTimeoutTone() {
     try {
-      const AudioContextClass = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!AudioContextClass) return;
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const context = new AudioContextClass();
-      void context.resume();
-      const now = context.currentTime;
-      const bellNotes = [
-        { frequency: 660, start: 0, duration: 0.72 },
-        { frequency: 880, start: 0.16, duration: 0.72 },
-        { frequency: 660, start: 0.58, duration: 0.72 },
-        { frequency: 880, start: 0.74, duration: 0.82 },
-      ];
-      bellNotes.forEach(({ frequency, start, duration }) => {
+      [300, 200, 150].forEach((freq, start) => {
         const oscillator = context.createOscillator();
         const overtone = context.createOscillator();
         const gain = context.createGain();
-        oscillator.type = "triangle";
-        overtone.type = "sine";
-        oscillator.frequency.value = frequency;
-        overtone.frequency.value = frequency * 2.01;
-        gain.gain.setValueAtTime(0.0001, now + start);
-        gain.gain.exponentialRampToValueAtTime(0.22, now + start + 0.035);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+        oscillator.type = "sawtooth";
+        overtone.type = "square";
+        oscillator.frequency.setValueAtTime(freq, context.currentTime + start * 0.18);
+        overtone.frequency.setValueAtTime(freq * 1.5, context.currentTime + start * 0.18);
+        gain.gain.setValueAtTime(0.001, context.currentTime + start * 0.18);
+        gain.gain.exponentialRampToValueAtTime(0.22, context.currentTime + start * 0.18 + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + start * 0.18 + 0.35);
         oscillator.connect(gain);
         overtone.connect(gain);
         gain.connect(context.destination);
-        oscillator.start(now + start);
-        overtone.start(now + start);
-        oscillator.stop(now + start + duration + 0.03);
-        overtone.stop(now + start + duration + 0.03);
+        oscillator.start(context.currentTime + start * 0.18);
+        overtone.start(context.currentTime + start * 0.18);
+        oscillator.stop(context.currentTime + start * 0.18 + 0.4);
+        overtone.stop(context.currentTime + start * 0.18 + 0.4);
       });
       window.setTimeout(() => void context.close(), 2200);
     } catch {
-      // Some browsers may block synthesized audio; the visual timeout state still works.
+      // Audio autoplay restrictions may apply
     }
   }
 
@@ -321,33 +302,54 @@ export default function Home() {
     startQuiz();
   }
 
-  function goStart() {
-    setScreen("start");
-    setTimeExpired(false);
-    setEmailStatus("idle");
-    setEmailMessage("");
+  function registerAnswer(correct: boolean, question: Question, givenAnswer: string) {
+    if (answered) return;
+    setAnswered(true);
+    const nextScore = score + (correct ? 1 : 0);
+    setScore(nextScore);
+    scoreRef.current = nextScore;
+    const nextStats = addStat(stats, question.type, question.typeLabel, correct);
+    setStats(nextStats);
+    statsRef.current = nextStats;
+    const nextStreak = correct ? streak + 1 : 0;
+    setStreak(nextStreak);
+
+    const record: ReviewRecord = { answer: givenAnswer, isCorrect: correct };
+    const nextRecords = { ...answerRecordsRef.current, [question.id]: record };
+    answerRecordsRef.current = nextRecords;
+    setAnswerRecords(nextRecords);
+
+    if (currentIndex === questions.length - 1) {
+      playSchoolBell();
+      window.setTimeout(() => finishQuiz(nextScore, nextStats), 900);
+    }
   }
 
-  function sendResult(percentage: number, details: string, finalScore: number) {
-    if (!EMAIL_CONFIG.publicKey || EMAIL_CONFIG.publicKey === "YOUR_PUBLIC_KEY") {
-      setEmailStatus("fail");
-      setEmailMessage("Результат сохранён на экране. Отправка почты пока не настроена.");
-      return;
-    }
+  function handleChoice(option: string) {
+    if (answered || !currentQuestion || currentQuestion.kind !== "choice") return;
+    setSelectedOption(option);
+    const isCorrect = option === currentQuestion.correct;
+    registerAnswer(isCorrect, currentQuestion, option);
+  }
+
+  function finishQuiz(finalScore: number, finalStats: Stats) {
+    playSchoolBell();
+    setScreen("result");
     setEmailStatus("sending");
-    const date = new Date().toLocaleString("ru-RU", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+
+    const percentage = formatScore(finalScore, questions.length);
     const resultMessage = percentage >= 90 ? "Мастер продуктовой карты" : percentage >= 75 ? "Сильный результат" : percentage >= 55 ? "Хороший старт" : "Время для практики";
-    emailjs
-      .send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, {
-        to_email: EMAIL_CONFIG.recipient,
-        employee: name.trim(),
-        date,
+    
+    const details = Object.entries(finalStats).map(([key, item]) => {
+      const rate = Math.round((item.correct / item.total) * 100);
+      return `${item.label}: ${item.correct}/${item.total} (${rate}%)`;
+    }).join("\n");
+
+    const recipients = `${EMAIL_CONFIG.recipient}, afanasev_mv@doctorfarmer.ru`;
+
+    emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, {
+        to_email: recipients,
+        employee_name: name,
         score: finalScore,
         total: questions.length,
         percent: percentage,
@@ -357,7 +359,7 @@ export default function Home() {
       }, EMAIL_CONFIG.publicKey)
       .then(() => {
         setEmailStatus("ok");
-        setEmailMessage(`Результат успешно отправлен на адреса руководителей (${EMAIL_CONFIG.recipient})`);
+        setEmailMessage(`Результат успешно отправлен руководителям (${recipients})`);
       })
       .catch(() => {
         setEmailStatus("fail");
@@ -374,12 +376,17 @@ export default function Home() {
             <div><span className="brand-name">DOCTOR FARMER</span><span className="brand-caption">knowledge lab / 2026</span></div>
           </div>
           <div className="flex items-center space-x-3">
-            <Link href="/agro-helper">
+            <Link href="/">
               <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
-                🌱 АгроПомощник ДФ
+                🏠 На главную
               </Button>
             </Link>
-            <div className="header-note"><ShieldCheck size={15} /> Внутренний тренинг команды</div>
+            <Link href="/agro-helper">
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
+                🌱 АгроПомощник
+              </Button>
+            </Link>
+            <div className="header-note hidden sm:flex"><ShieldCheck size={15} /> Тест прайса</div>
           </div>
         </header>
 
@@ -425,7 +432,23 @@ export default function Home() {
     const matchItems = currentQuestion.kind === "match" ? currentQuestion.items : [];
     return (
       <main className="site-shell quiz-shell">
-        <header className="quiz-topbar"><button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> Завершить сессию</button><div className="quiz-brand"><img src={LOGO_IMAGE} alt="Doctor Farmer" /><span><i>/ quiz lab</i></span></div><div className="quiz-score"><span>Счёт</span><strong>{score}</strong></div></header>
+        <header className="quiz-topbar">
+          <div className="flex items-center gap-3">
+            <button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> Настройки теста</button>
+            <Link href="/">
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
+                🏠 На главную
+              </Button>
+            </Link>
+            <Link href="/agro-helper">
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
+                🌱 АгроПомощник
+              </Button>
+            </Link>
+          </div>
+          <div className="quiz-brand"><img src={LOGO_IMAGE} alt="Doctor Farmer" /><span><i>/ quiz lab</i></span></div>
+          <div className="quiz-score"><span>Счёт</span><strong>{score}</strong></div>
+        </header>
         <div className="progress-meta"><span>Вопрос <strong>{currentIndex + 1}</strong> из {questions.length}</span><span>{percent}% пройдено</span></div><div className="progress-track"><div className="progress-value" style={{ width: `${Math.max(percent, 3)}%` }} /></div>
         <section className="quiz-layout">
           <div className={`question-panel ${answered ? "is-answered" : ""}`}>
@@ -449,7 +472,23 @@ export default function Home() {
   const resultSub = percentage >= 75 ? "Вы уверенно ориентируетесь в ключевых характеристиках препаратов." : "Повторите темы с наименьшим результатом и пройдите сессию ещё раз.";
   return (
     <main className="site-shell result-shell">
-      <header className="quiz-topbar"><button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> К настройкам</button><div className="quiz-brand"><img src={LOGO_IMAGE} alt="Doctor Farmer" /><span><i>/ result lab</i></span></div><div className="quiz-score"><span>Сотрудник</span><strong className="score-name">{name}</strong></div></header>
+      <header className="quiz-topbar">
+        <div className="flex items-center gap-3">
+          <button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> К настройкам</button>
+          <Link href="/">
+            <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
+              🏠 На главную
+            </Button>
+          </Link>
+          <Link href="/agro-helper">
+            <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
+              🌱 АгроПомощник
+            </Button>
+          </Link>
+        </div>
+        <div className="quiz-brand"><img src={LOGO_IMAGE} alt="Doctor Farmer" /><span><i>/ result lab</i></span></div>
+        <div className="quiz-score"><span>Сотрудник</span><strong className="score-name">{name}</strong></div>
+      </header>
       <section className="result-hero" style={{ backgroundImage: `url(${RESULT_IMAGE})` }}><div className="result-overlay" /><div className="result-content"><div className="eyebrow light"><span className="eyebrow-dot" /> session complete</div><div className="result-scoreline"><strong>{score}</strong><span>/ {questions.length}<small>правильных ответов</small></span></div><h1>{resultMessage}</h1><p>{resultSub}</p><div className={`email-state ${emailStatus}`}><Mail size={16} />{emailStatus === "sending" ? "Отправляем итог руководителю…" : emailMessage}</div></div><div className="result-badge"><Trophy size={20} /><span>{percentage}%<small>точность</small></span></div></section>
       <section className="result-body"><div className="result-section-heading"><div><div className="section-kicker">02 / your field report</div><h2>Разбор по темам</h2></div><span>{questions.length} вопросов · {selectedModes.length} тем</span></div><div className="result-grid"><div className="stats-list">{Object.entries(stats).map(([key, item]) => { const rate = Math.round((item.correct / item.total) * 100); const meta = MODE_META[key as Mode] ?? MODE_META.dv; return <div className="stat-row" key={key}><div className="stat-title"><span className="stat-icon" style={{ color: meta.color, background: meta.tint }}>{meta.icon}</span><span>{item.label}</span><strong>{item.correct}/{item.total}</strong></div><div className="stat-track"><div style={{ width: `${rate}%`, background: meta.color }} /></div></div>; })}</div><aside className="result-next"><div className="section-kicker">следующий шаг</div><h3>Закрепите результат<br /><em>в следующем поле.</em></h3><p>Повторите только те разделы, где точность ниже 75%.</p><div className="result-actions"><button type="button" className="action-button action-primary" onClick={restartQuiz}><span>Пройти ещё раз</span><RotateCcw size={17} /></button><button type="button" className="action-button action-outline" onClick={goStart}><span>Изменить темы</span><ChevronRight size={17} /></button></div></aside></div></section>
       <section className="review-section"><div className="result-section-heading review-heading"><div><div className="section-kicker">03 / learn from the field</div><h2>Правильные ответы и пояснения</h2></div><span>Проверьте каждый вопрос и закрепите материал</span></div><div className="review-list">{questions.map((question, index) => { const record = answerRecords[question.id]; const isCorrect = record?.isCorrect ?? false; const userAnswer = record?.answer ?? "Ответ не выбран — время истекло."; const correctAnswer = getCorrectAnswer(question); const meta = MODE_META[question.type]; return <article className={`review-card ${isCorrect ? "is-correct" : "is-missed"}`} key={question.id}><div className="review-card-top"><span className="review-index">{String(index + 1).padStart(2, "0")}</span><span className="question-tag" style={{ color: meta.color, background: meta.tint }}><span>{meta.icon}</span>{question.typeLabel}</span><span className={`review-result ${isCorrect ? "is-correct" : "is-missed"}`}>{isCorrect ? "Верно" : "Повторить"}</span></div><h3>{question.prompt}</h3><div className="review-answer-grid"><div className={`review-answer ${isCorrect ? "is-positive" : "is-negative"}`}><span className="review-label">Ваш ответ</span><p>{userAnswer}</p></div><div className="review-answer is-positive"><span className="review-label">Правильный ответ</span><p>{correctAnswer}</p></div></div><div className="review-explanation"><span>Агрономическое пояснение</span><p>{question.explanation}</p></div></article>; })}</div></section>
