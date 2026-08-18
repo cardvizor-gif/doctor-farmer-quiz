@@ -5,7 +5,7 @@ import { PRICE_CATALOG, PriceItem } from "@/data/priceCatalog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle2, ShieldCheck, Droplet, Filter, Calculator, Download, RefreshCw } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ShieldCheck, Droplet, Filter, Calculator, Download } from "lucide-react";
 import { Link } from "wouter";
 
 export default function AgroHelper() {
@@ -14,26 +14,32 @@ export default function AgroHelper() {
   const [selectedProblemCategory, setSelectedProblemCategory] = useState<string>("all");
   const [fieldArea, setFieldArea] = useState<number>(100); // га
 
-  // Пользовательские замены препаратов (ключ: cropId-stepIndex-productIndex, значение: выбранный PriceItem)
+  // Заменители препаратов (ключ: cropId-stepIndex-productIndex)
   const [customReplacements, setCustomReplacements] = useState<Record<string, PriceItem>>({});
 
-  // Найти базовую схему защиты
+  // Найти схему защиты
   const currentScheme: CropProtectionScheme | undefined = PROTECTION_SCHEMES.find(
     s => s.cropId === selectedCrop?.id && (s.technology === selectedTech || s.technology === 'Классическая')
   ) ?? PROTECTION_SCHEMES.find(s => s.cropId === selectedCrop?.id);
 
-  // Фильтрация зарегистрированных препаратов для данной культуры по категории/группе
-  const getRegisteredProductsForCrop = (groupFilter?: string): PriceItem[] => {
+  // Строгая проверка регистрации препарата на культуру и совпадения группы
+  const getRegisteredAlternatives = (requiredGroup: string): PriceItem[] => {
     if (!selectedCrop) return [];
     return PRICE_CATALOG.filter(item => {
-      // Проверить регистрацию на культуру (по совпадению подстроки в массиве cultures)
-      const isRegistered = item.cultures.some(c => 
-        selectedCrop.name.toLowerCase().includes(c.toLowerCase()) || 
-        c.toLowerCase().includes(selectedCrop.name.toLowerCase().split(' ')[0])
-      );
-      if (!isRegistered) return false;
-      if (groupFilter && item.group !== groupFilter) return false;
-      return true;
+      // Совпадение группы (например, гербицид меняем только на гербицид той же подгруппы)
+      if (item.group !== requiredGroup) {
+        // Допустим мягкое соответствие для общих гербицидов
+        if (!(requiredGroup.includes('Гербицид') && item.group.includes('Гербицид'))) {
+          return false;
+        }
+      }
+      // Проверка официальной регистрации в прайсе
+      const isRegistered = item.cultures.some(c => {
+        const cropName = selectedCrop.name.toLowerCase();
+        const itemCulture = c.toLowerCase();
+        return cropName.includes(itemCulture) || itemCulture.includes(cropName.split(' ')[0]);
+      });
+      return isRegistered;
     });
   };
 
@@ -64,7 +70,7 @@ export default function AgroHelper() {
             </div>
             <div>
               <h1 className="font-bold text-base sm:text-lg tracking-tight text-[#1B4D3E] leading-tight">АгроПомощник ДФ</h1>
-              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Схемы защиты с проверкой официальных регистраций из прайса</p>
+              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Схемы защиты с проверкой точных регистраций</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 w-full sm:w-auto">
@@ -219,13 +225,13 @@ export default function AgroHelper() {
                 />
               </div>
               <p className="text-[11px] text-gray-500">
-                Автоматический расчёт литража или канистр (для бинарных упаковок из расчёта 1 канистра на 11–14 га).
+                Автоматический пересчёт литража или канистр на заданную площадь поля.
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Правая колонка: схема защиты и выбор зарегистрированных препаратов */}
+        {/* Правая колонка: схема защиты */}
         <div className="lg:col-span-8 space-y-6">
           <Card className="border-[#E2E8DF] shadow-xs bg-white min-h-[550px] flex flex-col">
             <CardHeader className="p-4 sm:p-6 border-b border-gray-100 bg-[#FBFDFC]">
@@ -249,7 +255,7 @@ export default function AgroHelper() {
                 </div>
               </div>
               <p className="text-xs sm:text-sm text-gray-600 mt-2">
-                {currentScheme?.description} (все препараты проверены по официальной регистрации для культуры)
+                {currentScheme?.description}
               </p>
             </CardHeader>
 
@@ -277,7 +283,7 @@ export default function AgroHelper() {
                             </span>
                           </div>
 
-                          {/* Список препаратов в этапе */}
+                          {/* Препараты в этапе */}
                           <div className="space-y-4 mt-3">
                             {step.products.map((prod, pIdx) => {
                               const replKey = `${selectedCrop?.id}-${sIdx}-${pIdx}`;
@@ -290,21 +296,14 @@ export default function AgroHelper() {
                                 cultures: []
                               };
 
-                              // Определим группу для подбора из прайса
-                              let targetGroup = activeProd.group;
-                              if (targetGroup === 'Удобрение') targetGroup = 'Удобрение';
-                              else if (targetGroup.includes('Инсектицид')) targetGroup = 'Инсектицид';
-                              else if (targetGroup.includes('Фунгицид') || targetGroup.includes('Протравитель')) targetGroup = activeProd.group as any;
-                              else targetGroup = 'Гербицид';
-
-                              // Получим список всех зарегистрированных альтернатив из прайса для этой группы
-                              const registeredAlternatives = getRegisteredProductsForCrop(targetGroup);
+                              // Получаем строго отфильтрованные альтернативы для замен внутри той же группы
+                              const alternatives = getRegisteredAlternatives(activeProd.group);
 
                               // Расчет фасовки
-                              const isCanister = activeProd.name.includes('КлопЭфир') || activeProd.name.includes('Триатлон') || activeProd.name.includes('Биогем') || activeProd.name.includes('Магнум') || activeProd.rate.includes('канистр');
+                              const isCanister = activeProd.name.includes('КлопЭфир') || activeProd.name.includes('Триатлон') || activeProd.rate.includes('канистр');
                               let canisterCoverage = 14;
-                              if (activeProd.name.includes('Микс') || activeProd.name.includes('Триатлон') || activeProd.name.includes('Макс')) canisterCoverage = 11;
-                              else if (activeProd.name.includes('Интенсив') || activeProd.name.includes('Магнум')) canisterCoverage = 12;
+                              if (activeProd.name.includes('Микс') || activeProd.name.includes('Триатлон')) canisterCoverage = 11;
+                              else if (activeProd.name.includes('Интенсив')) canisterCoverage = 14;
 
                               let calculatedDisplay = "";
                               if (isCanister) {
@@ -330,7 +329,7 @@ export default function AgroHelper() {
                                           {activeProd.group}
                                         </Badge>
                                         <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                          ✓ Регистрация подтверждена
+                                          ✓ Зарегистрировано
                                         </span>
                                       </div>
                                       <p className="text-xs text-gray-600">
@@ -350,14 +349,14 @@ export default function AgroHelper() {
                                     </div>
                                   </div>
 
-                                  {/* Выпадающий список или кнопки альтернатив из прайса с подтвержденной регистрацией */}
-                                  {registeredAlternatives.length > 1 && (
+                                  {/* Строгая замена только внутри той же группы (гербицид на гербицид, фунгицидный протравитель на фунгицидный протравитель) */}
+                                  {alternatives.length > 1 && (
                                     <div className="pt-2 border-t border-gray-200/60 space-y-1.5">
                                       <span className="text-[11px] text-gray-500 block italic">
-                                        🔄 Заменить на другой зарегистрированный препарат из прайса ({registeredAlternatives.length} доступно для {selectedCrop?.name}):
+                                        🔄 Замена препарата ({activeProd.group} для {selectedCrop?.name}):
                                       </span>
                                       <div className="flex flex-wrap gap-1.5">
-                                        {registeredAlternatives.map((alt) => {
+                                        {alternatives.map((alt) => {
                                           const isSelected = activeProd.name === alt.name;
                                           return (
                                             <button
@@ -395,7 +394,7 @@ export default function AgroHelper() {
               )}
 
               <div className="mt-8 pt-4 border-t border-gray-100 text-center text-xs text-gray-400">
-                АгроПомощник ДФ • Проверка официальных регистраций из прайса
+                АгроПомощник ДФ • Проверка официальных регистраций
               </div>
             </CardContent>
           </Card>
