@@ -23,7 +23,6 @@ import {
   X,
 } from "lucide-react";
 import { EMAIL_CONFIG } from "@/data/emailConfig";
-import { TEAM_MEMBERS } from "@/data/team";
 import {
   buildQuestions,
   DEFAULT_MODES,
@@ -402,46 +401,7 @@ export default function Home() {
                 <div className="rule-item"><strong>03</strong> Результат автоматически уйдёт руководителю на почту.</div>
               </div>
 
-              <div className="name-input-wrap">
-                <label htmlFor="employee-select">Сотрудник (выберите из списка)</label>
-                <div className={`field-with-icon ${nameError ? "has-error" : ""}`}>
-                  <Target size={17} />
-                  <select
-                    id="employee-select"
-                    value={TEAM_MEMBERS.includes(name) ? name : (name ? "custom" : "")}
-                    onChange={(event) => {
-                      const val = event.target.value;
-                      if (val === "custom") {
-                        setName("");
-                      } else {
-                        setName(val);
-                      }
-                      if (val) setNameError(false);
-                    }}
-                    className="w-full bg-transparent pl-9 pr-3 py-2.5 text-sm text-gray-800 focus:outline-none"
-                  >
-                    <option value="" disabled>-- Выберите ваше ФИО --</option>
-                    {TEAM_MEMBERS.map(member => (
-                      <option key={member} value={member}>{member}</option>
-                    ))}
-                  </select>
-                </div>
-                {(!TEAM_MEMBERS.includes(name) && name !== "") || (!name && nameError) ? (
-                  <div className="mt-2">
-                    <input
-                      id="employee-custom"
-                      value={name}
-                      onChange={(event) => {
-                        setName(event.target.value);
-                        if (event.target.value.trim()) setNameError(false);
-                      }}
-                      placeholder="Введите вашу Фамилию и Имя"
-                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#1B4D3E]"
-                    />
-                  </div>
-                ) : null}
-                {nameError && <div className="error-hint">Пожалуйста, выберите или укажите Фамилию и Имя перед началом теста.</div>}
-              </div>
+              <div className="name-input-wrap"><label htmlFor="employee-name">Фамилия Имя (обязательно)</label><div className={`field-with-icon ${nameError ? "has-error" : ""}`}><Target size={17} /><input id="employee-name" value={name} onChange={(event) => { setName(event.target.value); if (event.target.value.trim()) setNameError(false); }} placeholder="Например, Иванов Иван" /></div>{nameError && <div className="error-hint">Пожалуйста, укажите Фамилию и Имя перед началом теста.</div>}</div>
               <div className="mode-section-heading"><span>Темы теста</span><span className="selected-counter">{selectedModes.length} из {modeOrder.length} тем</span></div>
               <div className="mode-grid">
                 {modeOrder.map((mode) => {
