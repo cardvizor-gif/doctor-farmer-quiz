@@ -1,20 +1,56 @@
-import { useState } from "react";
-import { CROP_OPTIONS, CropOption } from "@/data/agropom";
+import React, { useState } from "react";
+import { CROP_OPTIONS, CropOption, PROBLEM_CATEGORIES } from "@/data/agropom";
 import { PROTECTION_SCHEMES, CropProtectionScheme } from "@/data/protectionSchemes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowLeft, CheckCircle2, ShieldCheck, Layers, Droplet } from "lucide-react";
+import { Search, ArrowLeft, CheckCircle2, ShieldCheck, Layers, Droplet, Filter, Calculator, Download } from "lucide-react";
 import { Link } from "wouter";
 
 export default function AgroHelper() {
   const [selectedCrop, setSelectedCrop] = useState<CropOption | null>(CROP_OPTIONS[0]);
   const [selectedTech, setSelectedTech] = useState<string>("Классическая");
+  const [selectedProblemCategory, setSelectedProblemCategory] = useState<string>("all");
+  const [fieldArea, setFieldArea] = useState<number>(100); // га
 
   // Найти подходящую схему защиты
   const currentScheme: CropProtectionScheme | undefined = PROTECTION_SCHEMES.find(
     s => s.cropId === selectedCrop?.id && (s.technology === selectedTech || s.technology === 'Классическая')
   ) ?? PROTECTION_SCHEMES.find(s => s.cropId === selectedCrop?.id);
+
+  // Фильтрация этапов/шагов по выбранной категории проблем (если задана)
+  const filteredSteps = currentScheme?.steps.filter(step => {
+    if (selectedProblemCategory === "all") return true;
+    const taskLower = step.task.toLowerCase();
+    const stageLower = step.stage.toLowerCase();
+    const productsText = step.products.map(p => `${p.name} ${p.group} ${p.dv}`).join(" ").toLowerCase();
+    const combined = `${taskLower} ${stageLower} ${productsText}`;
+
+    if (selectedProblemCategory === "weeds") {
+      return combined.includes("гербицид") || combined.includes("сорняк") || combined.includes("глифосат") || combined.includes("злак");
+    }
+    if (selectedProblemCategory === "diseases") {
+      return combined.includes("фунгицид") || combined.includes("протравит") || combined.includes("болезн") || combined.includes("гниль") || combined.includes("склеротин");
+    }
+    if (selectedProblemCategory === "pests") {
+      return combined.includes("инсектицид") || combined.includes("вредител") || combined.includes("насеком");
+    }
+    if (selectedProblemCategory === "nutrition") {
+      return combined.includes("удобрени") || combined.includes("питани") || combined.includes("антистресс") || combined.includes("аминокислот");
+    }
+    return true;
+  });
+
+  // Функция экспорта в PDF (печатная форма браузера)
+  const handleExportPDF = () => {
+    window.print();
+  };
+
+  // Функция помощи в парсинге нормы (например, "0,5 л/га" -> число 0.5)
+  const parseRateValue = (rateStr: string): number => {
+    const match = rateStr.replace(',', '.').match(/([\d\.]+)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
 
   return (
     <div className="min-h-screen bg-[#F7F9F6] text-[#1B2A1E] flex flex-col font-sans">
@@ -27,7 +63,7 @@ export default function AgroHelper() {
             </div>
             <div>
               <h1 className="font-bold text-base sm:text-lg tracking-tight text-[#1B4D3E] leading-tight">АгроПомощник ДФ</h1>
-              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Готовые схемы защиты и нормы применения</p>
+              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Готовые схемы защиты, фильтрация и калькулятор полей</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 w-full sm:w-auto">
@@ -43,7 +79,7 @@ export default function AgroHelper() {
       {/* Основной контент */}
       <main className="max-w-6xl mx-auto px-4 py-4 sm:py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
         
-        {/* Левая колонка: выбор культуры и технологии */}
+        {/* Левая колонка: выбор культуры, фильтры и калькулятор площади */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-[#E2E8DF] shadow-xs bg-white">
             <CardHeader className="p-4 sm:p-6 pb-3">
@@ -67,7 +103,7 @@ export default function AgroHelper() {
               >
                 {CROP_OPTIONS.map((crop) => <option key={crop.id} value={crop.id}>{crop.name}</option>)}
               </select>
-              <div className="hidden sm:grid grid-cols-1 gap-1.5 max-h-96 overflow-y-auto pr-1">
+              <div className="hidden sm:grid grid-cols-1 gap-1.5 max-h-72 overflow-y-auto pr-1">
                 {CROP_OPTIONS.map((crop) => (
                   <button
                     key={crop.id}
@@ -108,6 +144,82 @@ export default function AgroHelper() {
               )}
             </CardContent>
           </Card>
+
+          {/* Фильтрация по вредным объектам */}
+          <Card className="border-[#E2E8DF] shadow-xs bg-white">
+            <CardHeader className="p-4 sm:p-6 pb-3">
+              <CardTitle className="text-base font-semibold text-[#1B4D3E] flex items-center gap-2">
+                <Filter className="w-4 h-4 text-emerald-600" /> Фильтр по задачам
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 space-y-2">
+              <button
+                onClick={() => setSelectedProblemCategory("all")}
+                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
+                  selectedProblemCategory === "all" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                Все задачи и этапы
+              </button>
+              <button
+                onClick={() => setSelectedProblemCategory("weeds")}
+                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
+                  selectedProblemCategory === "weeds" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                🌾 Сорняки (гербициды)
+              </button>
+              <button
+                onClick={() => setSelectedProblemCategory("diseases")}
+                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
+                  selectedProblemCategory === "diseases" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                🛡️ Болезни и протравливание
+              </button>
+              <button
+                onClick={() => setSelectedProblemCategory("pests")}
+                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
+                  selectedProblemCategory === "pests" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                🐛 Вредители (инсектициды)
+              </button>
+              <button
+                onClick={() => setSelectedProblemCategory("nutrition")}
+                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
+                  selectedProblemCategory === "nutrition" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                ⚡ Питание и антистресс
+              </button>
+            </CardContent>
+          </Card>
+
+          {/* Калькулятор площади поля */}
+          <Card className="border-[#E2E8DF] shadow-xs bg-white">
+            <CardHeader className="p-4 sm:p-6 pb-3">
+              <CardTitle className="text-base font-semibold text-[#1B4D3E] flex items-center gap-2">
+                <Calculator className="w-4 h-4 text-emerald-600" /> Калькулятор площади
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 space-y-3">
+              <div>
+                <label className="text-xs font-medium text-gray-600 block mb-1">Площадь поля (га):</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100000"
+                  value={fieldArea}
+                  onChange={(e) => setFieldArea(Math.max(1, parseInt(e.target.value) || 0))}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#1B4D3E]"
+                />
+              </div>
+              <p className="text-[11px] text-gray-500">
+                Калькулятор автоматически пересчитает суммарный расход препаратов для выбранной площади.
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Правая колонка: готовая схема защиты */}
@@ -119,68 +231,83 @@ export default function AgroHelper() {
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                     Готовая схема защиты • {selectedTech || 'Классика'}
                   </span>
-                  <CardTitle className="text-xl font-bold text-[#1B4D3E] mt-1">
-                    {selectedCrop?.name}
+                  <CardTitle className="text-xl sm:text-2xl font-bold text-[#1B4D3E] mt-1">
+                    {currentScheme?.title || selectedCrop?.name}
                   </CardTitle>
                 </div>
-                {currentScheme && (
-                  <Badge variant="secondary" className="bg-[#1B4D3E]/10 text-[#1B4D3E] font-medium">
-                    {currentScheme.steps.length} этапа обработки
-                  </Badge>
-                )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleExportPDF}
+                    size="sm"
+                    className="bg-[#1B4D3E] text-white hover:bg-[#153B2F] flex items-center gap-1.5 text-xs"
+                  >
+                    <Download className="w-4 h-4" /> Экспорт в PDF / Печать
+                  </Button>
+                </div>
               </div>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                {currentScheme?.description}
+              </p>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 flex-1 flex flex-col justify-between">
-              
-              {!currentScheme ? (
-                <div className="text-center py-24 my-auto text-gray-500 space-y-2">
-                  <Search className="w-12 h-12 mx-auto text-gray-300 stroke-1" />
-                  <p className="font-medium text-sm">Для выбранной культуры готовая схема пока не добавлена.</p>
-                  <p className="text-xs text-gray-400">Выберите другую культуру, чтобы открыть доступную схему защиты.</p>
+
+            <CardContent className="p-4 sm:p-6 flex-1 space-y-6">
+              {!currentScheme || !filteredSteps || filteredSteps.length === 0 ? (
+                <div className="text-center py-16 text-gray-400">
+                  <ShieldCheck className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                  <p className="text-sm">Для выбранной культуры и задачи этапы защиты не найдены.</p>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="bg-emerald-50/70 border border-emerald-200/60 p-4 rounded-xl flex items-start space-x-3">
-                    <ShieldCheck className="w-5 h-5 text-emerald-700 mt-0.5 shrink-0" />
-                    <div>
-                      <h4 className="font-semibold text-sm text-[#1B4D3E]">{currentScheme.title}</h4>
-                      <p className="text-xs text-gray-600 mt-0.5">{currentScheme.description}</p>
-                    </div>
-                  </div>
-
-                  {/* Шаги схемы */}
                   <div className="space-y-4">
-                    {currentScheme.steps.map((step, idx) => (
-                      <div key={step.stage} className="border border-gray-200 rounded-xl p-4 sm:p-5 bg-white shadow-xs relative overflow-hidden">
-                        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-[#1B4D3E]" />
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                          <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-md">
-                            Этап {idx + 1}: {step.stage}
-                          </span>
-                          <span className="text-xs text-gray-500 font-medium flex items-start sm:items-center leading-snug">
-                            <Layers className="w-3.5 h-3.5 mr-1 text-emerald-700" /> Задача: {step.task}
+                    {filteredSteps.map((step, sIdx) => (
+                      <div key={sIdx} className="border border-gray-200/80 rounded-xl p-4 sm:p-5 bg-white shadow-xs hover:border-[#1B4D3E]/30 transition-all">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3 pb-2 border-b border-gray-100">
+                          <h3 className="font-semibold text-sm sm:text-base text-[#1B4D3E] flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs flex items-center justify-center font-bold">
+                              {sIdx + 1}
+                            </span>
+                            {step.stage}
+                          </h3>
+                          <span className="text-xs text-gray-500 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">
+                            {step.task}
                           </span>
                         </div>
 
-                        <div className="space-y-3 mt-3">
-                          {step.products.map(prod => (
-                            <div key={prod.name} className="bg-gray-50 rounded-lg p-3 border border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                              <div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="text-[10px] font-medium px-2 py-0.5 bg-white border border-gray-200 text-gray-700 rounded-md">
-                                    {prod.group}
-                                  </span>
-                                  <h5 className="font-bold text-sm text-[#1B4D3E] break-words">{prod.name}</h5>
+                        {/* Список препаратов в этапе */}
+                        <div className="space-y-2.5 mt-3">
+                          {step.products.map((prod, pIdx) => {
+                            const rateVal = parseRateValue(prod.rate);
+                            const totalVolume = rateVal > 0 ? (rateVal * fieldArea).toFixed(1) : null;
+                            const isTons = prod.rate.includes('т');
+
+                            return (
+                              <div key={pIdx} className="bg-[#F9FBF8] border border-gray-200/60 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-sm text-gray-900">{prod.name}</span>
+                                    <Badge variant="outline" className="text-[10px] bg-white text-emerald-800 border-emerald-200">
+                                      {prod.group}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-xs text-gray-600">
+                                    <b>ДВ:</b> {prod.dv}
+                                  </p>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">ДВ: {prod.dv}</p>
-                                {prod.note && <p className="text-xs text-amber-700 mt-0.5 font-medium">{prod.note}</p>}
+                                <div className="flex items-sm sm:items-end justify-between sm:justify-end gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                                  <div className="text-left sm:text-right">
+                                    <div className="text-xs text-gray-500">Норма применения</div>
+                                    <div className="font-bold text-sm text-[#1B4D3E]">{prod.rate}</div>
+                                  </div>
+                                  {totalVolume && !isTons && (
+                                    <div className="text-left sm:text-right bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-100">
+                                      <div className="text-[10px] text-emerald-700 font-medium">На {fieldArea} га</div>
+                                      <div className="font-bold text-sm text-emerald-900">{totalVolume} л</div>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <div className="text-right shrink-0 bg-white px-3 py-2 rounded-lg border border-gray-200">
-                                <span className="text-[10px] text-gray-400 block">Норма применения</span>
-                                <span className="font-bold text-sm text-[#1B4D3E]">{prod.rate}</span>
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
 
                         {step.tankMixNote && (
@@ -189,8 +316,6 @@ export default function AgroHelper() {
                             <span>{step.tankMixNote}</span>
                           </div>
                         )}
-
-
                       </div>
                     ))}
                   </div>
