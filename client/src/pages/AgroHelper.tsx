@@ -70,15 +70,18 @@ export default function AgroHelper() {
   return (
     <div className="min-h-screen bg-[#F7F9F6] text-[#1B2A1E] flex flex-col font-sans">
       {/* Шапка */}
-      <header className="border-b border-[#E2E8DF] bg-white sticky top-0 z-20 shadow-xs">
+      <header className="border-b border-[#DDE6DD] bg-[#FFFDF8] sticky top-0 z-20 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 py-3 sm:h-16 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-lg bg-[#1B4D3E] flex items-center justify-center text-white font-bold text-lg">
-              🌱
+          <div className="flex items-center gap-3">
+            <div className="relative w-9 h-9 rounded-xl bg-[#194F38] flex items-center justify-center text-white shadow-sm" aria-label="Doctor Farmer">
+              <span className="absolute w-5 h-1.5 rounded-full bg-white" />
+              <span className="absolute h-5 w-1.5 rounded-full bg-white" />
+              <span className="absolute w-1.5 h-1.5 rounded-full bg-[#D6B75B]" />
             </div>
-            <div>
-              <h1 className="font-bold text-base sm:text-lg tracking-tight text-[#1B4D3E] leading-tight">АгроПомощник ДФ</h1>
-              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Схемы защиты с точным расчетом литров и канистр</p>
+            <div className="leading-none">
+              <div className="font-mono text-[10px] font-bold tracking-[0.18em] text-[#194F38]">DOCTOR FARMER</div>
+              <h1 className="mt-1 font-bold text-base sm:text-lg tracking-tight text-[#194F38]">АгроПомощник ДФ</h1>
+              <p className="mt-1 font-mono text-[9px] tracking-wide text-gray-500">FIELD NOTE / РАСЧЁТ СХЕМЫ ЗАЩИТЫ</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 w-full sm:w-auto">
@@ -92,14 +95,14 @@ export default function AgroHelper() {
       </header>
 
       {/* Основной контент */}
-      <main className="max-w-6xl mx-auto px-4 py-4 sm:py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
+      <main className="max-w-6xl mx-auto px-4 py-3 sm:py-5 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5">
         
         {/* Левая колонка */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="border-[#E2E8DF] shadow-xs bg-white">
+        <div className="lg:col-span-4 space-y-3">
+          <Card className="border-[#DDE6DD] shadow-xs bg-[#FFFDF8]">
             <CardHeader className="p-4 sm:p-6 pb-3">
-              <CardTitle className="text-base font-semibold text-[#1B4D3E] flex items-center justify-between">
-                <span>Выберите культуру</span>
+              <CardTitle className="text-base font-semibold text-[#194F38] flex items-center justify-between">
+                <span className="font-mono text-[11px] uppercase tracking-[0.08em]">Культура / поле</span>
                 {selectedCrop && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
               </CardTitle>
             </CardHeader>
@@ -163,9 +166,9 @@ export default function AgroHelper() {
           </Card>
 
           {/* Фильтрация по задачам */}
-          <Card className="border-[#E2E8DF] shadow-xs bg-white">
+          <Card className="border-[#DDE6DD] shadow-xs bg-[#FFFDF8]">
             <CardHeader className="p-4 sm:p-6 pb-3">
-              <CardTitle className="text-base font-semibold text-[#1B4D3E] flex items-center gap-2">
+              <CardTitle className="text-base font-semibold text-[#194F38] flex items-center gap-2">
                 <Filter className="w-4 h-4 text-emerald-600" /> Фильтр по задачам
               </CardTitle>
             </CardHeader>
@@ -214,9 +217,9 @@ export default function AgroHelper() {
           </Card>
 
           {/* Калькулятор площади */}
-          <Card className="border-[#E2E8DF] shadow-xs bg-white">
+          <Card className="border-[#DDE6DD] shadow-xs bg-[#FFFDF8]">
             <CardHeader className="p-4 sm:p-6 pb-3">
-              <CardTitle className="text-base font-semibold text-[#1B4D3E] flex items-center gap-2">
+              <CardTitle className="text-base font-semibold text-[#194F38] flex items-center gap-2">
                 <Calculator className="w-4 h-4 text-emerald-600" /> Калькулятор площади
               </CardTitle>
             </CardHeader>
@@ -240,15 +243,15 @@ export default function AgroHelper() {
         </div>
 
         {/* Правая колонка: схема защиты */}
-        <div className="lg:col-span-8 space-y-6">
-          <Card className="border-[#E2E8DF] shadow-xs bg-white min-h-[550px] flex flex-col">
-            <CardHeader className="p-4 sm:p-6 border-b border-gray-100 bg-[#FBFDFC]">
+        <div className="lg:col-span-8 space-y-3">
+          <Card className="border-[#DDE6DD] shadow-xs bg-[#FFFDF8] flex flex-col">
+            <CardHeader className="p-4 sm:p-5 border-b border-gray-100 bg-[#FBFDFC]">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8A6A1F] bg-[#F8F0CD] px-2 py-0.5 rounded-md border border-[#E7D68D]">
                     Схема защиты • {selectedTech || 'Классика'}
                   </span>
-                  <CardTitle className="text-xl sm:text-2xl font-bold text-[#1B4D3E] mt-1">
+                  <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight text-[#194F38] mt-1">
                     {currentScheme?.title || selectedCrop?.name}
                   </CardTitle>
                 </div>
@@ -267,32 +270,32 @@ export default function AgroHelper() {
               </p>
             </CardHeader>
 
-            <CardContent className="p-4 sm:p-6 flex-1 space-y-6">
+            <CardContent className="p-4 sm:p-5 flex-1 space-y-3">
               {!currentScheme || !currentScheme.steps || currentScheme.steps.length === 0 ? (
                 <div className="text-center py-16 text-gray-400">
                   <ShieldCheck className="w-12 h-12 mx-auto mb-3 opacity-40" />
                   <p className="text-sm">Для выбранной культуры этапы защиты не найдены.</p>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  <div className="space-y-4">
+                <div className="space-y-3">
+                  <div className="space-y-2">
                     {currentScheme.steps.map((step, sIdx) => {
                       return (
-                        <div key={sIdx} className="border border-gray-200/80 rounded-xl p-4 sm:p-5 bg-white shadow-xs hover:border-[#1B4D3E]/30 transition-all">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3 pb-2 border-b border-gray-100">
+                        <div key={sIdx} className="border border-gray-200/80 rounded-xl p-3 sm:p-4 bg-white shadow-xs hover:border-[#1B4D3E]/30 transition-all">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2 pb-1.5 border-b border-gray-100">
                             <h3 className="font-semibold text-sm sm:text-base text-[#1B4D3E] flex items-center gap-2">
-                              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs flex items-center justify-center font-bold">
+                              <span className="w-6 h-6 rounded-full bg-[#F8F0CD] text-[#8A6A1F] text-xs flex items-center justify-center font-bold border border-[#E7D68D]">
                                 {sIdx + 1}
                               </span>
                               {step.stage}
                             </h3>
-                            <span className="text-xs text-gray-500 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">
+                            <span className="font-mono text-[10px] uppercase tracking-wide text-gray-500 bg-[#F5F5ED] px-2.5 py-1 rounded-md border border-[#E6E9DF]">
                               {step.task}
                             </span>
                           </div>
 
                           {/* Препараты в этапе */}
-                          <div className="space-y-4 mt-3">
+                          <div className="space-y-2 mt-2">
                             {step.products.map((prod, pIdx) => {
                               const replKey = `${selectedCrop?.id}-${sIdx}-${pIdx}`;
                               const activeProd = customReplacements[replKey] || {
@@ -336,10 +339,10 @@ export default function AgroHelper() {
                                     <div className="space-y-1">
                                       <div className="flex items-center gap-2">
                                         <span className="font-bold text-sm text-gray-900">{activeProd.name}</span>
-                                        <Badge variant="outline" className="text-[10px] bg-white text-emerald-800 border-emerald-200">
+                                        <Badge variant="outline" className="font-mono text-[10px] bg-white text-[#194F38] border-[#B9DCC9]">
                                           {activeProd.group}
                                         </Badge>
-                                        <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                        <span className="font-mono text-[9px] uppercase tracking-wide text-[#194F38] bg-[#EDF7EF] px-2 py-0.5 rounded border border-[#B9DCC9]">
                                           ✓ Зарегистрировано
                                         </span>
                                       </div>
@@ -350,12 +353,12 @@ export default function AgroHelper() {
 
                                     <div className="flex items-sm sm:items-end justify-between sm:justify-end gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
                                       <div className="text-left sm:text-right">
-                                        <div className="text-xs text-gray-500">Норма / Фасовка</div>
+                                        <div className="font-mono text-[10px] uppercase tracking-wide text-gray-500">Норма / фасовка</div>
                                         <div className="font-bold text-sm text-[#1B4D3E]">{activeProd.rate}</div>
                                       </div>
                                       <div className="text-left sm:text-right bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-100">
-                                        <div className="text-[10px] text-emerald-700 font-medium">Расход на {fieldArea} га</div>
-                                        <div className="font-bold text-xs sm:text-sm text-emerald-900">{calculatedDisplay}</div>
+                                        <div className="font-mono text-[10px] uppercase tracking-wide text-[#8A6A1F] font-medium">Расход на {fieldArea} га</div>
+                                        <div className="font-mono font-bold text-xs sm:text-sm text-[#194F38]">{calculatedDisplay}</div>
                                       </div>
                                     </div>
                                   </div>
@@ -363,7 +366,7 @@ export default function AgroHelper() {
                                   {/* Замена препарата строго внутри своей подгруппы без смешивания двудольных и злаковых */}
                                   {alternatives.length > 1 && (
                                     <div className="pt-2 border-t border-gray-200/60 space-y-1.5">
-                                      <span className="text-[11px] text-gray-500 block italic">
+                                      <span className="font-mono text-[10px] text-gray-500 block italic">
                                         🔄 Замена препарата ({activeProd.group} для {selectedCrop?.name}):
                                       </span>
                                       <div className="flex flex-wrap gap-1.5">
@@ -392,7 +395,7 @@ export default function AgroHelper() {
                           </div>
 
                           {step.tankMixNote && (
-                            <div className="mt-3 text-xs text-blue-800 bg-blue-50 p-2.5 rounded-lg border border-blue-100 flex items-start sm:items-center gap-2">
+                            <div className="mt-2 text-xs text-[#285A5A] bg-[#EEF7F5] p-2.5 rounded-lg border border-[#CBE4DF] flex items-start sm:items-center gap-2">
                               <Droplet className="w-4 h-4 text-blue-600 shrink-0" />
                               <span>{step.tankMixNote}</span>
                             </div>
@@ -404,7 +407,7 @@ export default function AgroHelper() {
                 </div>
               )}
 
-              <div className="mt-8 pt-4 border-t border-gray-100 text-center text-xs text-gray-400">
+              <div className="mt-3 pt-2 border-t border-[#E6E9DF] text-center font-mono text-[9px] uppercase tracking-wide text-gray-400">
                 АгроПомощник ДФ • Проверка официальных регистраций
               </div>
             </CardContent>
