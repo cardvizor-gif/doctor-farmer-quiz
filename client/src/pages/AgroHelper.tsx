@@ -190,11 +190,7 @@ export default function AgroHelper() {
                           </div>
                         )}
 
-                        {step.adjuvant && (
-                          <div className="mt-2 text-xs text-emerald-800 bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-100">
-                            <b>Рекомендуемый адъювант / ПАВ:</b> {step.adjuvant}
-                          </div>
-                        )}
+
                       </div>
                     ))}
                   </div>
