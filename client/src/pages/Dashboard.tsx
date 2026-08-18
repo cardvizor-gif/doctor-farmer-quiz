@@ -30,21 +30,25 @@ export default function Dashboard() {
       {/* Основной контент */}
       <main className="max-w-5xl mx-auto px-4 py-6 sm:py-10 flex-1 w-full space-y-6">
         
-        {/* Баннер */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#194F38] to-[#143D2C] text-white p-6 sm:p-8 shadow-md">
+        {/* Респектабельный Hero-блок с коллажем и светлым фоном */}
+        <div className="relative overflow-hidden rounded-2xl bg-[#FFFDF8] border border-[#DDE6DD] p-6 sm:p-10 shadow-xs">
+          <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-25 pointer-events-none hidden sm:block">
+            <img 
+              src="/manus-storage/doctor-farmer-collage_e20385be.png" 
+              alt="Agronomy Collage" 
+              className="w-full h-full object-cover object-right mask-radial"
+            />
+          </div>
           <div className="relative z-10 max-w-2xl space-y-3">
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[#E7D68D] bg-[#143D2C]/80 px-2.5 py-1 rounded border border-[#E7D68D]/30 inline-block">
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[#8A6A1F] bg-[#F8F0CD] px-2.5 py-1 rounded border border-[#E7D68D] inline-block">
               ПРОФЕССИОНАЛЬНАЯ СРЕДА КОМАНДЫ
             </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-[#194F38]">
               Знания, которые работают на поле.
             </h2>
-            <p className="text-sm text-emerald-100/90 leading-relaxed">
+            <p className="text-sm text-gray-600 leading-relaxed max-w-xl">
               Единый рабочий комплекс для полевых специалистов. Используйте АгроПомощник для точного подбора схем защиты по официальным регламентам и тест для проверки продуктовой экспертизы команды.
             </p>
-          </div>
-          <div className="absolute right-[-10px] bottom-[-20px] opacity-10 text-9xl pointer-events-none font-bold">
-            🌾
           </div>
         </div>
 
