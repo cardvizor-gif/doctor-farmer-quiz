@@ -20,12 +20,12 @@ export interface CropProtectionScheme {
 }
 
 export const PROTECTION_SCHEMES: CropProtectionScheme[] = [
-  // 1. Озимая пшеница (728 га)
+  // 1. Озимая пшеница
   {
     cropId: 'wheat_winter',
     technology: 'Классическая',
     title: 'Схема защиты озимой пшеницы',
-    description: 'Производственная схема защиты озимой пшеницы по таблице КПКОЛОС2017.xlsx',
+    description: 'Производственная схема защиты озимой пшеницы',
     steps: [
       {
         stage: 'Протравливание семян — высев ~220 кг/га = 0,22 т/га',
@@ -56,12 +56,12 @@ export const PROTECTION_SCHEMES: CropProtectionScheme[] = [
     ]
   },
 
-  // 2. Яровая пшеница (565 га)
+  // 2. Яровая пшеница
   {
     cropId: 'wheat_spring',
     technology: 'Классическая',
     title: 'Схема защиты яровой пшеницы',
-    description: 'Производственная схема защиты яровой пшеницы по таблице КПКОЛОС2017.xlsx',
+    description: 'Производственная схема защиты яровой пшеницы',
     steps: [
       {
         stage: 'Протравливание семян — высев ~220 кг/га = 0,22 т/га',
@@ -92,12 +92,12 @@ export const PROTECTION_SCHEMES: CropProtectionScheme[] = [
     ]
   },
 
-  // 3. Горох (547 га)
+  // 3. Горох
   {
     cropId: 'peas',
     technology: 'Классическая',
     title: 'Схема защиты гороха',
-    description: 'Производственная схема защиты гороха по таблице КПКОЛОС2017.xlsx',
+    description: 'Производственная схема защиты гороха',
     steps: [
       {
         stage: 'Протравливание семян — высев ~250 кг/га = 0,25 т/га',
@@ -132,12 +132,12 @@ export const PROTECTION_SCHEMES: CropProtectionScheme[] = [
     ]
   },
 
-  // 4. Чечевица зелёная (323 га)
+  // 4. Чечевица зелёная
   {
     cropId: 'lentil_green',
     technology: 'Классическая',
     title: 'Схема защиты чечевицы зелёной',
-    description: 'Производственная схема защиты зелёной чечевицы по таблице КПКОЛОС2017.xlsx',
+    description: 'Производственная схема защиты зелёной чечевицы',
     steps: [
       {
         stage: 'Гербицидная обработка',
@@ -151,12 +151,12 @@ export const PROTECTION_SCHEMES: CropProtectionScheme[] = [
     ]
   },
 
-  // 5. Чечевица красная (244 га)
+  // 5. Чечевица красная
   {
     cropId: 'lentil_red',
     technology: 'Классическая',
     title: 'Схема защиты чечевицы красной',
-    description: 'Производственная схема защиты красной чечевицы по таблице КПКОЛОС2017.xlsx',
+    description: 'Производственная схема защиты красной чечевицы',
     steps: [
       {
         stage: 'Гербицидная обработка',
@@ -170,12 +170,12 @@ export const PROTECTION_SCHEMES: CropProtectionScheme[] = [
     ]
   },
 
-  // 6. Лён масличный (955 га)
+  // 6. Лён масличный
   {
     cropId: 'flax_classic',
     technology: 'Классическая',
     title: 'Схема защиты льна масличного',
-    description: 'Производственная схема защиты масличного льна по таблице КПКОЛОС2017.xlsx',
+    description: 'Производственная схема защиты масличного льна',
     steps: [
       {
         stage: 'Протравливание семян — высев ~80 кг/га = 0,08 т/га',
@@ -204,12 +204,12 @@ export const PROTECTION_SCHEMES: CropProtectionScheme[] = [
     ]
   },
 
-  // 7. Подсолнечник — Экспресс (1702 га)
+  // 7. Подсолнечник — Экспресс
   {
     cropId: 'sunflower_express',
     technology: 'Express',
     title: 'Схема защиты подсолнечника (Экспресс)',
-    description: 'Производственная схема защиты подсолнечника по технологии Экспресс по таблице КПКОЛОС2017.xlsx',
+    description: 'Производственная схема защиты подсолнечника по технологии Экспресс',
     steps: [
       {
         stage: 'Гербицидная обработка (2-4 листа)',
@@ -230,12 +230,12 @@ export const PROTECTION_SCHEMES: CropProtectionScheme[] = [
     ]
   },
 
-  // 8. Подсолнечник — Система Clearfield (1702 га)
+  // 8. Подсолнечник — Система Clearfield
   {
     cropId: 'sunflower_clearfield',
     technology: 'Clearfield',
     title: 'Схема защиты подсолнечника (Clearfield)',
-    description: 'Производственная схема защиты подсолнечника по системе Clearfield по таблице КПКОЛОС2017.xlsx',
+    description: 'Производственная схема защиты подсолнечника по системе Clearfield',
     steps: [
       {
         stage: 'Гербицидная обработка (2-4 листа)',
@@ -254,12 +254,12 @@ export const PROTECTION_SCHEMES: CropProtectionScheme[] = [
     ]
   },
 
-  // 9. Чистый пар (глифосат) (1401 га)
+  // 9. Чистый пар (глифосат)
   {
     cropId: 'fallow',
     technology: 'Глифосат',
     title: 'Схема обработки чистых паров',
-    description: 'Производственная обработка чистых паров по таблице КПКОЛОС2017.xlsx',
+    description: 'Производственная обработка чистых паров',
     steps: [
       {
         stage: 'Обработка по глифосату',
