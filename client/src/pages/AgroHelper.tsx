@@ -22,24 +22,34 @@ export default function AgroHelper() {
     s => s.cropId === selectedCrop?.id && (s.technology === selectedTech || s.technology === 'Классическая')
   ) ?? PROTECTION_SCHEMES.find(s => s.cropId === selectedCrop?.id);
 
-  // Строгая проверка регистрации препарата на культуру и совпадения группы
+  // Строгая проверка регистрации и правил для зерновых (только 2-3 компонента против двудольных, без Сикурса)
   const getRegisteredAlternatives = (requiredGroup: string): PriceItem[] => {
     if (!selectedCrop) return [];
+    const cropName = selectedCrop.name.toLowerCase();
+    const isCereals = cropName.includes('пшениц') || cropName.includes('ячмен') || cropName.includes('овес');
+
     return PRICE_CATALOG.filter(item => {
-      // Совпадение группы (например, гербицид меняем только на гербицид той же подгруппы)
+      // 1. Совпадение функциональной группы
       if (item.group !== requiredGroup) {
-        // Допустим мягкое соответствие для общих гербицидов
         if (!(requiredGroup.includes('Гербицид') && item.group.includes('Гербицид'))) {
           return false;
         }
       }
-      // Проверка официальной регистрации в прайсе
+
+      // 2. Проверка регистрации на культуру
       const isRegistered = item.cultures.some(c => {
-        const cropName = selectedCrop.name.toLowerCase();
         const itemCulture = c.toLowerCase();
         return cropName.includes(itemCulture) || itemCulture.includes(cropName.split(' ')[0]);
       });
-      return isRegistered;
+      if (!isRegistered) return false;
+
+      // 3. Правила для зерновых противодвудольных: только 2-3 компонента, без Сикурса и монопрепаратов (кроме бинарных упаковок)
+      if (isCereals && requiredGroup === 'Гербицид (двудольные)') {
+        if (item.name === 'Сикурс, ВР') return false;
+        if (item.componentsCount && item.componentsCount < 2) return false;
+      }
+
+      return true;
     });
   };
 
@@ -70,7 +80,7 @@ export default function AgroHelper() {
             </div>
             <div>
               <h1 className="font-bold text-base sm:text-lg tracking-tight text-[#1B4D3E] leading-tight">АгроПомощник ДФ</h1>
-              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Схемы защиты с проверкой точных регистраций</p>
+              <p className="text-[11px] sm:text-xs text-gray-500 leading-tight">Схемы защиты с разделением двудольных и злаковых</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 w-full sm:w-auto">
@@ -300,10 +310,11 @@ export default function AgroHelper() {
                               const alternatives = getRegisteredAlternatives(activeProd.group);
 
                               // Расчет фасовки
-                              const isCanister = activeProd.name.includes('КлопЭфир') || activeProd.name.includes('Триатлон') || activeProd.rate.includes('канистр');
-                              let canisterCoverage = 14;
-                              if (activeProd.name.includes('Микс') || activeProd.name.includes('Триатлон')) canisterCoverage = 11;
-                              else if (activeProd.name.includes('Интенсив')) canisterCoverage = 14;
+                              const isCanister = activeProd.name.includes('КлопЭфир') || activeProd.name.includes('Триатлон') || activeProd.name.includes('Биогем') || activeProd.name.includes('Магнум') || activeProd.rate.includes('га');
+                              let canisterCoverage = 12;
+                              if (activeProd.name.includes('Интенсив')) canisterCoverage = 14;
+                              else if (activeProd.name.includes('Микс') || activeProd.name.includes('Триатлон Плюс') || activeProd.name.includes('Биогем Макс')) canisterCoverage = 11;
+                              else if (activeProd.name.includes('Триатлон Экстра') || activeProd.name.includes('Магнум Твин')) canisterCoverage = 12;
 
                               let calculatedDisplay = "";
                               if (isCanister) {
@@ -349,7 +360,7 @@ export default function AgroHelper() {
                                     </div>
                                   </div>
 
-                                  {/* Строгая замена только внутри той же группы (гербицид на гербицид, фунгицидный протравитель на фунгицидный протравитель) */}
+                                  {/* Замена препарата строго внутри своей группы */}
                                   {alternatives.length > 1 && (
                                     <div className="pt-2 border-t border-gray-200/60 space-y-1.5">
                                       <span className="text-[11px] text-gray-500 block italic">
