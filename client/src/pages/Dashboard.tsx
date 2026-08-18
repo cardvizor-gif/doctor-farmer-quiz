@@ -7,20 +7,24 @@ import { ShieldCheck, ArrowRight } from "lucide-react";
 export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#F4F6F2] text-[#142319] flex flex-col font-sans">
-      {/* Шапка с крупным бесшовным логотипом */}
+      {/* Шапка с идеально чистым собственным знаком и крупным шрифтом */}
       <header className="border-b border-[#D5E1D5] bg-[#FFFFFF] sticky top-0 z-20 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 py-4 sm:h-24 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center p-1" aria-label="Doctor Farmer">
-              <img src="/manus-storage/doctor-farmer-mark-tight_464f2838.png" alt="Doctor Farmer" className="w-full h-full object-contain scale-125" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center p-1 bg-emerald-50/50 rounded-2xl border border-emerald-100" aria-label="Doctor Farmer">
+              <img 
+                src="/manus-storage/doctor-farmer-custom-mark_23712a1e.png" 
+                alt="Doctor Farmer Mark" 
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm" 
+              />
             </div>
-            <div className="leading-none space-y-1">
-              <div className="font-mono text-[11px] font-bold tracking-[0.22em] text-[#194F38]">DOCTOR FARMER</div>
+            <div className="leading-none space-y-1.5">
+              <div className="font-mono text-xs font-bold tracking-[0.24em] text-[#194F38]">DOCTOR FARMER</div>
               <h1 className="font-extrabold text-lg sm:text-2xl tracking-tight text-[#142319]">Рабочий кабинет</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-gray-500 bg-[#EFEFE9] px-3.5 py-2 rounded-lg border border-[#E0E2D6]">
+            <span className="font-mono text-xs text-gray-600 bg-[#EFEFE9] px-3.5 py-2 rounded-lg border border-[#E0E2D6]">
               KNOWLEDGE & FIELD LAB • 2026
             </span>
           </div>
@@ -30,26 +34,27 @@ export default function Dashboard() {
       {/* Основной контент */}
       <main className="max-w-5xl mx-auto px-4 py-8 sm:py-12 flex-1 w-full space-y-8">
         
-        {/* Элитный премиальный Hero-блок с масштабным визуалом */}
-        <div className="relative overflow-hidden rounded-3xl bg-[#0E2E20] text-white p-8 sm:p-14 shadow-2xl border border-emerald-900/50">
-          <div className="absolute inset-0 opacity-55 pointer-events-none mix-blend-luminosity">
+        {/* Открытый, светлый и дорогой Hero-блок с видимой панорамой и текстом поверх легкой дымки */}
+        <div className="relative overflow-hidden rounded-3xl bg-[#0F2D20] text-white p-8 sm:p-14 shadow-xl border border-emerald-900/40">
+          <div className="absolute inset-0 opacity-80 pointer-events-none">
             <img 
               src="/manus-storage/doctor-farmer-elite-hero_486afb2e.png" 
-              alt="Elite Agronomy Panorama" 
-              className="w-full h-full object-cover object-center scale-105"
+              alt="Agronomy Landscape Panorama" 
+              className="w-full h-full object-cover object-center scale-100"
             />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0E2E20] via-[#0E2E20]/95 to-[#0E2E20]/40 pointer-events-none" />
+          {/* Градиент только слева, чтобы текст читался идеально, а справа был виден красивый пейзаж */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0E2E20] via-[#0E2E20]/90 to-transparent pointer-events-none" />
           
           <div className="relative z-10 max-w-2xl space-y-5">
-            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-[#F3E29F] bg-black/40 px-3.5 py-1.5 rounded-md border border-[#F3E29F]/40 inline-block backdrop-blur-xs">
-              ЭЛИТНАЯ АГРОНОМИЧЕСКАЯ ПЛАТФОРМА
+            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-[#F3E29F] bg-black/50 px-3.5 py-1.5 rounded-md border border-[#F3E29F]/40 inline-block backdrop-blur-xs">
+              ПРОФЕССИОНАЛЬНАЯ АГРОНОМИЧЕСКАЯ СРЕДА
             </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight text-white">
+            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight text-white drop-shadow-md">
               Знания, которые работают на поле.
             </h2>
-            <p className="text-base sm:text-lg text-emerald-100/90 leading-relaxed max-w-xl font-normal">
-              Профессиональный комплекс для экспертов агрослужбы. Используйте АгроПомощник для точного регламентного подбора защиты и тест для аттестации продуктовой экспертизы.
+            <p className="text-base sm:text-lg text-emerald-100 leading-relaxed max-w-xl font-normal drop-shadow-sm">
+              Единый комплекс для экспертов агрослужбы. Используйте АгроПомощник для точного регламентного подбора защиты и тест для аттестации продуктовой экспертизы.
             </p>
           </div>
         </div>
