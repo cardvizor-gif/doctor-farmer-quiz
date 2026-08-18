@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { ArrowRight, ShieldCheck, Award, BookOpen, Layers } from "lucide-react";
 
 const LOGO_IMAGE = "/manus-storage/doctor-farmer-mark_1fd4bf89.png";
-const ILLUSTRATION_IMAGE = "/manus-storage/879f8c09-e2e2-474d-af5b-81973f44c53f_ada94bb2.webp";
+const ILLUSTRATION_IMAGE = "/manus-storage/agri-transparent_ebc8cf7a.png";
 
 export default function Dashboard() {
   return (
@@ -78,11 +78,11 @@ export default function Dashboard() {
           </div>
 
           <div className="lg:col-span-6 relative flex justify-center lg:justify-end">
-            <div className="w-full max-w-md lg:max-w-lg relative p-5 sm:p-7 bg-white rounded-3xl border border-[#dde5dc] shadow-xl">
+            <div className="w-full max-w-md lg:max-w-lg relative flex items-center justify-center p-2">
               <img 
                 src={ILLUSTRATION_IMAGE} 
                 alt="Agronomic Style Illustration" 
-                className="w-full h-auto max-h-[610px] rounded-2xl object-contain object-center shadow-inner"
+                className="w-full h-auto max-h-[610px] object-contain object-center drop-shadow-sm"
               />
             </div>
           </div>
