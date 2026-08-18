@@ -202,7 +202,7 @@ export default function AgroHelper() {
               )}
 
               <div className="mt-8 pt-4 border-t border-gray-100 text-center text-xs text-gray-400">
-                АгроПомощник ДФ • Готовые схемы защиты с точными нормами • На базе прайса Кинзябузов.xlsx
+                АгроПомощник ДФ • Готовые схемы защиты с точными нормами
               </div>
             </CardContent>
           </Card>
