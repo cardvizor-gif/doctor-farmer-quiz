@@ -98,18 +98,33 @@ export default function AgroHelper() {
         }
       ` }} />
 
-      {/* Верхняя навигация в стиле теста */}
+      {/* Верхняя навигация в стиле теста с идеальной мобильной адаптацией */}
       <header className="w-full bg-[#fbfcf9] border-b border-[#dde5dc] sticky top-0 z-30 shadow-xs">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={LOGO_IMAGE} alt="Doctor Farmer" className="w-11 h-11 object-contain mix-blend-multiply" />
-            <div>
-              <span className="font-bold tracking-tight text-sm sm:text-base text-[#12352a]">DOCTOR FARMER</span>
-              <span className="block text-[10px] text-[#6f7a73] font-mono tracking-wider">agro helper / 2026</span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-auto sm:h-20 py-3 sm:py-0 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-start">
+            <div className="flex items-center gap-2.5">
+              <img src={LOGO_IMAGE} alt="Doctor Farmer" className="w-9 h-9 sm:w-11 sm:h-11 object-contain mix-blend-multiply flex-shrink-0" />
+              <div>
+                <span className="font-bold tracking-tight text-xs sm:text-base text-[#12352a] block">DOCTOR FARMER</span>
+                <span className="block text-[9px] sm:text-[10px] text-[#6f7a73] font-mono tracking-wider">agro helper</span>
+              </div>
+            </div>
+            {/* Кнопки для мобильных прямо в первой строке для удобства */}
+            <div className="flex sm:hidden items-center gap-2">
+              <Link href="/">
+                <Button variant="outline" size="sm" className="border-[#2e7d52] text-[#194f38] hover:bg-[#e8efe5] text-[11px] h-8 px-2.5">
+                  <ArrowLeft className="w-3.5 h-3.5 mr-1" /> На главную
+                </Button>
+              </Link>
+              <Link href="/quiz">
+                <Button size="sm" className="bg-[#194f38] hover:bg-[#12352a] text-white text-[11px] h-8 px-2.5">
+                  Тест
+                </Button>
+              </Link>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-3">
             <Link href="/">
               <Button variant="outline" size="sm" className="border-[#2e7d52] text-[#194f38] hover:bg-[#e8efe5] text-xs h-9">
                 <ArrowLeft className="w-4 h-4 mr-1.5" /> На главную
@@ -117,7 +132,7 @@ export default function AgroHelper() {
             </Link>
             <Link href="/quiz">
               <Button size="sm" className="bg-[#194f38] hover:bg-[#12352a] text-white text-xs h-9">
-                <Award className="w-4 h-4 mr-1.5" /> Тест прайса
+                <Award className="w-4 h-4 mr-1.5" /> Тест
               </Button>
             </Link>
           </div>
@@ -329,11 +344,11 @@ export default function AgroHelper() {
                                 </div>
                               </div>
 
-                              {/* Выбор замены препарата (в поле / без печати) */}
-                              <div className="pt-2 border-t border-[#dde5dc] flex items-center justify-between gap-4 no-print">
+                              {/* Выбор замены препарата (в поле / без печати) с мобильной адаптацией */}
+                              <div className="pt-3 border-t border-[#dde5dc] flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
                                 <div className="text-xs text-[#6f7a73] flex items-center gap-1.5">
-                                  <Droplet className="w-3.5 h-3.5 text-[#66a46c]" />
-                                  <span>Заменить препарат из зарегистрированных в прайсе:</span>
+                                  <Droplet className="w-3.5 h-3.5 text-[#66a46c] flex-shrink-0" />
+                                  <span>Заменить препарат:</span>
                                 </div>
                                 <select
                                   value={activeProduct.name}
@@ -341,7 +356,7 @@ export default function AgroHelper() {
                                     const found = alternatives.find(a => a.name === e.target.value);
                                     if (found) handleReplaceProduct(replacementKey, found);
                                   }}
-                                  className="text-xs px-3 py-1.5 border border-[#dde5dc] rounded-lg bg-white text-[#15211c] font-medium max-w-xs focus:outline-none focus:ring-1 focus:ring-[#66a46c]"
+                                  className="text-xs px-3 py-2 border border-[#dde5dc] rounded-lg bg-white text-[#15211c] font-medium w-full sm:max-w-xs focus:outline-none focus:ring-1 focus:ring-[#66a46c]"
                                 >
                                   <option value={activeProduct.name}>{activeProduct.name} (текущий)</option>
                                   {alternatives.filter(a => a.name !== activeProduct.name).map((alt, altIdx) => (
