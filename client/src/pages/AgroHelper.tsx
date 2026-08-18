@@ -22,26 +22,43 @@ export default function AgroHelper() {
     s => s.cropId === selectedCrop?.id && (s.technology === selectedTech || s.technology === 'Классическая')
   ) ?? PROTECTION_SCHEMES.find(s => s.cropId === selectedCrop?.id);
 
-  // Строгая фильтрация замен: гербициды против двудольных меняются только на двудольные, граминициды — только на злаковые
+  // Фильтрация этапов по выбранной категории задачи
+  const filteredSteps = currentScheme?.steps.filter(step => {
+    if (selectedProblemCategory === "all") return true;
+    const taskLower = step.task.toLowerCase();
+    const stageLower = step.stage.toLowerCase();
+    
+    if (selectedProblemCategory === "weeds") {
+      return taskLower.includes('гербицид') || taskLower.includes('сорняк') || stageLower.includes('гербицид');
+    }
+    if (selectedProblemCategory === "diseases") {
+      return taskLower.includes('фунгицид') || taskLower.includes('болезн') || taskLower.includes('протравливан') || stageLower.includes('протравливан');
+    }
+    if (selectedProblemCategory === "pests") {
+      return taskLower.includes('инсектицид') || taskLower.includes('вредител') || stageLower.includes('вредител');
+    }
+    if (selectedProblemCategory === "nutrition") {
+      return taskLower.includes('питани') || taskLower.includes('удобрен') || taskLower.includes('антистресс') || taskLower.includes('аминокислот');
+    }
+    return true;
+  }) || [];
+
+  // Строгая фильтрация замен
   const getRegisteredAlternatives = (requiredGroup: string): PriceItem[] => {
     if (!selectedCrop) return [];
     const cropName = selectedCrop.name.toLowerCase();
     const isCereals = cropName.includes('пшениц') || cropName.includes('ячмен') || cropName.includes('овес');
 
     return PRICE_CATALOG.filter(item => {
-      // 1. Точное совпадение подгруппы (никаких смешиваний двудольных и злаковых)
       if (item.group !== requiredGroup) {
         return false;
       }
-
-      // 2. Проверка регистрации на культуру в прайсе
       const isRegistered = item.cultures.some(c => {
         const itemCulture = c.toLowerCase();
         return cropName.includes(itemCulture) || itemCulture.includes(cropName.split(' ')[0]);
       });
       if (!isRegistered) return false;
 
-      // 3. Правила для зерновых противодвудольных: только 2-3 компонента, без Сикурса и монопрепаратов
       if (isCereals && requiredGroup === 'Гербицид (двудольные)') {
         if (item.name === 'Сикурс, ВР') return false;
         if (item.componentsCount && item.componentsCount < 2) return false;
@@ -100,13 +117,13 @@ export default function AgroHelper() {
         {/* Левая колонка */}
         <div className="lg:col-span-4 space-y-3">
           <Card className="border-[#DDE6DD] shadow-xs bg-[#FFFDF8]">
-            <CardHeader className="p-4 sm:p-6 pb-3">
-              <CardTitle className="text-base font-semibold text-[#194F38] flex items-center justify-between">
+            <CardHeader className="p-3 sm:p-4 pb-2">
+              <CardTitle className="text-sm font-semibold text-[#194F38] flex items-center justify-between">
                 <span className="font-mono text-[11px] uppercase tracking-[0.08em]">Культура / поле</span>
-                {selectedCrop && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+                {selectedCrop && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-4">
+            <CardContent className="p-3 sm:p-4 pt-0 space-y-3">
               <select
                 value={selectedCrop?.id ?? ""}
                 onChange={(e) => {
@@ -117,12 +134,12 @@ export default function AgroHelper() {
                     setCustomReplacements({});
                   }
                 }}
-                className="sm:hidden w-full rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm text-gray-800 focus:outline-none focus:border-[#1B4D3E]"
+                className="sm:hidden w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-800 focus:outline-none focus:border-[#1B4D3E]"
                 aria-label="Выберите культуру"
               >
                 {CROP_OPTIONS.map((crop) => <option key={crop.id} value={crop.id}>{crop.name}</option>)}
               </select>
-              <div className="hidden sm:grid grid-cols-1 gap-1.5 max-h-64 overflow-y-auto pr-1">
+              <div className="hidden sm:grid grid-cols-1 gap-1 max-h-48 overflow-y-auto pr-1">
                 {CROP_OPTIONS.map((crop) => (
                   <button
                     key={crop.id}
@@ -131,7 +148,7 @@ export default function AgroHelper() {
                       setSelectedTech(crop.technologies[0]);
                       setCustomReplacements({});
                     }}
-                    className={`text-left text-xs p-2.5 rounded-lg border transition-all ${
+                    className={`text-left text-xs p-2 rounded-lg border transition-all ${
                       selectedCrop?.id === crop.id
                         ? "bg-[#1B4D3E] text-white border-[#1B4D3E] shadow-xs font-medium"
                         : "bg-white text-gray-700 border-gray-200 hover:border-[#1B4D3E]/40"
@@ -143,14 +160,14 @@ export default function AgroHelper() {
               </div>
 
               {selectedCrop && selectedCrop.technologies.length > 1 && (
-                <div className="pt-3 border-t border-gray-100">
-                  <label className="text-xs font-medium text-gray-600 block mb-1.5">Технология возделывания:</label>
-                  <div className="flex flex-wrap gap-2">
+                <div className="pt-2 border-t border-gray-100">
+                  <label className="text-[11px] font-medium text-gray-600 block mb-1">Технология возделывания:</label>
+                  <div className="flex flex-wrap gap-1.5">
                     {selectedCrop.technologies.map(tech => (
                       <button
                         key={tech}
                         onClick={() => setSelectedTech(tech)}
-                        className={`text-xs px-3 py-1 rounded-full border transition-all ${
+                        className={`text-[11px] px-2.5 py-1 rounded-full border transition-all ${
                           selectedTech === tech
                             ? "bg-emerald-700 text-white border-emerald-700 font-medium"
                             : "bg-gray-50 text-gray-600 border-gray-200"
@@ -167,15 +184,15 @@ export default function AgroHelper() {
 
           {/* Фильтрация по задачам */}
           <Card className="border-[#DDE6DD] shadow-xs bg-[#FFFDF8]">
-            <CardHeader className="p-4 sm:p-6 pb-3">
-              <CardTitle className="text-base font-semibold text-[#194F38] flex items-center gap-2">
+            <CardHeader className="p-3 sm:p-4 pb-2">
+              <CardTitle className="text-sm font-semibold text-[#194F38] flex items-center gap-2">
                 <Filter className="w-4 h-4 text-emerald-600" /> Фильтр по задачам
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-2">
+            <CardContent className="p-3 sm:p-4 pt-0 space-y-1.5">
               <button
                 onClick={() => setSelectedProblemCategory("all")}
-                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
+                className={`w-full text-left text-xs p-2 rounded-lg border transition-all ${
                   selectedProblemCategory === "all" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                 }`}
               >
@@ -183,7 +200,7 @@ export default function AgroHelper() {
               </button>
               <button
                 onClick={() => setSelectedProblemCategory("weeds")}
-                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
+                className={`w-full text-left text-xs p-2 rounded-lg border transition-all ${
                   selectedProblemCategory === "weeds" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                 }`}
               >
@@ -191,7 +208,7 @@ export default function AgroHelper() {
               </button>
               <button
                 onClick={() => setSelectedProblemCategory("diseases")}
-                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
+                className={`w-full text-left text-xs p-2 rounded-lg border transition-all ${
                   selectedProblemCategory === "diseases" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                 }`}
               >
@@ -199,7 +216,7 @@ export default function AgroHelper() {
               </button>
               <button
                 onClick={() => setSelectedProblemCategory("pests")}
-                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
+                className={`w-full text-left text-xs p-2 rounded-lg border transition-all ${
                   selectedProblemCategory === "pests" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                 }`}
               >
@@ -207,7 +224,7 @@ export default function AgroHelper() {
               </button>
               <button
                 onClick={() => setSelectedProblemCategory("nutrition")}
-                className={`w-full text-left text-xs p-2.5 rounded-lg border transition-all ${
+                className={`w-full text-left text-xs p-2 rounded-lg border transition-all ${
                   selectedProblemCategory === "nutrition" ? "bg-[#1B4D3E] text-white border-[#1B4D3E]" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                 }`}
               >
@@ -218,25 +235,25 @@ export default function AgroHelper() {
 
           {/* Калькулятор площади */}
           <Card className="border-[#DDE6DD] shadow-xs bg-[#FFFDF8]">
-            <CardHeader className="p-4 sm:p-6 pb-3">
-              <CardTitle className="text-base font-semibold text-[#194F38] flex items-center gap-2">
+            <CardHeader className="p-3 sm:p-4 pb-2">
+              <CardTitle className="text-sm font-semibold text-[#194F38] flex items-center gap-2">
                 <Calculator className="w-4 h-4 text-emerald-600" /> Калькулятор площади
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-3">
+            <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
               <div>
-                <label className="text-xs font-medium text-gray-600 block mb-1">Площадь поля (га):</label>
+                <label className="text-[11px] font-medium text-gray-600 block mb-1">Площадь поля (га):</label>
                 <input
                   type="number"
                   min="1"
                   max="100000"
                   value={fieldArea}
                   onChange={(e) => setFieldArea(Math.max(1, parseInt(e.target.value) || 0))}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#1B4D3E]"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-[#1B4D3E]"
                 />
               </div>
-              <p className="text-[11px] text-gray-500">
-                Автоматический расчёт литража для жидких препаратов и канистр для бинарных упаковок.
+              <p className="text-[10px] text-gray-500">
+                Пересчёт литража для жидких препаратов и канистр для упаковок.
               </p>
             </CardContent>
           </Card>
@@ -271,15 +288,15 @@ export default function AgroHelper() {
             </CardHeader>
 
             <CardContent className="p-4 sm:p-5 flex-1 space-y-3">
-              {!currentScheme || !currentScheme.steps || currentScheme.steps.length === 0 ? (
-                <div className="text-center py-16 text-gray-400">
+              {filteredSteps.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
                   <ShieldCheck className="w-12 h-12 mx-auto mb-3 opacity-40" />
-                  <p className="text-sm">Для выбранной культуры этапы защиты не найдены.</p>
+                  <p className="text-sm">По выбранному фильтру этапы защиты не найдены.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    {currentScheme.steps.map((step, sIdx) => {
+                    {filteredSteps.map((step, sIdx) => {
                       return (
                         <div key={sIdx} className="border border-gray-200/80 rounded-xl p-3 sm:p-4 bg-white shadow-xs hover:border-[#1B4D3E]/30 transition-all">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2 pb-1.5 border-b border-gray-100">
@@ -307,10 +324,8 @@ export default function AgroHelper() {
                                 cultures: []
                               };
 
-                              // Получаем строго отфильтрованные альтернативы для замен внутри той же группы
                               const alternatives = getRegisteredAlternatives(activeProd.group);
 
-                              // Точный расчет расхода в зависимости от типа нормы (литры на га или канистры на га)
                               const isCanister = activeProd.name.includes('КлопЭфир') || activeProd.name.includes('Триатлон') || activeProd.name.includes('Биогем') || activeProd.name.includes('Магнум Твин');
                               
                               let calculatedDisplay = "";
@@ -323,7 +338,6 @@ export default function AgroHelper() {
                                 const totalCanisters = Math.ceil(fieldArea / canisterCoverage);
                                 calculatedDisplay = `${totalCanisters} канистр(-ы) (на ${fieldArea} га при норме 1 кан. на ${canisterCoverage} га)`;
                               } else {
-                                // Обычный расчет литров по норме л/га
                                 const rateVal = parseRateValue(activeProd.rate);
                                 if (rateVal > 0 && !activeProd.rate.includes('т')) {
                                   const totalVol = (rateVal * fieldArea).toFixed(1);
@@ -363,7 +377,6 @@ export default function AgroHelper() {
                                     </div>
                                   </div>
 
-                                  {/* Замена препарата строго внутри своей подгруппы без смешивания двудольных и злаковых */}
                                   {alternatives.length > 1 && (
                                     <div className="pt-2 border-t border-gray-200/60 space-y-1.5">
                                       <span className="font-mono text-[10px] text-gray-500 block italic">
