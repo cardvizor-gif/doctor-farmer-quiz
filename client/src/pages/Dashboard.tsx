@@ -4,14 +4,44 @@ import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-[#f4f7f1] text-[#15211c] flex flex-col font-sans selection:bg-[#66a46c] selection:text-white">
+    <div className="min-h-screen bg-[#f4f7f1] text-[#15211c] flex flex-col font-sans selection:bg-[#66a46c] selection:text-white relative overflow-hidden">
       
+      {/* Техно-аграрный геометрический водяной паттерн (кубизм / ботанические контуры культур) */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.055] z-0 flex flex-col justify-between overflow-hidden select-none" aria-hidden="true">
+        <svg className="w-full h-full absolute inset-0 text-[#194f38]" viewBox="0 0 1200 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Геометрический контур колоса пшеницы (кубистический стиль) */}
+          <path d="M150 100 L180 70 L210 100 L180 130 Z M180 70 L180 160 M165 95 L195 95 M160 120 L200 120" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M150 180 L180 150 L210 180 L180 210 Z M180 150 L180 240 M165 175 L195 175 M160 200 L200 200" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+
+          {/* Геометрический контур корзинки подсолнечника */}
+          <circle cx="950" cy="180" r="50" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6"/>
+          <path d="M950 130 L950 230 M900 180 L1000 180 M915 145 L985 215 M915 215 L985 145" stroke="currentColor" strokeWidth="1.5"/>
+
+          {/* Геометрический контур кукурузы с початком */}
+          <path d="M220 700 L250 650 L280 700 L250 820 Z M250 670 Q235 720 250 780" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+          <path d="M235 680 L220 660 M265 680 L285 660 M240 720 L220 710 M260 720 L285 710" stroke="currentColor" strokeWidth="1.5"/>
+
+          {/* Техно-аграрная сетка и абстрактные многоугольники */}
+          <polygon points="850,600 920,540 980,620 900,680" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4"/>
+          <polygon points="100,450 160,400 210,480 140,510" stroke="currentColor" strokeWidth="1.5"/>
+          <circle cx="880" cy="800" r="70" stroke="currentColor" strokeWidth="1.5"/>
+          <path d="M810 800 H950 M880 730 V870" stroke="currentColor" strokeWidth="1.5"/>
+
+          {/* Линии полей и технологические векторы */}
+          <path d="M0 350 Q300 320 600 360 T1200 340" stroke="currentColor" strokeWidth="2" fill="none"/>
+          <path d="M0 600 Q400 570 800 610 T1200 590" stroke="currentColor" strokeWidth="2" fill="none"/>
+          <path d="M0 850 Q350 820 750 860 T1200 840" stroke="currentColor" strokeWidth="2" fill="none"/>
+        </svg>
+      </div>
+
       {/* Верхняя навигация */}
       <header className="w-full border-b border-[#dde5dc] bg-[#fbfcf9] sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
           
           <div className="flex items-center gap-2.5 min-w-0">
-            <DoctorFarmerLogo className="h-10 sm:h-12 w-auto" />
+            <Link href="/">
+              <DoctorFarmerLogo className="h-10 sm:h-12 w-auto cursor-pointer" />
+            </Link>
           </div>
 
           <nav className="hidden md:flex items-center space-x-6 text-xs font-semibold text-[#194f38] uppercase tracking-wider">
@@ -35,7 +65,7 @@ export default function Dashboard() {
       </header>
 
       {/* Мобильная панель быстрого переключения */}
-      <div className="md:hidden bg-[#e8efe5] border-b border-[#dde5dc] px-4 py-2 flex items-center justify-around text-xs font-bold text-[#194f38]">
+      <div className="md:hidden bg-[#e8efe5] border-b border-[#dde5dc] px-4 py-2 flex items-center justify-around text-xs font-bold text-[#194f38] relative z-20">
         <Link href="/agro-helper">
           <span className="flex items-center gap-1.5 py-1 px-3 rounded-lg bg-white shadow-2xs">🌱 АгроПомощник</span>
         </Link>
@@ -45,10 +75,10 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Hero-секция без графики — чистый премиальный фокус на инструментах */}
-      <section className="relative overflow-hidden py-12 sm:py-20 md:py-24 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center">
-        <div className="w-full space-y-6 sm:space-y-8 z-10 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#e8efe5] text-[#194f38] text-xs font-bold tracking-wide uppercase border border-[#dde5dc] mx-auto">
+      {/* Hero-секция с техно-аграрным паттерном */}
+      <section className="relative overflow-hidden py-12 sm:py-20 md:py-24 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10">
+        <div className="w-full space-y-6 sm:space-y-8 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#e8efe5] text-[#194f38] text-xs font-bold tracking-wide uppercase border border-[#dde5dc] mx-auto shadow-2xs">
             <ShieldCheck className="w-4 h-4 text-[#2e7d52]" /> Рабочий кабинет команды
           </div>
           
@@ -79,7 +109,7 @@ export default function Dashboard() {
       </section>
 
       {/* Карточки модулей снизу */}
-      <section className="bg-white py-16 sm:py-20 border-t border-[#dde5dc]">
+      <section className="bg-white py-16 sm:py-20 border-t border-[#dde5dc] relative z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
@@ -89,14 +119,17 @@ export default function Dashboard() {
                   <div className="w-12 h-12 rounded-xl bg-[#e8efe5] flex items-center justify-center text-[#2e7d52] mb-6 group-hover:scale-105 transition-transform border border-[#dde5dc]">
                     <Layers className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#12352a] mb-2">АгроПомощник ДФ</h3>
-                  <p className="text-[#6f7a73] text-sm leading-relaxed mb-6 font-medium">
-                    Интерактивный подбор схем защиты растений с учётом технологий возделывания, точных норм из прайса, калькулятора площади и сохранения схем.
+                  <h3 className="text-xl font-bold text-[#12352a] mb-2 flex items-center justify-between">
+                    <span>АгроПомощник ДФ</span>
+                    <ArrowRight className="w-5 h-5 text-[#2e7d52] group-hover:translate-x-1 transition-transform" />
+                  </h3>
+                  <p className="text-sm text-[#6f7a73] leading-relaxed font-medium">
+                    Интерактивный подбор схем защиты растений по культурам с учётом официальных регламентов, расчётом дозировок на гектары и возможностью экспорта в PDF.
                   </p>
                 </div>
-                <div className="flex items-center text-[#194f38] font-bold text-xs uppercase tracking-wider gap-1 group-hover:translate-x-1 transition-transform">
-                  <span>Перейти к подбору схем</span>
-                  <ArrowRight className="w-4 h-4" />
+                <div className="mt-8 pt-4 border-t border-[#dde5dc] flex items-center gap-2 text-xs font-bold text-[#194f38]">
+                  <span>Запустить консультант</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </div>
             </Link>
@@ -107,14 +140,17 @@ export default function Dashboard() {
                   <div className="w-12 h-12 rounded-xl bg-[#e8efe5] flex items-center justify-center text-[#2e7d52] mb-6 group-hover:scale-105 transition-transform border border-[#dde5dc]">
                     <BookOpen className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#12352a] mb-2">Тестирование</h3>
-                  <p className="text-[#6f7a73] text-sm leading-relaxed mb-6 font-medium">
-                    Проверка продуктовой экспертизы сотрудников с фиксированным таймером, звуковым оповещением и детальным разбором ошибок.
+                  <h3 className="text-xl font-bold text-[#12352a] mb-2 flex items-center justify-between">
+                    <span>Тестирование</span>
+                    <ArrowRight className="w-5 h-5 text-[#2e7d52] group-hover:translate-x-1 transition-transform" />
+                  </h3>
+                  <p className="text-sm text-[#6f7a73] leading-relaxed font-medium">
+                    Проверка продуктовой экспертизы сотрудников с фиксированным таймером, случайным распределением вопросов и автоматическим отчётом на почту руководству.
                   </p>
                 </div>
-                <div className="flex items-center text-[#194f38] font-bold text-xs uppercase tracking-wider gap-1 group-hover:translate-x-1 transition-transform">
-                  <span>Пройти аттестацию</span>
-                  <ArrowRight className="w-4 h-4" />
+                <div className="mt-8 pt-4 border-t border-[#dde5dc] flex items-center gap-2 text-xs font-bold text-[#194f38]">
+                  <span>Начать аттестацию</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </div>
             </Link>
@@ -124,13 +160,13 @@ export default function Dashboard() {
       </section>
 
       {/* Футер */}
-      <footer className="bg-[#fbfcf9] border-t border-[#dde5dc] py-8 text-[#6f7a73]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-center sm:text-left">
-          <div>© Doctor Farmer. Все права защищены.</div>
-          <div className="flex items-center space-x-6">
-            <span className="cursor-pointer hover:text-[#15211c]">Политика конфиденциальности</span>
-            <span className="cursor-pointer hover:text-[#15211c]">Поддержка</span>
+      <footer className="bg-[#fbfcf9] border-t border-[#dde5dc] py-8 px-4 sm:px-6 text-center text-xs text-[#6f7a73] relative z-10">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <DoctorFarmerLogo className="h-6 w-auto" />
+            <span className="font-bold text-[#12352a]">DOCTOR FARMER</span>
           </div>
+          <p>© 2026 ООО ТД Доктор Фармер. Внутренний корпоративный портал.</p>
         </div>
       </footer>
 
