@@ -113,7 +113,7 @@ export default function Dashboard() {
       {/* Карточки модулей снизу */}
       <section className="bg-white py-16 sm:py-20 border-t border-[#dde5dc] relative z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             <Link href="/agro-helper">
               <div className="bg-[#f4f7f1] p-8 rounded-2xl border border-[#dde5dc] hover:border-[#2e7d52] transition-all shadow-xs cursor-pointer group flex flex-col justify-between h-full">
@@ -140,7 +140,7 @@ export default function Dashboard() {
               <div className="bg-[#f4f7f1] p-8 rounded-2xl border border-[#dde5dc] hover:border-[#2e7d52] transition-all shadow-xs cursor-pointer group flex flex-col justify-between h-full">
                 <div>
                   <div className="w-12 h-12 rounded-xl bg-[#e8efe5] flex items-center justify-center text-[#2e7d52] mb-6 group-hover:scale-105 transition-transform border border-[#dde5dc]">
-                    <BookOpen className="w-6 h-6" />
+                    <Award className="w-6 h-6" />
                   </div>
                   <h3 className="text-xl font-bold text-[#12352a] mb-2 flex items-center justify-between">
                     <span>Тестирование</span>
@@ -152,6 +152,27 @@ export default function Dashboard() {
                 </div>
                 <div className="mt-8 pt-4 border-t border-[#dde5dc] flex items-center gap-2 text-xs font-bold text-[#194f38]">
                   <span>Начать аттестацию</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/knowledge-base">
+              <div className="bg-[#f4f7f1] p-8 rounded-2xl border border-[#dde5dc] hover:border-[#2e7d52] transition-all shadow-xs cursor-pointer group flex flex-col justify-between h-full">
+                <div>
+                  <div className="w-12 h-12 rounded-xl bg-[#e8efe5] flex items-center justify-center text-[#2e7d52] mb-6 group-hover:scale-105 transition-transform border border-[#dde5dc]">
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#12352a] mb-2 flex items-center justify-between">
+                    <span>База знаний</span>
+                    <ArrowRight className="w-5 h-5 text-[#2e7d52] group-hover:translate-x-1 transition-transform" />
+                  </h3>
+                  <p className="text-sm text-[#6f7a73] leading-relaxed font-medium">
+                    Справочник действующих веществ, препаратов каталога, регламентов применения и агрономических регламентов защиты.
+                  </p>
+                </div>
+                <div className="mt-8 pt-4 border-t border-[#dde5dc] flex items-center gap-2 text-xs font-bold text-[#194f38]">
+                  <span>Открыть справочник</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </div>
