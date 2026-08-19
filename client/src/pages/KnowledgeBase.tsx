@@ -6,128 +6,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, BookOpen, Search, ShieldCheck, HelpCircle, Award, Sparkles, CheckCircle2, FileText, ExternalLink } from "lucide-react";
+import { ArrowLeft, BookOpen, Search, ShieldCheck, HelpCircle, Award, Sparkles, CheckCircle2, FileText } from "lucide-react";
 import { PRICE_CATALOG } from "@/data/priceCatalog";
-
-interface KnowledgeItem {
-  id: string;
-  title: string;
-  category: "препараты" | "действующие вещества" | "регламенты" | "технологии";
-  subtitle: string;
-  description: string;
-  details: string[];
-  tags: string[];
-}
-
-const KNOWLEDGE_BASE_ITEMS: KnowledgeItem[] = [
-  {
-    id: "dv-tribenuron",
-    title: "Трибенурон-метил (Группа сульфонилмочевин)",
-    category: "действующие вещества",
-    subtitle: "Системный гербицид против двудольных сорняков в посевах зерновых",
-    description: "Ингибирует фермент ацетолактатсинтазу (АЛС), что приводит к остановке деления клеток и гибели сорных растений. Эффективен против широкого спектра двудольных сорняков.",
-    details: [
-      "Применение: Зерновые культуры (пшеница, ячмень) от кущения до выхода в трубку.",
-      "Температурный режим: +15...+25 °C в сухую погоду.",
-      "Препараты в прайсе: Богдэн (ВДГ, 750 г/кг трибенурон-метил), а также в составе бинарных упаковок (Триатлон Плюс)."
-    ],
-    tags: ["Гербициды", "Двудольные", "Зерновые", "Сульфонилмочевины", "Богдэн"]
-  },
-  {
-    id: "dv-glyphosate",
-    title: "Глифосат (изотропиламинная соль / калийная соль)",
-    category: "действующие вещества",
-    subtitle: "Системный гербицид сплошного действия для десикации и паров",
-    description: "Проникает через надземные органы растений в корневую систему, блокируя синтез ароматических аминокислот. Уничтожает как однолетние, так и многолетние злаковые и двудольные сорняки.",
-    details: [
-      "Применение: Обработка полей по паровой технологии, десикация зерновых и масличных культур перед уборкой.",
-      "Нормы расхода: Зависят от видового состава сорняков (от 1.5 до 3.0 л/га).",
-      "Особенности: Не обладает почвенной активностью, действует только по вегетирующим сорнякам.",
-      "Препараты в прайсе: Торнадо 540, Ураган Форте."
-    ],
-    tags: ["Десикация", "Пары", "Сплошное действие", "Глифосат", "Торнадо", "Ураган"]
-  },
-  {
-    id: "prep-klopethir-int",
-    title: "КлопЭфир Интенсив (Клопиралид + Флорасулам + 2,4-Д)",
-    category: "препараты",
-    subtitle: "Заводская бинарная упаковка для зерновых",
-    description: "Высокоэффективная комбинация для борьбы со злостными двудольными сорняками (включая подмаренник цепкий, виды осота, бодяк, ромашку, марь белую) в посевах озимой и яровой пшеницы и ячменя.",
-    details: [
-      "Норма применения: 1 канистра на 12-16 га (стандартная средняя норма — 1 канистра на 14 га).",
-      "Фаза культуры: Кущение зерновых до образования 2-го междоузлия.",
-      "Баковые смеси: Первыми в бак добавляются водорастворимые пакеты/порошки, затем суспензии и эмульсии."
-    ],
-    tags: ["Зерновые", "Двудольные", "КлопЭфир", "Заводская упаковка"]
-  },
-  {
-    id: "prep-triatlon-plus",
-    title: "Триатлон Плюс (Элант Премиум + Сталкер)",
-    category: "препараты",
-    subtitle: "Заводская бинарная упаковка (2,4-Д + дикамба + трибенурон-метил)",
-    description: "Комплексное решение для зерновых культур против широкого спектра двудольных сорняков.",
-    details: [
-      "Норма применения: 4,5 л + 0,15 кг на 10-12 га.",
-      "Культуры: Пшеница озимая и яровая, ячмень яровой, овес.",
-      "Особенности: Мощное синергетическое действие трех действующих веществ."
-    ],
-    tags: ["Зерновые", "Двудольные", "Триатлон Плюс", "Заводская упаковка"]
-  },
-  {
-    id: "reg-cereal-weeds",
-    title: "Гербицидная защита зерновых от двудольных",
-    category: "регламенты",
-    subtitle: "Стратегия применения бинарных упаковок и баковых смесей",
-    description: "В защите зерновых (пшеница, ячмень) против двудольных сорняков ключевую роль играет фаза кущения культуры и фаза розетки у многолетних сорняков.",
-    details: [
-      "Правило подбора: Применяются проверенные заводские упаковки и комплексы (КлопЭфир Интенсив, КлопЭфир Микс, Триатлон Плюс, Триатлон Экстра).",
-      "Температурный оптимум: +12...+22 °C в солнечную безветренную погоду.",
-      "Ограничения: Не проводить обработку при угрозе заморозков ночью."
-    ],
-    tags: ["Зерновые", "Регламенты", "Гербициды", "Двудольные"]
-  },
-  {
-    id: "tech-clearfield",
-    title: "Технология Clearfield (Чистое поле)",
-    category: "технологии",
-    subtitle: "Возделывание устойчивых гибридов рапса и подсолнечника",
-    description: "Технология возделывания устойчивых гибридов с применением имадазолиноновых гербицидов. Позволяет уничтожить весь спектр сорняков, включая трудноискорежимые.",
-    details: [
-      "Культуры: Подсолнечник, Рапс (устойчивые гибриды).",
-      "Особенность: Строго контролировать севооборот из-за последействия на чувствительные культуры.",
-      "Фаза внесения: 2-4 настоящих листа культуры."
-    ],
-    tags: ["Clearfield", "Подсолнечник", "Рапс", "Технологии"]
-  },
-  {
-    id: "prep-verner-timeterr",
-    title: "Протравители семян: Тиметерр и Вернер",
-    category: "препараты",
-    subtitle: "Фунгицидная защита семенного материала",
-    description: "Обязательный этап предпосевной подготовки семян зерновых культур. Предотвращают развитие корневых гнилей и головневых болезней.",
-    details: [
-      "Тиметерр: Надежный протравитель для зерновых против комплекса семенной и почвенной инфекции.",
-      "Вернер: Комбинированный препарат, обеспечивающий длительное сохранение энергии прорастания и защиту от болезней.",
-      "Качество обработки: Равномерное покрытие семян с обязательным контролем влажности."
-    ],
-    tags: ["Протравливание", "Семена", "Фунгициды", "Зерновые", "Тиметерр", "Вернер"]
-  }
-];
 
 export default function KnowledgeBase() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedGroup, setSelectedGroup] = useState<string>("all");
+  const [selectedCulture, setSelectedCulture] = useState<string>("all");
   const [isSupportOpen, setIsSupportOpen] = useState(false);
 
-  const filteredItems = KNOWLEDGE_BASE_ITEMS.filter((item) => {
-    const matchesCat = selectedCategory === "all" || item.category === selectedCategory;
+  const allGroups = Array.from(new Set(PRICE_CATALOG.map(item => item.group)));
+  const allCulturesSet = new Set<string>();
+  PRICE_CATALOG.forEach(item => {
+    item.cultures.forEach(c => allCulturesSet.add(c));
+  });
+  const allCultures = Array.from(allCulturesSet).sort();
+
+  const filteredItems = PRICE_CATALOG.filter((item) => {
+    const matchesGroup = selectedGroup === "all" || item.group === selectedGroup;
+    const matchesCulture = selectedCulture === "all" || item.cultures.includes(selectedCulture);
     const q = searchQuery.toLowerCase();
     const matchesQuery = 
-      item.title.toLowerCase().includes(q) ||
-      item.subtitle.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q) ||
-      item.tags.some(t => t.toLowerCase().includes(q));
-    return matchesCat && matchesQuery;
+      item.name.toLowerCase().includes(q) ||
+      item.dv.toLowerCase().includes(q) ||
+      item.category.toLowerCase().includes(q) ||
+      item.cultures.some(c => c.toLowerCase().includes(q));
+    return matchesGroup && matchesCulture && matchesQuery;
   });
 
   return (
@@ -166,22 +70,22 @@ export default function KnowledgeBase() {
       <section className="bg-white border-b border-[#dde5dc] py-10 px-4 sm:px-8">
         <div className="max-w-4xl mx-auto text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8efe5] border border-[#2e7d52]/20 text-[#194f38] text-xs font-bold uppercase tracking-wider">
-            <BookOpen className="w-3.5 h-3.5 text-[#2e7d52]" /> Экспертный справочник
+            <BookOpen className="w-3.5 h-3.5 text-[#2e7d52]" /> Экспертный справочник каталога
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-[#12352a] tracking-tight">
             База знаний агронома
           </h1>
           <p className="text-sm sm:text-base text-[#6f7a73] max-w-2xl mx-auto font-medium">
-            Официальные регламенты, свойства действующих веществ, особенности препаратов из каталога Doctor Farmer и проверенные агрономические практики.
+            Полный каталог препаратов, удобрений, заводских бинарных упаковок, действующих веществ и регламентов применения по официальному перечню.
           </p>
 
-          {/* Поиск и категории */}
-          <div className="pt-6 max-w-xl mx-auto space-y-4">
+          {/* Поиск и фильтры */}
+          <div className="pt-6 max-w-2xl mx-auto space-y-4">
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6f7a73]" />
               <Input
                 type="text"
-                placeholder="Поиск по препаратам, действующим веществам, регламентам..."
+                placeholder="Поиск по названию препарата, действующему веществу, культуре..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-[#f4f7f1] border-[#dde5dc] text-[#15211c] placeholder:text-[#6f7a73] text-sm h-11 rounded-xl focus-visible:ring-[#2e7d52]"
@@ -189,23 +93,55 @@ export default function KnowledgeBase() {
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-2">
-              {[
-                { id: "all", label: "Все темы" },
-                { id: "препараты", label: "Препараты" },
-                { id: "действующие вещества", label: "Действующие вещества" },
-                { id: "регламенты", label: "Регламенты" },
-                { id: "технологии", label: "Технологии" },
-              ].map((cat) => (
+              <button
+                onClick={() => setSelectedGroup("all")}
+                className={
+                  selectedGroup === "all"
+                    ? "px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-[#194f38] text-white shadow-xs"
+                    : "px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-[#f4f7f1] text-[#6f7a73] border border-[#dde5dc] hover:border-[#66a46c]"
+                }
+              >
+                Все группы ({PRICE_CATALOG.length})
+              </button>
+              {allGroups.map((group) => (
                 <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    selectedCategory === cat.id
-                      ? "bg-[#194f38] text-white shadow-xs"
-                      : "bg-[#f4f7f1] text-[#6f7a73] border border-[#dde5dc] hover:border-[#66a46c]"
-                  }`}
+                  key={group}
+                  onClick={() => setSelectedGroup(group)}
+                  className={
+                    selectedGroup === group
+                      ? "px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-[#194f38] text-white shadow-xs"
+                      : "px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-[#f4f7f1] text-[#6f7a73] border border-[#dde5dc] hover:border-[#66a46c]"
+                  }
                 >
-                  {cat.label}
+                  {group}
+                </button>
+              ))}
+            </div>
+
+            {/* Фильтр по культурам */}
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5">
+              <span className="text-xs font-bold text-[#6f7a73] mr-1">Культура:</span>
+              <button
+                onClick={() => setSelectedCulture("all")}
+                className={
+                  selectedCulture === "all"
+                    ? "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all bg-[#2e7d52] text-white"
+                    : "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all bg-[#f4f7f1] text-[#6f7a73] border border-[#dde5dc] hover:bg-[#e8efe5]"
+                }
+              >
+                Все культуры
+              </button>
+              {allCultures.map((cult) => (
+                <button
+                  key={cult}
+                  onClick={() => setSelectedCulture(cult)}
+                  className={
+                    selectedCulture === cult
+                      ? "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all bg-[#2e7d52] text-white"
+                      : "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all bg-[#f4f7f1] text-[#6f7a73] border border-[#dde5dc] hover:bg-[#e8efe5]"
+                  }
+                >
+                  {cult}
                 </button>
               ))}
             </div>
@@ -219,50 +155,55 @@ export default function KnowledgeBase() {
           <div className="text-center py-16 bg-white rounded-2xl border border-[#dde5dc] p-8">
             <BookOpen className="w-12 h-12 text-[#6f7a73] mx-auto mb-3 opacity-40" />
             <h3 className="text-lg font-bold text-[#12352a]">Ничего не найдено</h3>
-            <p className="text-sm text-[#6f7a73] mt-1">Попробуйте изменить поисковый запрос или выбрать другую категорию.</p>
+            <p className="text-sm text-[#6f7a73] mt-1">Попробуйте изменить поисковый запрос или сбросить фильтры.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredItems.map((item) => (
-              <Card key={item.id} className="bg-white border border-[#dde5dc] shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-                <CardHeader className="pb-3 border-b border-[#dde5dc] bg-[#fbfcf9]">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider text-[#194f38] border-[#2e7d52]/30 bg-[#e8efe5]">
-                      {item.category}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-lg font-bold text-[#12352a] leading-tight">
-                    {item.title}
-                  </CardTitle>
-                  <p className="text-xs font-semibold text-[#2e7d52] mt-1">{item.subtitle}</p>
-                </CardHeader>
-                <CardContent className="pt-4 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <p className="text-xs text-[#15211c] leading-relaxed">
-                      {item.description}
-                    </p>
-
-                    <div className="space-y-1.5 pt-2 border-t border-[#dde5dc]">
-                      <span className="text-[11px] font-bold text-[#6f7a73] uppercase tracking-wider">Ключевые факты:</span>
-                      <ul className="space-y-1 text-xs text-[#15211c]">
-                        {item.details.map((d, dIdx) => (
-                          <li key={dIdx} className="flex items-start gap-1.5">
-                            <span className="text-[#2e7d52] font-bold mt-0.5">•</span>
-                            <span>{d}</span>
-                          </li>
-                        ))}
-                      </ul>
+            {filteredItems.map((item, idx) => (
+              <Card key={idx} className="bg-white border border-[#dde5dc] shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-shadow flex flex-col justify-between">
+                <div>
+                  <CardHeader className="pb-3 border-b border-[#dde5dc] bg-[#fbfcf9]">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider text-[#194f38] border-[#2e7d52]/30 bg-[#e8efe5]">
+                        {item.group}
+                      </Badge>
+                      <span className="text-[11px] font-semibold text-[#6f7a73]">{item.category}</span>
                     </div>
-                  </div>
+                    <CardTitle className="text-lg font-bold text-[#12352a] leading-tight">
+                      {item.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-3">
+                    <div>
+                      <span className="text-[11px] font-bold text-[#6f7a73] uppercase tracking-wider block mb-1">Действующее вещество:</span>
+                      <p className="text-xs text-[#15211c] font-medium leading-relaxed bg-[#f4f7f1] p-2.5 rounded-xl border border-[#dde5dc]">
+                        {item.dv}
+                      </p>
+                    </div>
 
-                  <div className="pt-4 border-t border-[#dde5dc] flex flex-wrap gap-1.5">
-                    {item.tags.map((tag, tIdx) => (
-                      <span key={tIdx} className="px-2 py-0.5 bg-[#f4f7f1] text-[#6f7a73] rounded-md text-[10px] font-medium border border-[#dde5dc]">
-                        #{tag}
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                      <div className="bg-[#fbfcf9] p-2 rounded-xl border border-[#dde5dc]">
+                        <span className="text-[10px] font-bold text-[#6f7a73] uppercase block">Норма расхода:</span>
+                        <span className="font-bold text-[#12352a]">{item.rate}</span>
+                      </div>
+                      <div className="bg-[#fbfcf9] p-2 rounded-xl border border-[#dde5dc]">
+                        <span className="text-[10px] font-bold text-[#6f7a73] uppercase block">Регламент:</span>
+                        <span className="font-bold text-[#194f38]">Официальный допуск</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </div>
+
+                <div className="px-6 pb-5 pt-3 border-t border-[#dde5dc] bg-[#fbfcf9]">
+                  <span className="text-[10px] font-bold text-[#6f7a73] uppercase tracking-wider block mb-1.5">Культуры применения:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {item.cultures.map((cul, cIdx) => (
+                      <span key={cIdx} className="px-2 py-0.5 bg-[#e8efe5] text-[#194f38] rounded-md text-[10px] font-semibold border border-[#2e7d52]/20">
+                        {cul}
                       </span>
                     ))}
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>
