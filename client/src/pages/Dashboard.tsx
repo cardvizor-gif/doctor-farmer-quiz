@@ -6,34 +6,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#f4f7f1] text-[#15211c] flex flex-col font-sans selection:bg-[#66a46c] selection:text-white relative overflow-hidden">
       
-      {/* Техно-аграрный геометрический водяной паттерн (кубизм / ботанические контуры культур) */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.09] z-0 flex flex-col justify-between overflow-hidden select-none" aria-hidden="true">
-        <svg className="w-full h-full absolute inset-0 text-[#194f38]" viewBox="0 0 1200 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
-          {/* Геометрический контур колоса пшеницы (кубистический стиль) */}
-          <path d="M150 100 L180 70 L210 100 L180 130 Z M180 70 L180 160 M165 95 L195 95 M160 120 L200 120" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M150 180 L180 150 L210 180 L180 210 Z M180 150 L180 240 M165 175 L195 175 M160 200 L200 200" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-
-          {/* Геометрический контур корзинки подсолнечника */}
-          <circle cx="950" cy="180" r="50" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6"/>
-          <path d="M950 130 L950 230 M900 180 L1000 180 M915 145 L985 215 M915 215 L985 145" stroke="currentColor" strokeWidth="1.5"/>
-
-          {/* Геометрический контур кукурузы с початком */}
-          <path d="M220 700 L250 650 L280 700 L250 820 Z M250 670 Q235 720 250 780" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-          <path d="M235 680 L220 660 M265 680 L285 660 M240 720 L220 710 M260 720 L285 710" stroke="currentColor" strokeWidth="1.5"/>
-
-          {/* Техно-аграрная сетка и абстрактные многоугольники */}
-          <polygon points="850,600 920,540 980,620 900,680" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4"/>
-          <polygon points="100,450 160,400 210,480 140,510" stroke="currentColor" strokeWidth="1.5"/>
-          <circle cx="880" cy="800" r="70" stroke="currentColor" strokeWidth="1.5"/>
-          <path d="M810 800 H950 M880 730 V870" stroke="currentColor" strokeWidth="1.5"/>
-
-          {/* Линии полей и технологические векторы */}
-          <path d="M0 350 Q300 320 600 360 T1200 340" stroke="currentColor" strokeWidth="2" fill="none"/>
-          <path d="M0 600 Q400 570 800 610 T1200 590" stroke="currentColor" strokeWidth="2" fill="none"/>
-          <path d="M0 850 Q350 820 750 860 T1200 840" stroke="currentColor" strokeWidth="2" fill="none"/>
-        </svg>
-      </div>
-
       {/* Верхняя навигация */}
       <header className="w-full border-b border-[#dde5dc] bg-[#fbfcf9] sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
@@ -75,72 +47,65 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Hero-секция с техно-аграрным паттерном */}
-      <section className="relative overflow-hidden py-12 sm:py-20 md:py-24 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10">
-        {/* Узнаваемые контурные водяные знаки внутри hero: пшеница, подсолнечник, кукуруза и рапс */}
-        <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.12] text-[#194f38]" aria-hidden="true">
-          <svg className="w-full h-full" viewBox="0 0 900 430" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-            {/* Пшеница слева */}
-            <g stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M105 385 C108 310 108 220 112 95" />
-              <path d="M112 145 L78 118 L105 164 M112 188 L76 160 L105 207 M112 232 L79 210 L106 251" />
-              <path d="M112 126 L145 100 L119 151 M112 171 L150 145 L119 195 M112 216 L147 190 L117 238" />
-              <path d="M112 95 L112 60" />
+      {/* Hero-секция с крупными белыми стилизованными силуэтами культур в стиле референса */}
+      <section className="relative overflow-hidden py-14 sm:py-22 md:py-28 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10 bg-[#12352a] text-white shadow-lg rounded-3xl my-6 mx-4 sm:mx-auto">
+        
+        {/* Крупные фоновые белые силуэты культур в стиле референса (колосья пшеницы, подсолнечник, зерновые) */}
+        <div className="absolute inset-0 pointer-events-none z-0 opacity-15 flex items-center justify-between px-8 py-4 select-none overflow-hidden" aria-hidden="true">
+          <svg className="w-full h-full absolute inset-0 text-white" viewBox="0 0 1000 450" fill="currentColor" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            {/* Колос пшеницы стиль 1 (слева) */}
+            <g transform="translate(60, 40) scale(1.3)">
+              <rect x="35" y="10" width="6" height="240" rx="3" />
+              <path d="M38 20 C10 10 5 40 38 60 C5 75 10 105 38 120 C5 135 10 165 38 180 C5 195 10 225 38 240 Z" />
+              <path d="M41 20 C69 10 74 40 41 60 C74 75 69 105 41 120 C74 135 69 165 41 180 C74 195 69 225 41 240 Z" />
             </g>
-            {/* Подсолнечник справа */}
-            <g stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="758" cy="145" r="38" />
-              <circle cx="758" cy="145" r="15" strokeDasharray="3 5" />
-              <path d="M758 107 V183 M720 145 H796 M731 118 L785 172 M731 172 L785 118" />
-              <path d="M758 183 C758 238 744 286 718 333" />
-              <path d="M741 248 C705 224 683 228 665 247 C696 257 718 259 741 248 Z" />
-              <path d="M745 285 C780 262 804 267 821 289 C789 296 768 298 745 285 Z" />
+
+            {/* Колос пшеницы стиль 2 (чуть правее) */}
+            <g transform="translate(180, 80) scale(1.1)">
+              <rect x="35" y="10" width="6" height="200" rx="3" />
+              <path d="M38 15 C15 5 10 30 38 45 C10 60 15 85 38 100 C10 115 15 140 38 155 C10 170 15 195 38 210 Z" />
+              <path d="M41 15 C64 5 69 30 41 45 C69 60 64 85 41 100 C69 115 64 140 41 155 C69 170 64 195 41 210 Z" />
             </g>
-            {/* Кукуруза снизу справа */}
-            <g stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M650 400 C659 348 664 306 662 258" />
-              <path d="M662 287 C623 268 596 274 575 301 C610 308 638 306 662 287 Z" />
-              <path d="M663 330 C700 308 728 317 746 344 C712 348 686 344 663 330 Z" />
-              <path d="M662 258 L650 230 M662 258 L679 229" />
-              <path d="M650 230 L662 218 L674 230 L662 242 Z" />
+
+            {/* Подсолнечник / стилизованный элемент (справа 1) */}
+            <g transform="translate(740, 60) scale(1.2)">
+              <circle cx="50" cy="80" r="35" />
+              <path d="M50 15 V145 M15 80 H85 M25 45 L75 115 M25 115 L75 45" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
+              <rect x="47" y="140" width="6" height="150" rx="3" />
             </g>
-            {/* Рапс / геометрические цветы снизу слева */}
-            <g stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M254 390 C260 346 258 300 266 248" />
-              <circle cx="266" cy="246" r="9" /><circle cx="239" cy="270" r="8" /><circle cx="292" cy="275" r="8" />
-              <path d="M266 246 L239 270 M266 246 L292 275 M266 246 L266 220" />
-              <path d="M228 391 H316 M228 373 H316" strokeDasharray="6 8" />
-            </g>
-            {/* Кубистическая сетка полей */}
-            <g stroke="currentColor" strokeWidth="1.4" strokeDasharray="5 7">
-              <path d="M30 405 H870" /><path d="M420 90 V395" /><path d="M470 90 V395" />
-              <path d="M360 390 L470 325 L580 390" /><path d="M360 370 L470 305 L580 370" />
+
+            {/* Колос пшеницы зеркальный (справа 2) */}
+            <g transform="translate(860, 50) scale(1.25)">
+              <rect x="35" y="10" width="6" height="220" rx="3" />
+              <path d="M38 18 C12 8 8 35 38 52 C8 65 12 92 38 108 C8 122 12 148 38 165 C8 178 12 205 38 220 Z" />
+              <path d="M41 18 C67 8 71 35 41 52 C71 65 67 92 41 108 C71 122 67 148 41 165 C71 178 67 205 41 220 Z" />
             </g>
           </svg>
         </div>
+
         <div className="w-full space-y-6 sm:space-y-8 max-w-3xl mx-auto relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#e8efe5] text-[#194f38] text-xs font-bold tracking-wide uppercase border border-[#dde5dc] mx-auto shadow-2xs">
-            <ShieldCheck className="w-4 h-4 text-[#2e7d52]" /> Рабочий кабинет команды
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-bold tracking-wide uppercase border border-white/20 mx-auto shadow-sm backdrop-blur-xs">
+            <ShieldCheck className="w-4 h-4 text-[#d5a642]" /> Рабочий кабинет команды
           </div>
           
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-[#12352a] leading-[1.15]">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
             Профессиональная <br />
-            <span className="text-[#2e7d52]">экспертиза на поле</span>
+            <span className="text-[#66a46c]">экспертиза на поле</span>
           </h1>
 
-          <p className="text-[#6f7a73] text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium">
+          <p className="text-white/80 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium">
             Единый цифровой инструмент для точного подбора регламентов защиты растений и оперативной аттестации продуктовых знаний команды.
           </p>
 
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/agro-helper">
-              <button className="bg-[#194f38] hover:bg-[#12352a] text-white font-bold text-sm px-8 py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group w-full sm:w-auto">
+              <button className="bg-[#66a46c] hover:bg-[#528a57] text-white font-bold text-sm px-8 py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group w-full sm:w-auto">
                 <span>АгроПомощник ДФ</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
             <Link href="/quiz">
-              <button className="bg-white hover:bg-[#e8efe5] text-[#194f38] font-bold text-sm px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 border border-[#dde5dc] shadow-xs w-full sm:w-auto">
+              <button className="bg-white hover:bg-[#f4f7f1] text-[#12352a] font-bold text-sm px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto">
                 <Award className="w-4 h-4 text-[#d5a642]" />
                 <span>Тестирование</span>
               </button>
