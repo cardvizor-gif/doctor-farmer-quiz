@@ -7,7 +7,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#f4f7f1] text-[#15211c] flex flex-col font-sans selection:bg-[#66a46c] selection:text-white relative overflow-hidden">
       
       {/* Техно-аграрный геометрический водяной паттерн (кубизм / ботанические контуры культур) */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.055] z-0 flex flex-col justify-between overflow-hidden select-none" aria-hidden="true">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.09] z-0 flex flex-col justify-between overflow-hidden select-none" aria-hidden="true">
         <svg className="w-full h-full absolute inset-0 text-[#194f38]" viewBox="0 0 1200 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Геометрический контур колоса пшеницы (кубистический стиль) */}
           <path d="M150 100 L180 70 L210 100 L180 130 Z M180 70 L180 160 M165 95 L195 95 M160 120 L200 120" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -77,7 +77,48 @@ export default function Dashboard() {
 
       {/* Hero-секция с техно-аграрным паттерном */}
       <section className="relative overflow-hidden py-12 sm:py-20 md:py-24 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10">
-        <div className="w-full space-y-6 sm:space-y-8 max-w-3xl mx-auto">
+        {/* Узнаваемые контурные водяные знаки внутри hero: пшеница, подсолнечник, кукуруза и рапс */}
+        <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.12] text-[#194f38]" aria-hidden="true">
+          <svg className="w-full h-full" viewBox="0 0 900 430" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            {/* Пшеница слева */}
+            <g stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M105 385 C108 310 108 220 112 95" />
+              <path d="M112 145 L78 118 L105 164 M112 188 L76 160 L105 207 M112 232 L79 210 L106 251" />
+              <path d="M112 126 L145 100 L119 151 M112 171 L150 145 L119 195 M112 216 L147 190 L117 238" />
+              <path d="M112 95 L112 60" />
+            </g>
+            {/* Подсолнечник справа */}
+            <g stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="758" cy="145" r="38" />
+              <circle cx="758" cy="145" r="15" strokeDasharray="3 5" />
+              <path d="M758 107 V183 M720 145 H796 M731 118 L785 172 M731 172 L785 118" />
+              <path d="M758 183 C758 238 744 286 718 333" />
+              <path d="M741 248 C705 224 683 228 665 247 C696 257 718 259 741 248 Z" />
+              <path d="M745 285 C780 262 804 267 821 289 C789 296 768 298 745 285 Z" />
+            </g>
+            {/* Кукуруза снизу справа */}
+            <g stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M650 400 C659 348 664 306 662 258" />
+              <path d="M662 287 C623 268 596 274 575 301 C610 308 638 306 662 287 Z" />
+              <path d="M663 330 C700 308 728 317 746 344 C712 348 686 344 663 330 Z" />
+              <path d="M662 258 L650 230 M662 258 L679 229" />
+              <path d="M650 230 L662 218 L674 230 L662 242 Z" />
+            </g>
+            {/* Рапс / геометрические цветы снизу слева */}
+            <g stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M254 390 C260 346 258 300 266 248" />
+              <circle cx="266" cy="246" r="9" /><circle cx="239" cy="270" r="8" /><circle cx="292" cy="275" r="8" />
+              <path d="M266 246 L239 270 M266 246 L292 275 M266 246 L266 220" />
+              <path d="M228 391 H316 M228 373 H316" strokeDasharray="6 8" />
+            </g>
+            {/* Кубистическая сетка полей */}
+            <g stroke="currentColor" strokeWidth="1.4" strokeDasharray="5 7">
+              <path d="M30 405 H870" /><path d="M420 90 V395" /><path d="M470 90 V395" />
+              <path d="M360 390 L470 325 L580 390" /><path d="M360 370 L470 305 L580 370" />
+            </g>
+          </svg>
+        </div>
+        <div className="w-full space-y-6 sm:space-y-8 max-w-3xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#e8efe5] text-[#194f38] text-xs font-bold tracking-wide uppercase border border-[#dde5dc] mx-auto shadow-2xs">
             <ShieldCheck className="w-4 h-4 text-[#2e7d52]" /> Рабочий кабинет команды
           </div>
