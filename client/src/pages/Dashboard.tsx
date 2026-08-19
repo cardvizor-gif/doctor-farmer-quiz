@@ -40,16 +40,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Мобильная панель быстрого переключения */}
-      <div className="md:hidden bg-[#e8efe5] border-b border-[#dde5dc] px-4 py-2 flex items-center justify-around text-xs font-bold text-[#194f38] relative z-20">
-        <Link href="/agro-helper">
-          <span className="flex items-center gap-1.5 py-1 px-3 rounded-lg bg-white shadow-2xs">🌱 АгроПомощник</span>
-        </Link>
-        <div className="w-px h-4 bg-[#dde5dc]" />
-        <Link href="/quiz">
-          <span className="flex items-center gap-1.5 py-1 px-3 rounded-lg hover:bg-white/60">📝 Тестирование</span>
-        </Link>
-      </div>
+      {/* Мобильная панель быстрого переключения удалена по требованию пользователя */}
 
       {/* Hero-секция с белым фоном и отчётливой зелёной мозаикой пиктограмм */}
       <section className="relative overflow-hidden py-14 sm:py-22 md:py-28 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10 bg-white text-[#12352a] shadow-lg rounded-3xl my-6 mx-4 sm:mx-auto border border-[#dde5dc]">
