@@ -68,11 +68,11 @@ function formatDuration(seconds: number): string {
 }
 
 function getTimeLimitSeconds(questionCountNumber: number, selectedModesCount: number): number {
-  if (questionCountNumber <= 20) return 600; // 10 минут
-  if (questionCountNumber <= 30) return 900; // 15 минут
-  if (questionCountNumber <= 50) return 1500; // 25 минут
-  if (questionCountNumber <= 100) return 3000; // 50 минут
-  return questionCountNumber * 20; // 20 сек на вопрос
+  if (questionCountNumber <= 20) return 420; // 7 минут для 20 вопросов
+  if (questionCountNumber <= 30) return 600; // 10 минут для 30 вопросов
+  if (questionCountNumber <= 50) return 1020; // 17 минут для 50 вопросов
+  if (questionCountNumber <= 100) return 2040; // 34 минуты для 100 вопросов
+  return questionCountNumber * 20;
 }
 
 function ButtonArrow({ children, onClick, disabled = false }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
@@ -371,23 +371,23 @@ export default function Home() {
   if (screen === "start") {
     return (
       <main className="site-shell start-shell">
-        <header className="site-header">
-          <div className="brand-lockup">
-            <img src={LOGO_IMAGE} alt="Doctor Farmer" className="brand-mark" />
-            <div><span className="brand-name">DOCTOR FARMER</span><span className="brand-caption">knowledge lab / 2026</span></div>
-          </div>
-          <div className="flex items-center space-x-3">
+        <header className="site-header flex flex-col sm:flex-row items-center justify-between gap-3 py-2">
+          <div className="flex items-center justify-between w-full sm:w-auto">
             <Link href="/">
-              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
-                🏠 На главную
+              <DoctorFarmerLogo className="h-9 sm:h-11 w-auto cursor-pointer" />
+            </Link>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+            <Link href="/">
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[11px] h-8 px-2.5">
+                На главную
               </Button>
             </Link>
             <Link href="/agro-helper">
-              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
-                🌱 АгроПомощник
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[11px] h-8 px-2.5">
+                АгроПомощник
               </Button>
             </Link>
-            <div className="header-note hidden sm:flex"><ShieldCheck size={15} /> Тестирование</div>
           </div>
         </header>
 
@@ -433,21 +433,27 @@ export default function Home() {
     const matchItems = currentQuestion.kind === "match" ? currentQuestion.items : [];
     return (
       <main className="site-shell quiz-shell">
-        <header className="quiz-topbar">
-          <div className="flex items-center gap-3">
-            <button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> Настройки теста</button>
+        <header className="quiz-topbar flex flex-col sm:flex-row items-center justify-between gap-3 py-2">
+          <div className="flex items-center justify-between w-full sm:w-auto gap-2 flex-wrap">
+            <button type="button" className="back-link text-xs flex items-center gap-1 text-[#194f38]" onClick={goStart}><ArrowLeft size={14} /> К настройкам</button>
+            <div className="flex items-center gap-1.5">
+              <Link href="/">
+                <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[10px] h-7 px-2">
+                  На главную
+                </Button>
+              </Link>
+              <Link href="/agro-helper">
+                <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[10px] h-7 px-2">
+                  АгроПомощник
+                </Button>
+              </Link>
+            </div>
+          </div>
+          <div className="quiz-brand flex items-center gap-2">
             <Link href="/">
-              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
-                🏠 На главную
-              </Button>
-            </Link>
-            <Link href="/agro-helper">
-              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
-                🌱 АгроПомощник
-              </Button>
+              <DoctorFarmerLogo className="h-7 sm:h-9 w-auto cursor-pointer" />
             </Link>
           </div>
-          <div className="quiz-brand"><DoctorFarmerLogo className="h-8 sm:h-10 w-auto" /><span><i>/ quiz lab</i></span></div>
           <div className="quiz-score"><span>Счёт</span><strong>{score}</strong></div>
         </header>
         <div className="progress-meta"><span>Вопрос <strong>{currentIndex + 1}</strong> из {questions.length}</span><span>{percent}% пройдено</span></div><div className="progress-track"><div className="progress-value" style={{ width: `${Math.max(percent, 3)}%` }} /></div>
@@ -473,21 +479,27 @@ export default function Home() {
   const resultSub = percentage >= 75 ? "Вы уверенно ориентируетесь в ключевых характеристиках препаратов." : "Повторите темы с наименьшим результатом и пройдите сессию ещё раз.";
   return (
     <main className="site-shell result-shell">
-      <header className="quiz-topbar">
-        <div className="flex items-center gap-3">
-          <button type="button" className="back-link" onClick={goStart}><ArrowLeft size={16} /> К настройкам</button>
+      <header className="quiz-topbar flex flex-col sm:flex-row items-center justify-between gap-3 py-2">
+        <div className="flex items-center justify-between w-full sm:w-auto gap-2 flex-wrap">
+          <button type="button" className="back-link text-xs flex items-center gap-1 text-[#194f38]" onClick={goStart}><ArrowLeft size={14} /> К настройкам</button>
+          <div className="flex items-center gap-1.5">
+            <Link href="/">
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[10px] h-7 px-2">
+                На главную
+              </Button>
+            </Link>
+            <Link href="/agro-helper">
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[10px] h-7 px-2">
+                АгроПомощник
+              </Button>
+            </Link>
+          </div>
+        </div>
+        <div className="quiz-brand flex items-center gap-2">
           <Link href="/">
-            <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
-              🏠 На главную
-            </Button>
-          </Link>
-          <Link href="/agro-helper">
-            <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-xs py-1 h-8">
-              🌱 АгроПомощник
-            </Button>
+            <DoctorFarmerLogo className="h-7 sm:h-9 w-auto cursor-pointer" />
           </Link>
         </div>
-        <div className="quiz-brand"><DoctorFarmerLogo className="h-8 sm:h-10 w-auto" /><span><i>/ result lab</i></span></div>
         <div className="quiz-score"><span>Сотрудник</span><strong className="score-name">{name}</strong></div>
       </header>
       <section className="result-hero" style={{ backgroundImage: `url(${RESULT_IMAGE})` }}><div className="result-overlay" /><div className="result-content"><div className="eyebrow light"><span className="eyebrow-dot" /> session complete</div><div className="result-scoreline"><strong>{score}</strong><span>/ {questions.length}<small>правильных ответов</small></span></div><h1>{resultMessage}</h1><p>{resultSub}</p><div className={`email-state ${emailStatus}`}><Mail size={16} />{emailStatus === "sending" ? "Отправляем итог руководителю…" : emailMessage}</div></div><div className="result-badge"><Trophy size={20} /><span>{percentage}%<small>точность</small></span></div></section>
