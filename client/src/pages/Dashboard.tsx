@@ -47,57 +47,57 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Hero-секция с крупными белыми стилизованными силуэтами культур в стиле референса */}
-      <section className="relative overflow-hidden py-14 sm:py-22 md:py-28 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10 bg-[#12352a] text-white shadow-lg rounded-3xl my-6 mx-4 sm:mx-auto">
+      {/* Hero-секция с белым фоном и отчётливой зелёной мозаикой пиктограмм */}
+      <section className="relative overflow-hidden py-14 sm:py-22 md:py-28 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10 bg-white text-[#12352a] shadow-lg rounded-3xl my-6 mx-4 sm:mx-auto border border-[#dde5dc]">
         
-        {/* Мозаика из предоставленных пиктограмм культур: единый масштаб, ритм и прозрачность */}
+        {/* Мозаика из зелёных пиктограмм культур на белом фоне */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true">
-          <div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3 gap-3 sm:gap-6 p-5 sm:p-8 opacity-[0.17]">
+          <div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3 gap-3 sm:gap-6 p-5 sm:p-8 opacity-[0.22]">
             {[
-              ["/manus-storage/df-white-wheat_icon_615a03d9.png", "Пшеница"],
-              ["/manus-storage/df-white-barley_icon_50d4dba4.png", "Ячмень"],
-              ["/manus-storage/df-white-corn_icon_135d59a6.png", "Кукуруза"],
-              ["/manus-storage/df-white-oats_icon_d5de16a2.png", "Овёс"],
-              ["/manus-storage/df-white-rapeseed_icon_b44efa1f.png", "Рапс"],
-              ["/manus-storage/df-white-sunflower_icon_1f630dd8.png", "Подсолнечник"],
-              ["/manus-storage/df-white-pea_icon_91021ead.png", "Горох"],
-              ["/manus-storage/df-white-corn_icon_135d59a6.png", "Кукуруза"],
-              ["/manus-storage/df-white-oats_icon_d5de16a2.png", "Овёс"],
-              ["/manus-storage/df-white-sunflower_icon_1f630dd8.png", "Подсолнечник"],
-              ["/manus-storage/df-white-rapeseed_icon_b44efa1f.png", "Рапс"],
-              ["/manus-storage/df-white-barley_icon_50d4dba4.png", "Ячмень"],
+              ["/manus-storage/df-green-wheat_icon_5f103e9a.png", "Пшеница"],
+              ["/manus-storage/df-green-barley_icon_4f609506.png", "Ячмень"],
+              ["/manus-storage/df-green-corn_icon_6c35bf86.png", "Кукуруза"],
+              ["/manus-storage/df-green-oats_icon_f913a11f.png", "Овёс"],
+              ["/manus-storage/df-green-rapeseed_icon_f8c194b4.png", "Рапс"],
+              ["/manus-storage/df-green-sunflower_icon_011ba21e.png", "Подсолнечник"],
+              ["/manus-storage/df-green-pea_icon_fa7f50ea.png", "Горох"],
+              ["/manus-storage/df-green-corn_icon_6c35bf86.png", "Кукуруза"],
+              ["/manus-storage/df-green-oats_icon_f913a11f.png", "Овёс"],
+              ["/manus-storage/df-green-sunflower_icon_011ba21e.png", "Подсолнечник"],
+              ["/manus-storage/df-green-rapeseed_icon_f8c194b4.png", "Рапс"],
+              ["/manus-storage/df-green-barley_icon_4f609506.png", "Ячмень"],
             ].map(([src, alt], index) => (
               <div key={`${src}-${index}`} className={`flex items-center justify-center ${index % 3 === 1 ? "translate-y-3 sm:translate-y-5" : ""}`}>
-                <img src={src} alt={alt} className="h-full w-full object-contain drop-shadow-[0_2px_8px_rgba(255,255,255,0.08)]" />
+                <img src={src} alt={alt} className="h-full w-full object-contain drop-shadow-[0_2px_6px_rgba(25,79,56,0.12)]" />
               </div>
             ))}
           </div>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(18,53,42,0.96)_0%,rgba(18,53,42,0.78)_42%,rgba(18,53,42,0.34)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.85)_48%,rgba(255,255,255,0.45)_100%)]" />
         </div>
 
         <div className="w-full space-y-6 sm:space-y-8 max-w-3xl mx-auto relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-bold tracking-wide uppercase border border-white/20 mx-auto shadow-sm backdrop-blur-xs">
-            <ShieldCheck className="w-4 h-4 text-[#d5a642]" /> Рабочий кабинет команды
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#e8efe5] text-[#194f38] text-xs font-bold tracking-wide uppercase border border-[#dde5dc] mx-auto shadow-2xs">
+            <ShieldCheck className="w-4 h-4 text-[#2e7d52]" /> Рабочий кабинет команды
           </div>
           
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-[#12352a] leading-[1.15]">
             Профессиональная <br />
-            <span className="text-[#66a46c]">экспертиза на поле</span>
+            <span className="text-[#2e7d52]">экспертиза на поле</span>
           </h1>
 
-          <p className="text-white/80 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium">
+          <p className="text-[#6f7a73] text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium">
             Единый цифровой инструмент для точного подбора регламентов защиты растений и оперативной аттестации продуктовых знаний команды.
           </p>
 
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/agro-helper">
-              <button className="bg-[#66a46c] hover:bg-[#528a57] text-white font-bold text-sm px-8 py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group w-full sm:w-auto">
+              <button className="bg-[#194f38] hover:bg-[#12352a] text-white font-bold text-sm px-8 py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group w-full sm:w-auto">
                 <span>АгроПомощник ДФ</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
             <Link href="/quiz">
-              <button className="bg-white hover:bg-[#f4f7f1] text-[#12352a] font-bold text-sm px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto">
+              <button className="bg-white hover:bg-[#e8efe5] text-[#194f38] font-bold text-sm px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 border border-[#dde5dc] shadow-xs w-full sm:w-auto">
                 <Award className="w-4 h-4 text-[#d5a642]" />
                 <span>Тестирование</span>
               </button>
