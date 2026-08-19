@@ -50,37 +50,29 @@ export default function Dashboard() {
       {/* Hero-секция с крупными белыми стилизованными силуэтами культур в стиле референса */}
       <section className="relative overflow-hidden py-14 sm:py-22 md:py-28 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10 bg-[#12352a] text-white shadow-lg rounded-3xl my-6 mx-4 sm:mx-auto">
         
-        {/* Крупные фоновые белые силуэты культур в стиле референса (колосья пшеницы, подсолнечник, зерновые) */}
-        <div className="absolute inset-0 pointer-events-none z-0 opacity-15 flex items-center justify-between px-8 py-4 select-none overflow-hidden" aria-hidden="true">
-          <svg className="w-full h-full absolute inset-0 text-white" viewBox="0 0 1000 450" fill="currentColor" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-            {/* Колос пшеницы стиль 1 (слева) */}
-            <g transform="translate(60, 40) scale(1.3)">
-              <rect x="35" y="10" width="6" height="240" rx="3" />
-              <path d="M38 20 C10 10 5 40 38 60 C5 75 10 105 38 120 C5 135 10 165 38 180 C5 195 10 225 38 240 Z" />
-              <path d="M41 20 C69 10 74 40 41 60 C74 75 69 105 41 120 C74 135 69 165 41 180 C74 195 69 225 41 240 Z" />
-            </g>
-
-            {/* Колос пшеницы стиль 2 (чуть правее) */}
-            <g transform="translate(180, 80) scale(1.1)">
-              <rect x="35" y="10" width="6" height="200" rx="3" />
-              <path d="M38 15 C15 5 10 30 38 45 C10 60 15 85 38 100 C10 115 15 140 38 155 C10 170 15 195 38 210 Z" />
-              <path d="M41 15 C64 5 69 30 41 45 C69 60 64 85 41 100 C69 115 64 140 41 155 C69 170 64 195 41 210 Z" />
-            </g>
-
-            {/* Подсолнечник / стилизованный элемент (справа 1) */}
-            <g transform="translate(740, 60) scale(1.2)">
-              <circle cx="50" cy="80" r="35" />
-              <path d="M50 15 V145 M15 80 H85 M25 45 L75 115 M25 115 L75 45" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-              <rect x="47" y="140" width="6" height="150" rx="3" />
-            </g>
-
-            {/* Колос пшеницы зеркальный (справа 2) */}
-            <g transform="translate(860, 50) scale(1.25)">
-              <rect x="35" y="10" width="6" height="220" rx="3" />
-              <path d="M38 18 C12 8 8 35 38 52 C8 65 12 92 38 108 C8 122 12 148 38 165 C8 178 12 205 38 220 Z" />
-              <path d="M41 18 C67 8 71 35 41 52 C71 65 67 92 41 108 C71 122 67 148 41 165 C71 178 67 205 41 220 Z" />
-            </g>
-          </svg>
+        {/* Мозаика из предоставленных пиктограмм культур: единый масштаб, ритм и прозрачность */}
+        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true">
+          <div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3 gap-3 sm:gap-6 p-5 sm:p-8 opacity-[0.17]">
+            {[
+              ["/manus-storage/df-white-wheat_icon_615a03d9.png", "Пшеница"],
+              ["/manus-storage/df-white-barley_icon_50d4dba4.png", "Ячмень"],
+              ["/manus-storage/df-white-corn_icon_135d59a6.png", "Кукуруза"],
+              ["/manus-storage/df-white-oats_icon_d5de16a2.png", "Овёс"],
+              ["/manus-storage/df-white-rapeseed_icon_b44efa1f.png", "Рапс"],
+              ["/manus-storage/df-white-sunflower_icon_1f630dd8.png", "Подсолнечник"],
+              ["/manus-storage/df-white-pea_icon_91021ead.png", "Горох"],
+              ["/manus-storage/df-white-corn_icon_135d59a6.png", "Кукуруза"],
+              ["/manus-storage/df-white-oats_icon_d5de16a2.png", "Овёс"],
+              ["/manus-storage/df-white-sunflower_icon_1f630dd8.png", "Подсолнечник"],
+              ["/manus-storage/df-white-rapeseed_icon_b44efa1f.png", "Рапс"],
+              ["/manus-storage/df-white-barley_icon_50d4dba4.png", "Ячмень"],
+            ].map(([src, alt], index) => (
+              <div key={`${src}-${index}`} className={`flex items-center justify-center ${index % 3 === 1 ? "translate-y-3 sm:translate-y-5" : ""}`}>
+                <img src={src} alt={alt} className="h-full w-full object-contain drop-shadow-[0_2px_8px_rgba(255,255,255,0.08)]" />
+              </div>
+            ))}
+          </div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(18,53,42,0.96)_0%,rgba(18,53,42,0.78)_42%,rgba(18,53,42,0.34)_100%)]" />
         </div>
 
         <div className="w-full space-y-6 sm:space-y-8 max-w-3xl mx-auto relative z-10">
