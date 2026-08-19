@@ -75,7 +75,7 @@ export default function Dashboard() {
           </h1>
 
           <p className="text-[#6f7a73] text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium">
-            Единый цифровой инструмент для точного подбора регламентов защиты растений и оперативной аттестации продуктовых знаний команды.
+            Единое пространство агрономических решений.
           </p>
 
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
