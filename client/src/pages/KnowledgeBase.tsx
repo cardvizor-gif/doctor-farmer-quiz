@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, BookOpen, Search, ShieldCheck, HelpCircle, Award, Sparkles, CheckCircle2, FileText } from "lucide-react";
+import { ArrowLeft, BookOpen, Search, ShieldCheck, HelpCircle, Award, Sparkles, CheckCircle2, FileText, Calendar, Clock, AlertTriangle } from "lucide-react";
 import { PRICE_CATALOG } from "@/data/priceCatalog";
 
 export default function KnowledgeBase() {
@@ -30,7 +30,9 @@ export default function KnowledgeBase() {
       item.name.toLowerCase().includes(q) ||
       item.dv.toLowerCase().includes(q) ||
       item.category.toLowerCase().includes(q) ||
-      item.cultures.some(c => c.toLowerCase().includes(q));
+      item.cultures.some(c => c.toLowerCase().includes(q)) ||
+      item.regulation.phase.toLowerCase().includes(q) ||
+      item.regulation.objects.toLowerCase().includes(q);
     return matchesGroup && matchesCulture && matchesQuery;
   });
 
@@ -70,13 +72,13 @@ export default function KnowledgeBase() {
       <section className="bg-white border-b border-[#dde5dc] py-10 px-4 sm:px-8">
         <div className="max-w-4xl mx-auto text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8efe5] border border-[#2e7d52]/20 text-[#194f38] text-xs font-bold uppercase tracking-wider">
-            <BookOpen className="w-3.5 h-3.5 text-[#2e7d52]" /> Экспертный справочник каталога
+            <BookOpen className="w-3.5 h-3.5 text-[#2e7d52]" /> Экспертный справочник регламентов
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-[#12352a] tracking-tight">
             База знаний агронома
           </h1>
           <p className="text-sm sm:text-base text-[#6f7a73] max-w-2xl mx-auto font-medium">
-            Полный каталог препаратов, удобрений, заводских бинарных упаковок, действующих веществ и регламентов применения по официальному перечню.
+            Полный каталог препаратов с подробными регламентами применения: фазы внесения, вредные объекты, температурные режимы и агрономические ограничения.
           </p>
 
           {/* Поиск и фильтры */}
@@ -85,7 +87,7 @@ export default function KnowledgeBase() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6f7a73]" />
               <Input
                 type="text"
-                placeholder="Поиск по названию препарата, действующему веществу, культуре..."
+                placeholder="Поиск по названию, действующему веществу, фазе, объектам..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-[#f4f7f1] border-[#dde5dc] text-[#15211c] placeholder:text-[#6f7a73] text-sm h-11 rounded-xl focus-visible:ring-[#2e7d52]"
@@ -189,6 +191,31 @@ export default function KnowledgeBase() {
                       <div className="bg-[#fbfcf9] p-2 rounded-xl border border-[#dde5dc]">
                         <span className="text-[10px] font-bold text-[#6f7a73] uppercase block">Регламент:</span>
                         <span className="font-bold text-[#194f38]">Официальный допуск</span>
+                      </div>
+                    </div>
+
+                    {/* Блок регламента применения */}
+                    <div className="space-y-2 pt-2 border-t border-[#dde5dc]">
+                      <span className="text-[11px] font-bold text-[#194f38] uppercase tracking-wider flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-[#2e7d52]" /> Регламент применения:
+                      </span>
+                      <div className="bg-[#f8faf6] p-3 rounded-xl border border-[#dde5dc] space-y-2 text-xs text-[#15211c]">
+                        <div>
+                          <span className="font-bold text-[#2e7d52]">Фаза и время внесения:</span>
+                          <p className="mt-0.5 text-[#334138]">{item.regulation.phase}</p>
+                        </div>
+                        <div>
+                          <span className="font-bold text-[#2e7d52]">Вредные объекты / назначение:</span>
+                          <p className="mt-0.5 text-[#334138]">{item.regulation.objects}</p>
+                        </div>
+                        <div>
+                          <span className="font-bold text-[#2e7d52]">Условия и температура:</span>
+                          <p className="mt-0.5 text-[#334138]">{item.regulation.conditions}</p>
+                        </div>
+                        <div>
+                          <span className="font-bold text-[#b91c1c]">Ограничения и требования:</span>
+                          <p className="mt-0.5 text-[#7f1d1d]">{item.regulation.restrictions}</p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
