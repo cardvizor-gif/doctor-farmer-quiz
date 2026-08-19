@@ -69,7 +69,7 @@ export default function Dashboard() {
             <ShieldCheck className="w-4 h-4 text-[#2e7d52]" /> Рабочий кабинет команды
           </div>
           
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-[#12352a] leading-[1.15]">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold font-jakarta tracking-tight text-[#12352a] leading-[1.2]">
             Профессиональная <br />
             <span className="text-[#2e7d52]">экспертиза на поле</span>
           </h1>
