@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { CROP_OPTIONS, CropOption } from "@/data/agropom";
-import { PROTECTION_SCHEMES, CropProtectionScheme } from "@/data/protectionSchemes";
+import { PROTECTION_SCHEMES, CropProtectionScheme } from '../data/protectionSchemes';
+import { getCropRecommendation } from '../data/cropRecommendations';
 import { PRICE_CATALOG, PriceItem } from "@/data/priceCatalog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -353,18 +354,26 @@ export default function AgroHelper() {
               </div>
             </div>
 
-            {/* Агрономические подсказки по баковым смесям и температурным режимам */}
-            <div className="mt-6 p-4 rounded-xl bg-[#f4f7f1] border border-[#dde5dc] space-y-2 text-xs text-[#15211c]">
-              <div className="font-bold text-[#12352a] flex items-center gap-1.5">
-                <Info className="w-4 h-4 text-[#2e7d52]" />
-                <span>Рекомендации агронома по применению баковых смесей:</span>
-              </div>
-              <ul className="list-disc pl-5 space-y-1 text-[#6f7a73]">
-                <li><strong className="text-[#15211c]">Оптимальная температура:</strong> +10°C … +25°C. Избегайте обработок при заморозках ночью или сильной почвенной и воздушной засухе (&gt;+28°C).</li>
-                <li><strong className="text-[#15211c]">Фазы развития:</strong> гербицидные обработки против двудольных сорняков в посевах зерновых проводятся в фазу кущения культуры до выхода в трубку.</li>
-                <li><strong className="text-[#15211c]">Порядок смешивания в баке:</strong> 1) Водорастворимые пакеты (SP), 2) Смачивающиеся порошки (WP), 3) Суспензионные концентраты (SC), 4) Эмульсии (EC), 5) Водные растворы (SL) и адъюванты.</li>
-              </ul>
-            </div>
+            {/* Агрономические подсказки по баковым смесям и температурным режимам (динамические по культуре) */}
+            {selectedCrop && (() => {
+              const rec = getCropRecommendation(selectedCrop.id);
+              return (
+                <div className="mt-6 p-4 rounded-xl bg-[#f4f7f1] border border-[#dde5dc] space-y-2 text-xs text-[#15211c]">
+                  <div className="font-bold text-[#12352a] flex items-center gap-1.5">
+                    <Info className="w-4 h-4 text-[#2e7d52]" />
+                    <span>Рекомендации агронома по применению баковых смесей ({selectedCrop.name}):</span>
+                  </div>
+                  <ul className="list-disc pl-5 space-y-1 text-[#6f7a73]">
+                    <li><strong className="text-[#15211c]">Оптимальная температура:</strong> {rec.optimalTemp}</li>
+                    <li><strong className="text-[#15211c]">Фазы развития:</strong> {rec.growthPhase}</li>
+                    <li><strong className="text-[#15211c]">Порядок смешивания в баке:</strong> {rec.mixingOrder}</li>
+                    {rec.specialNotes && (
+                      <li><strong className="text-[#15211c]">Особенности технологии:</strong> {rec.specialNotes}</li>
+                    )}
+                  </ul>
+                </div>
+              );
+            })()}
 
             {/* Список этапов схемы */}
             <div className="space-y-6 pt-6">
