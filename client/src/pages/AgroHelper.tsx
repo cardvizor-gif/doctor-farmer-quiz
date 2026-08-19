@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ShieldCheck, Droplet, Filter, Download, Award, BookmarkCheck, Thermometer, Clock, Info } from "lucide-react";
 import { Link } from "wouter";
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
+import { SupportModal } from "@/components/SupportModal";
+import { HelpCircle } from "lucide-react";
 
 export default function AgroHelper() {
   const [selectedCrop, setSelectedCrop] = useState<CropOption | null>(CROP_OPTIONS[0]);
@@ -22,6 +24,9 @@ export default function AgroHelper() {
   // Сохраненные схемы в localStorage
   const [savedSchemes, setSavedSchemes] = useState<Array<{ id: string; name: string; date: string; crop: string; tech: string; area: number }>>([]);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+
+  // Модалка Поддержки
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -164,6 +169,14 @@ export default function AgroHelper() {
                 <Award className="w-4 h-4 mr-1.5" /> Тестирование
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSupportOpen(true)}
+              className="border-[#2e7d52] text-[#194f38] hover:bg-[#e8efe5] text-xs h-9 gap-1.5"
+            >
+              <HelpCircle className="w-4 h-4 text-[#2e7d52]" /> Поддержка
+            </Button>
           </div>
         </div>
       </header>
@@ -485,13 +498,21 @@ export default function AgroHelper() {
       {/* Футер */}
       <footer className="bg-[#fbfcf9] border-t border-[#dde5dc] py-6 sm:py-8 text-[#6f7a73] no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-center sm:text-left">
-          <div>© Doctor Farmer. Все права защищены.</div>
+          <div>© Doctor Farmer. Все права защищены. (vildanov_sf@doctorfarmer.ru)</div>
           <div className="flex items-center space-x-6">
             <span className="cursor-pointer hover:text-[#15211c]">Политика конфиденциальности</span>
-            <span className="cursor-pointer hover:text-[#15211c]">Поддержка</span>
+            <span 
+              onClick={() => setIsSupportOpen(true)}
+              className="cursor-pointer text-[#194f38] font-semibold hover:underline flex items-center gap-1"
+            >
+              <HelpCircle className="w-3.5 h-3.5" /> Поддержка
+            </span>
           </div>
         </div>
       </footer>
+
+      {/* Модальное окно поддержки */}
+      <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
 
     </div>
   );

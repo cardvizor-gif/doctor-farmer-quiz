@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, ShieldCheck, Award, BookOpen, Layers } from "lucide-react";
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
+import { SupportModal } from "@/components/SupportModal";
+import { HelpCircle } from "lucide-react";
 
 export default function Dashboard() {
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
   return (
     <div className="min-h-screen bg-[#f4f7f1] text-[#15211c] flex flex-col font-sans selection:bg-[#66a46c] selection:text-white relative overflow-hidden">
       
@@ -158,15 +162,24 @@ export default function Dashboard() {
       </section>
 
       {/* Футер */}
-      <footer className="bg-[#fbfcf9] border-t border-[#dde5dc] py-8 px-4 sm:px-6 text-center text-xs text-[#6f7a73] relative z-10">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+      <footer className="bg-[#fbfcf9] border-t border-[#dde5dc] py-8 px-4 sm:px-6 text-xs text-[#6f7a73] relative z-10">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="flex items-center gap-2 justify-center sm:justify-start">
             <DoctorFarmerLogo className="h-6 w-auto" />
             <span className="font-bold text-[#12352a]">DOCTOR FARMER</span>
           </div>
-          <p>© 2026 ООО ТД Доктор Фармер. Внутренний корпоративный портал.</p>
+          <p>© 2026 ООО ТД Доктор Фармер (vildanov_sf@doctorfarmer.ru)</p>
+          <span 
+            onClick={() => setIsSupportOpen(true)}
+            className="cursor-pointer text-[#194f38] font-semibold hover:underline inline-flex items-center gap-1 justify-center"
+          >
+            <HelpCircle className="w-3.5 h-3.5" /> Поддержка
+          </span>
         </div>
       </footer>
+
+      {/* Модальное окно поддержки */}
+      <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
 
     </div>
   );
