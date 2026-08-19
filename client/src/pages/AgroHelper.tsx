@@ -1,13 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CROP_OPTIONS, CropOption } from "@/data/agropom";
 import { PROTECTION_SCHEMES, CropProtectionScheme } from "@/data/protectionSchemes";
 import { PRICE_CATALOG, PriceItem } from "@/data/priceCatalog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ShieldCheck, Droplet, Filter, Download, Award } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Droplet, Filter, Download, Award, BookmarkCheck, Thermometer, Clock, Info } from "lucide-react";
 import { Link } from "wouter";
-
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 
 export default function AgroHelper() {
@@ -19,93 +18,116 @@ export default function AgroHelper() {
   // Заменители препаратов (ключ: cropId-stepIndex-productIndex)
   const [customReplacements, setCustomReplacements] = useState<Record<string, PriceItem>>({});
 
+  // Сохраненные схемы в localStorage
+  const [savedSchemes, setSavedSchemes] = useState<Array<{ id: string; name: string; date: string; crop: string; tech: string; area: number }>>([]);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("doctor_farmer_saved_schemes");
+      if (stored) {
+        setSavedSchemes(JSON.parse(stored));
+      }
+    } catch (e) {}
+  }, []);
+
+  function handleSaveScheme() {
+    if (!selectedCrop) return;
+    const newScheme = {
+      id: `${selectedCrop.id}-${selectedTech}-${Date.now()}`,
+      name: `${selectedCrop.name} (${selectedTech}) — ${fieldArea} га`,
+      date: new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+      crop: selectedCrop.name,
+      tech: selectedTech,
+      area: fieldArea,
+    };
+    const updated = [newScheme, ...savedSchemes.slice(0, 9)];
+    setSavedSchemes(updated);
+    try {
+      localStorage.setItem("doctor_farmer_saved_schemes", JSON.stringify(updated));
+      setSaveSuccessMsg("Схема успешно сохранена!");
+      setTimeout(() => setSaveSuccessMsg(null), 3000);
+    } catch (e) {}
+  }
+
   // Найти схему защиты
   const currentScheme: CropProtectionScheme | undefined = PROTECTION_SCHEMES.find(
     s => s.cropId === selectedCrop?.id && (s.technology === selectedTech || s.technology === 'Классическая')
   ) ?? PROTECTION_SCHEMES.find(s => s.cropId === selectedCrop?.id);
 
-  // Фильтрация этапов по выбранной категории задачи
-  const filteredSteps = currentScheme?.steps.filter(step => {
-    if (selectedProblemCategory === "all") return true;
-    const taskLower = step.task.toLowerCase();
-    const stageLower = step.stage.toLowerCase();
-    
-    if (selectedProblemCategory === "weeds") {
-      return taskLower.includes('гербицид') || taskLower.includes('сорняк') || stageLower.includes('гербицид');
-    }
-    if (selectedProblemCategory === "diseases") {
-      return taskLower.includes('фунгицид') || taskLower.includes('болезн') || taskLower.includes('протравливан') || stageLower.includes('протравливан');
-    }
-    if (selectedProblemCategory === "pests") {
-      return taskLower.includes('инсектицид') || taskLower.includes('вредител') || stageLower.includes('вредител');
-    }
-    if (selectedProblemCategory === "nutrition") {
-      return taskLower.includes('питани') || taskLower.includes('удобрен') || taskLower.includes('антистресс') || taskLower.includes('аминокислот');
-    }
-    return true;
-  }) || [];
-
-  // Строгая фильтрация замен
-  const getRegisteredAlternatives = (requiredGroup: string): PriceItem[] => {
-    if (!selectedCrop) return [];
-    const cropName = selectedCrop.name.toLowerCase();
-    const isCereals = cropName.includes('пшениц') || cropName.includes('ячмен') || cropName.includes('овес');
-
-    return PRICE_CATALOG.filter(item => {
-      if (item.group !== requiredGroup) {
-        return false;
-      }
-      const isRegistered = item.cultures.some(c => {
-        const itemCulture = c.toLowerCase();
-        return cropName.includes(itemCulture) || itemCulture.includes(cropName.split(' ')[0]);
+  // Фильтрация этапов по категории проблем
+  const filteredSteps = useMemo(() => {
+    if (!currentScheme) return [];
+    if (selectedProblemCategory === "all") return currentScheme.steps;
+    return currentScheme.steps.map(step => {
+      const filteredProducts = step.products.filter(prod => {
+        const groupLower = prod.group.toLowerCase();
+        if (selectedProblemCategory === "herbicide") return groupLower.includes('гербицид');
+        if (selectedProblemCategory === "fungicide") return groupLower.includes('фунгицид');
+        if (selectedProblemCategory === "insecticide") return groupLower.includes('инсектицид');
+        if (selectedProblemCategory === "seed") return groupLower.includes('протравитель') || groupLower.includes('протравка');
+        if (selectedProblemCategory === "desiccant") return groupLower.includes('десикант') || groupLower.includes('адъювант');
+        return true;
       });
-      if (!isRegistered) return false;
+      return { ...step, products: filteredProducts };
+    }).filter(step => step.products.length > 0);
+  }, [currentScheme, selectedProblemCategory]);
 
-      if (isCereals && requiredGroup === 'Гербицид (двудольные)') {
-        if (item.name === 'Сикурс, ВР') return false;
-        if (item.componentsCount && item.componentsCount < 2) return false;
-      }
-
-      return true;
+  // Список доступных альтернатив из прайса по группе
+  function getRegisteredAlternatives(group: string): PriceItem[] {
+    const lower = group.toLowerCase();
+    return PRICE_CATALOG.filter(item => {
+      const itemGroup = item.group.toLowerCase();
+      if (lower.includes('гербицид') && itemGroup.includes('гербицид')) return true;
+      if (lower.includes('фунгицид') && itemGroup.includes('фунгицид')) return true;
+      if (lower.includes('инсектицид') && itemGroup.includes('инсектицид')) return true;
+      if ((lower.includes('протравитель') || lower.includes('протравка')) && (itemGroup.includes('протравитель') || itemGroup.includes('протравка'))) return true;
+      return itemGroup === lower;
     });
-  };
+  }
 
-  const handleExportPDF = () => {
-    window.print();
-  };
-
-  const parseRateValue = (rateStr: string): number => {
-    const match = rateStr.replace(',', '.').match(/([\d\.]+)/);
-    return match ? parseFloat(match[1]) : 0;
-  };
-
-  const handleReplaceProduct = (key: string, item: PriceItem) => {
+  function handleReplaceProduct(key: string, newProduct: PriceItem) {
     setCustomReplacements(prev => ({
       ...prev,
-      [key]: item
+      [key]: newProduct
     }));
-  };
+  }
+
+  function parseRateValue(rateStr: string): number {
+    const match = rateStr.match(/[\d,.]+/);
+    if (!match) return 0;
+    return parseFloat(match[0].replace(',', '.'));
+  }
+
+  function handleExportPDF() {
+    window.print();
+  }
 
   return (
-    <div className="min-h-screen bg-[#F4F7F1] text-[#15211c] flex flex-col font-sans selection:bg-[#66a46c] selection:text-white">
-      {/* Стили для печати: скрываем всё кроме печатаемого блока схемы */}
+    <div className="min-h-screen bg-[#f4f7f1] text-[#15211c] flex flex-col font-sans selection:bg-[#66a46c] selection:text-white">
+      
+      {/* Стили для печати (экспорта в PDF) */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          body * { visibility: hidden !important; }
-          .printable-scheme-area, .printable-scheme-area * { visibility: visible !important; }
-          .printable-scheme-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: #ffffff !important; padding: 20px !important; margin: 0 !important; }
+          body { background: white !important; color: black !important; }
           .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          header { display: none !important; }
+          aside { display: none !important; }
+          main { display: block !important; padding: 0 !important; max-width: 100% !important; }
+          .shadow-sm, .shadow-xl, .shadow-2xs { box-shadow: none !important; }
+          border { border-color: #ccc !important; }
         }
       ` }} />
 
-      {/* Верхняя навигация в стиле теста с идеальной мобильной адаптацией */}
+      {/* Верхняя навигация */}
       <header className="w-full bg-[#fbfcf9] border-b border-[#dde5dc] sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-auto sm:h-20 py-3 sm:py-0 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-start">
             <div className="flex items-center gap-2.5">
-              <DoctorFarmerLogo className="h-9 sm:h-11 w-auto" />
+              <DoctorFarmerLogo className="h-10 w-auto" />
             </div>
-            {/* Кнопки для мобильных прямо в первой строке для удобства */}
+            {/* Кнопки для мобильных */}
             <div className="flex sm:hidden items-center gap-2">
               <Link href="/">
                 <Button variant="outline" size="sm" className="border-[#2e7d52] text-[#194f38] hover:bg-[#e8efe5] text-[11px] h-8 px-2.5">
@@ -114,7 +136,7 @@ export default function AgroHelper() {
               </Link>
               <Link href="/quiz">
                 <Button size="sm" className="bg-[#194f38] hover:bg-[#12352a] text-white text-[11px] h-8 px-2.5">
-                  Тест
+                  Тестирование
                 </Button>
               </Link>
             </div>
@@ -128,7 +150,7 @@ export default function AgroHelper() {
             </Link>
             <Link href="/quiz">
               <Button size="sm" className="bg-[#194f38] hover:bg-[#12352a] text-white text-xs h-9">
-                <Award className="w-4 h-4 mr-1.5" /> Тест
+                <Award className="w-4 h-4 mr-1.5" /> Тестирование
               </Button>
             </Link>
           </div>
@@ -136,9 +158,9 @@ export default function AgroHelper() {
       </header>
 
       {/* Основной контейнер */}
-      <main className="max-w-7xl mx-auto px-6 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Левая панель: фильтры и параметры (скрывается при печати) */}
+        {/* Левая панель: фильтры и параметры */}
         <aside className="lg:col-span-4 space-y-6 no-print">
           
           <Card className="bg-[#ffffff] border border-[#dde5dc] shadow-sm rounded-2xl">
@@ -208,43 +230,91 @@ export default function AgroHelper() {
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#6f7a73] mb-2">Площадь обработки (га)</label>
                 <div className="flex items-center gap-3">
-                  <div className="relative flex-1">
-                    <input
-                      type="number"
-                      min={1}
-                      max={100000}
-                      value={fieldArea}
-                      onChange={(e) => setFieldArea(Math.max(1, Number(e.target.value)))}
-                      className="w-full h-11 px-3 border border-[#dde5dc] rounded-xl bg-[#f4f7f1] text-[#15211c] text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#66a46c]"
-                    />
-                  </div>
-                  <span className="text-xs font-bold text-[#6f7a73]">га</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100000"
+                    value={fieldArea}
+                    onChange={(e) => setFieldArea(Math.max(1, parseInt(e.target.value) || 0))}
+                    className="w-full px-3.5 py-2.5 text-sm font-bold border border-[#dde5dc] rounded-xl bg-[#f4f7f1] text-[#12352a] focus:outline-none focus:ring-2 focus:ring-[#2e7d52]"
+                  />
+                  <span className="text-xs font-mono font-semibold text-[#6f7a73]">га</span>
                 </div>
               </div>
 
-              {/* Фильтр по задаче */}
+              {/* Фильтр по типу задач */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#6f7a73] mb-2">Фильтр по задаче на поле</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#6f7a73] mb-2">Фильтр по задаче / препарату</label>
                 <select
                   value={selectedProblemCategory}
                   onChange={(e) => setSelectedProblemCategory(e.target.value)}
-                  className="w-full h-11 px-3 border border-[#dde5dc] rounded-xl bg-[#f4f7f1] text-[#15211c] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#66a46c]"
+                  className="w-full text-xs px-3 py-2.5 border border-[#dde5dc] rounded-xl bg-[#f4f7f1] text-[#15211c] font-medium focus:outline-none focus:ring-2 focus:ring-[#2e7d52]"
                 >
                   <option value="all">Все этапы защиты</option>
-                  <option value="weeds">Борьба с сорняками (гербициды)</option>
-                  <option value="diseases">Болезни и протравка (фунгициды)</option>
-                  <option value="pests">Вредители (инсектициды)</option>
-                  <option value="nutrition">Листовое питание и антистресс</option>
+                  <option value="seed">Протравливание семян</option>
+                  <option value="herbicide">Гербицидная защита</option>
+                  <option value="fungicide">Фунгицидная защита</option>
+                  <option value="insecticide">Инсектицидная защита</option>
+                  <option value="desiccant">Десикация / Адъюванты</option>
                 </select>
+              </div>
+
+              {/* Кнопка сохранения схемы */}
+              <div className="pt-2 border-t border-[#dde5dc]">
+                <Button
+                  onClick={handleSaveScheme}
+                  className="w-full bg-[#d5a642] hover:bg-[#c2953a] text-[#12352a] font-bold text-xs py-2.5 rounded-xl gap-2 shadow-xs"
+                >
+                  <BookmarkCheck className="w-4 h-4" /> Сохранить текущую схему
+                </Button>
+                {saveSuccessMsg && (
+                  <p className="text-[11px] text-[#2e7d52] font-semibold text-center mt-2 animate-pulse">{saveSuccessMsg}</p>
+                )}
               </div>
 
             </CardContent>
           </Card>
 
+          {/* Сохраненные схемы в браузере */}
+          {savedSchemes.length > 0 && (
+            <Card className="bg-[#ffffff] border border-[#dde5dc] shadow-sm rounded-2xl">
+              <CardHeader className="pb-3 border-b border-[#dde5dc]">
+                <CardTitle className="text-sm font-bold text-[#12352a] flex items-center gap-2">
+                  <BookmarkCheck className="w-4 h-4 text-[#d5a642]" /> Сохранённые схемы ({savedSchemes.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 pt-3 max-h-48 overflow-y-auto">
+                {savedSchemes.map((item) => (
+                  <div key={item.id} className="p-2.5 rounded-xl bg-[#f4f7f1] border border-[#dde5dc] flex items-center justify-between text-xs">
+                    <div>
+                      <div className="font-bold text-[#12352a]">{item.crop} <span className="text-[#6f7a73] font-normal">({item.tech})</span></div>
+                      <div className="text-[10px] text-[#6f7a73] font-mono">{item.area} га · {item.date}</div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const cropObj = CROP_OPTIONS.find(c => c.name === item.crop);
+                        if (cropObj) {
+                          setSelectedCrop(cropObj);
+                          setSelectedTech(item.tech);
+                          setFieldArea(item.area);
+                        }
+                      }}
+                      className="text-[10px] h-7 px-2 border-[#2e7d52] text-[#194f38] hover:bg-[#e8efe5]"
+                    >
+                      Открыть
+                    </Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
         </aside>
 
-        {/* Правая область: схема защиты (печатается только этот блок) */}
-        <section className="lg:col-span-8 space-y-6 printable-scheme-area">
+        {/* Правая панель: детализированная схема защиты с подсказками и калькулятором */}
+        <section className="lg:col-span-8 space-y-6">
           
           <div className="bg-white border border-[#dde5dc] rounded-2xl p-6 sm:p-8 shadow-sm">
             
@@ -271,6 +341,19 @@ export default function AgroHelper() {
                   <Download className="w-4 h-4" /> Экспорт в PDF / Печать
                 </Button>
               </div>
+            </div>
+
+            {/* Агрономические подсказки по баковым смесям и температурным режимам */}
+            <div className="mt-6 p-4 rounded-xl bg-[#f4f7f1] border border-[#dde5dc] space-y-2 text-xs text-[#15211c]">
+              <div className="font-bold text-[#12352a] flex items-center gap-1.5">
+                <Info className="w-4 h-4 text-[#2e7d52]" />
+                <span>Рекомендации агронома по применению баковых смесей:</span>
+              </div>
+              <ul className="list-disc pl-5 space-y-1 text-[#6f7a73]">
+                <li><strong className="text-[#15211c]">Оптимальная температура:</strong> +10°C … +25°C. Избегайте обработок при заморозках ночью или сильной почвенной и воздушной засухе (&gt;+28°C).</li>
+                <li><strong className="text-[#15211c]">Фазы развития:</strong> гербицидные обработки против двудольных сорняков в посевах зерновых проводятся в фазу кущения культуры до выхода в трубку.</li>
+                <li><strong className="text-[#15211c]">Порядок смешивания в баке:</strong> 1) Водорастворимые пакеты (SP), 2) Смачивающиеся порошки (WP), 3) Суспензионные концентраты (SC), 4) Эмульсии (EC), 5) Водные растворы (SL) и адъюванты.</li>
+              </ul>
             </div>
 
             {/* Список этапов схемы */}
@@ -340,7 +423,7 @@ export default function AgroHelper() {
                                 </div>
                               </div>
 
-                              {/* Выбор замены препарата (в поле / без печати) с мобильной адаптацией */}
+                              {/* Выбор замены препарата (в поле / без печати) */}
                               <div className="pt-3 border-t border-[#dde5dc] flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
                                 <div className="text-xs text-[#6f7a73] flex items-center gap-1.5">
                                   <Droplet className="w-3.5 h-3.5 text-[#66a46c] flex-shrink-0" />
@@ -374,12 +457,6 @@ export default function AgroHelper() {
               )}
             </div>
 
-            {/* Подвал схемы */}
-            <div className="mt-8 pt-6 border-t border-[#dde5dc] flex flex-col sm:flex-row items-center justify-between text-xs text-[#6f7a73] gap-4">
-              <div>Документ сформирован АгроПомощником Doctor Farmer</div>
-              <div className="font-mono">Регламенты соответствуют официальной продуктовой линейке</div>
-            </div>
-
           </div>
 
         </section>
@@ -387,10 +464,13 @@ export default function AgroHelper() {
       </main>
 
       {/* Футер */}
-      <footer className="bg-white border-t border-[#dde5dc] py-6 text-xs text-[#6f7a73] no-print">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono">
+      <footer className="bg-[#fbfcf9] border-t border-[#dde5dc] py-6 sm:py-8 text-[#6f7a73] no-print">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-center sm:text-left">
           <div>© Doctor Farmer. Все права защищены.</div>
-          <div>Единая корпоративная база знаний</div>
+          <div className="flex items-center space-x-6">
+            <span className="cursor-pointer hover:text-[#15211c]">Политика конфиденциальности</span>
+            <span className="cursor-pointer hover:text-[#15211c]">Поддержка</span>
+          </div>
         </div>
       </footer>
 
