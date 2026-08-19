@@ -122,20 +122,20 @@ export default function KnowledgeBase() {
   return (
     <div className="min-h-screen bg-[#f4f7f1] text-[#15211c] font-sans antialiased pb-20 flex flex-col">
       {/* Шапка */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#dde5dc] px-4 py-3 sm:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <Link href="/" className="flex items-center space-x-3 cursor-pointer">
-            <DoctorFarmerLogo className="h-9 w-auto" />
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#dde5dc] px-3 py-2.5 sm:px-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+          <Link href="/" className="flex items-center cursor-pointer shrink-0">
+            <DoctorFarmerLogo className="h-7 sm:h-9 w-auto" />
           </Link>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Link href="/agro-helper">
-              <Button variant="outline" size="sm" className="border-[#dde5dc] text-[#15211c] hover:bg-[#f4f7f1] text-xs">
+              <Button variant="outline" size="sm" className="border-[#dde5dc] text-[#15211c] hover:bg-[#f4f7f1] text-[11px] sm:text-xs px-2.5 sm:px-3 h-8">
                 АгроПомощник
               </Button>
             </Link>
             <Link href="/quiz">
-              <Button variant="outline" size="sm" className="border-[#dde5dc] text-[#15211c] hover:bg-[#f4f7f1] text-xs">
+              <Button variant="outline" size="sm" className="border-[#dde5dc] text-[#15211c] hover:bg-[#f4f7f1] text-[11px] sm:text-xs px-2.5 sm:px-3 h-8">
                 Тестирование
               </Button>
             </Link>
@@ -143,9 +143,9 @@ export default function KnowledgeBase() {
               variant="outline"
               size="sm"
               onClick={() => setIsSupportOpen(true)}
-              className="border-[#dde5dc] text-[#15211c] hover:bg-[#f4f7f1] text-xs gap-1.5"
+              className="border-[#dde5dc] text-[#15211c] hover:bg-[#f4f7f1] text-[11px] sm:text-xs px-2.5 sm:px-3 h-8 gap-1"
             >
-              <HelpCircle className="w-3.5 h-3.5 text-[#2e7d52]" /> Поддержка
+              <HelpCircle className="w-3.5 h-3.5 text-[#2e7d52] shrink-0" /> <span className="hidden xs:inline">Поддержка</span>
             </Button>
           </div>
         </div>
