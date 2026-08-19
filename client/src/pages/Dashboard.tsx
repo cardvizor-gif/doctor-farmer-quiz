@@ -29,13 +29,7 @@ export default function Dashboard() {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/agro-helper">
-              <button className="bg-[#194f38] hover:bg-[#12352a] text-white font-bold text-xs px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all shadow-xs whitespace-nowrap">
-                <span className="hidden sm:inline">Открыть </span>АгроПомощник
-              </button>
-            </Link>
-          </div>
+          {/* Кнопка в шапке удалена по требованию пользователя */}
 
         </div>
       </header>
