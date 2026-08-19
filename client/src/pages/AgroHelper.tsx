@@ -498,7 +498,7 @@ export default function AgroHelper() {
       {/* Футер */}
       <footer className="bg-[#fbfcf9] border-t border-[#dde5dc] py-6 sm:py-8 text-[#6f7a73] no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-center sm:text-left">
-          <div>© Doctor Farmer. Все права защищены. (vildanov_sf@doctorfarmer.ru)</div>
+          <div>© Doctor Farmer. Все права защищены.</div>
           <div className="flex items-center space-x-6">
             <span className="cursor-pointer hover:text-[#15211c]">Политика конфиденциальности</span>
             <span 

@@ -168,7 +168,7 @@ export default function Dashboard() {
             <DoctorFarmerLogo className="h-6 w-auto" />
             <span className="font-bold text-[#12352a]">DOCTOR FARMER</span>
           </div>
-          <p>© 2026 ООО ТД Доктор Фармер (vildanov_sf@doctorfarmer.ru)</p>
+          <p>© 2026 ООО ТД Доктор Фармер. Внутренний корпоративный портал.</p>
           <span 
             onClick={() => setIsSupportOpen(true)}
             className="cursor-pointer text-[#194f38] font-semibold hover:underline inline-flex items-center gap-1 justify-center"

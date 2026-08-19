@@ -81,7 +81,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
             Поддержка Doctor Farmer
           </DialogTitle>
           <DialogDescription className="text-center text-slate-600 text-sm">
-            Возникли вопросы по работе тестов или АгроПомощника? Отправьте сообщение напрямую руководителю: <span className="font-semibold text-emerald-800">vildanov_sf@doctorfarmer.ru</span>
+            Возникли вопросы по работе Тестирования или АгроПомощника? Опишите проблему, и ответственное лицо свяжется с вами.
           </DialogDescription>
         </DialogHeader>
 
