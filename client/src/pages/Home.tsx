@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useTransition, useMemo } from "react";
 import { Link } from "wouter";
+import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { Button } from "@/components/ui/button";
 import emailjs from "@emailjs/browser";
 import {
@@ -386,7 +387,7 @@ export default function Home() {
                 🌱 АгроПомощник
               </Button>
             </Link>
-            <div className="header-note hidden sm:flex"><ShieldCheck size={15} /> Тест прайса</div>
+            <div className="header-note hidden sm:flex"><ShieldCheck size={15} /> Тестирование</div>
           </div>
         </header>
 
@@ -417,7 +418,7 @@ export default function Home() {
                   return <button key={mode} type="button" className={`mode-tile ${active ? "is-active" : ""}`} onClick={() => toggleMode(mode)} style={{ "--mode-color": meta.color, "--mode-tint": meta.tint } as React.CSSProperties}><span className="mode-icon">{meta.icon}</span><span className="mode-name">{meta.short}</span><span className="mode-check">{active && <Check size={13} />}</span></button>;
                 })}
               </div>
-              <div className="settings-line"><label>Вопросов <select value={questionCount} onChange={(event) => setQuestionCount(event.target.value)}><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option><option value="999">Все доступные</option></select></label><div className="timer-fixed"><Clock3 size={16} /><span>Фиксированное время: {questionCount === "999" ? "20 сек/вопрос" : formatDuration(getTimeLimitSeconds(Number(questionCount), Number(questionCount)))}</span></div><ButtonArrow onClick={startQuiz}>Начать тест</ButtonArrow></div>
+              <div className="settings-line"><label>Вопросов <select value={questionCount} onChange={(event) => setQuestionCount(event.target.value)}><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option><option value="999">Все доступные</option></select></label><div className="timer-fixed"><Clock3 size={16} /><span>Фиксированное время: {questionCount === "999" ? "20 сек/вопрос" : formatDuration(getTimeLimitSeconds(Number(questionCount), Number(questionCount)))}</span></div><ButtonArrow onClick={startQuiz}>Начать тестирование</ButtonArrow></div>
               <div className="setup-footnote"><MousePointerClick size={14} /> Откройте ссылку на любом устройстве — тест работает в браузере.</div>
             </section>
           </div>
@@ -446,7 +447,7 @@ export default function Home() {
               </Button>
             </Link>
           </div>
-          <div className="quiz-brand"><img src={LOGO_IMAGE} alt="Doctor Farmer" /><span><i>/ quiz lab</i></span></div>
+          <div className="quiz-brand"><DoctorFarmerLogo className="h-8 sm:h-10 w-auto" /><span><i>/ quiz lab</i></span></div>
           <div className="quiz-score"><span>Счёт</span><strong>{score}</strong></div>
         </header>
         <div className="progress-meta"><span>Вопрос <strong>{currentIndex + 1}</strong> из {questions.length}</span><span>{percent}% пройдено</span></div><div className="progress-track"><div className="progress-value" style={{ width: `${Math.max(percent, 3)}%` }} /></div>
@@ -486,7 +487,7 @@ export default function Home() {
             </Button>
           </Link>
         </div>
-        <div className="quiz-brand"><img src={LOGO_IMAGE} alt="Doctor Farmer" /><span><i>/ result lab</i></span></div>
+        <div className="quiz-brand"><DoctorFarmerLogo className="h-8 sm:h-10 w-auto" /><span><i>/ result lab</i></span></div>
         <div className="quiz-score"><span>Сотрудник</span><strong className="score-name">{name}</strong></div>
       </header>
       <section className="result-hero" style={{ backgroundImage: `url(${RESULT_IMAGE})` }}><div className="result-overlay" /><div className="result-content"><div className="eyebrow light"><span className="eyebrow-dot" /> session complete</div><div className="result-scoreline"><strong>{score}</strong><span>/ {questions.length}<small>правильных ответов</small></span></div><h1>{resultMessage}</h1><p>{resultSub}</p><div className={`email-state ${emailStatus}`}><Mail size={16} />{emailStatus === "sending" ? "Отправляем итог руководителю…" : emailMessage}</div></div><div className="result-badge"><Trophy size={20} /><span>{percentage}%<small>точность</small></span></div></section>

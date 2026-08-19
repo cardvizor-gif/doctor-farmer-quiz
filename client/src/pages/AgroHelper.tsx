@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ShieldCheck, Droplet, Filter, Download, Award } from "lucide-react";
 import { Link } from "wouter";
 
-const LOGO_IMAGE = "/manus-storage/doctor-farmer-mark_1fd4bf89.png";
+import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 
 export default function AgroHelper() {
   const [selectedCrop, setSelectedCrop] = useState<CropOption | null>(CROP_OPTIONS[0]);
@@ -103,11 +103,7 @@ export default function AgroHelper() {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-auto sm:h-20 py-3 sm:py-0 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-start">
             <div className="flex items-center gap-2.5">
-              <img src={LOGO_IMAGE} alt="Doctor Farmer" className="w-9 h-9 sm:w-11 sm:h-11 object-contain mix-blend-multiply flex-shrink-0" />
-              <div>
-                <span className="font-bold tracking-tight text-xs sm:text-base text-[#12352a] block">DOCTOR FARMER</span>
-                <span className="block text-[9px] sm:text-[10px] text-[#6f7a73] font-mono tracking-wider">agro helper</span>
-              </div>
+              <DoctorFarmerLogo className="h-9 sm:h-11 w-auto" />
             </div>
             {/* Кнопки для мобильных прямо в первой строке для удобства */}
             <div className="flex sm:hidden items-center gap-2">

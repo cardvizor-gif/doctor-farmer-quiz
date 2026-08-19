@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { ArrowRight, ShieldCheck, Award, BookOpen, Layers } from "lucide-react";
+import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 
-const LOGO_IMAGE = "/manus-storage/logo_df_2c260058.jpg";
 const ILLUSTRATION_IMAGE = "/manus-storage/agri-transparent_ebc8cf7a.png";
 
 export default function Dashboard() {
@@ -13,7 +13,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
           
           <div className="flex items-center gap-2.5 min-w-0">
-            <img src={LOGO_IMAGE} alt="Doctor Farmer" className="h-10 sm:h-12 w-auto object-contain" />
+            <DoctorFarmerLogo className="h-9 sm:h-12 w-auto" />
           </div>
 
           <nav className="hidden md:flex items-center space-x-6 text-xs font-semibold text-[#194f38] uppercase tracking-wider">
