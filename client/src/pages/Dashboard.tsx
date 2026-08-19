@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { ArrowRight, ShieldCheck, Award, BookOpen, Layers } from "lucide-react";
 
-const LOGO_IMAGE = "/manus-storage/doctor-farmer-mark_1fd4bf89.png";
+const LOGO_IMAGE = "/manus-storage/logo_df_2c260058.jpg";
 const ILLUSTRATION_IMAGE = "/manus-storage/agri-transparent_ebc8cf7a.png";
 
 export default function Dashboard() {
@@ -13,11 +13,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
           
           <div className="flex items-center gap-2.5 min-w-0">
-            <img src={LOGO_IMAGE} alt="Doctor Farmer" className="w-9 h-9 sm:w-11 sm:h-11 object-contain mix-blend-multiply flex-shrink-0" />
-            <div className="min-w-0">
-              <span className="font-bold tracking-tight text-xs sm:text-base text-[#12352a] truncate block">DOCTOR FARMER</span>
-              <span className="block text-[9px] sm:text-[10px] text-[#6f7a73] font-mono tracking-wider truncate">knowledge lab</span>
-            </div>
+            <img src={LOGO_IMAGE} alt="Doctor Farmer" className="h-10 sm:h-12 w-auto object-contain" />
           </div>
 
           <nav className="hidden md:flex items-center space-x-6 text-xs font-semibold text-[#194f38] uppercase tracking-wider">
@@ -25,7 +21,7 @@ export default function Dashboard() {
               <span className="cursor-pointer hover:text-[#d5a642] transition-colors">АгроПомощник</span>
             </Link>
             <Link href="/quiz">
-              <span className="cursor-pointer hover:text-[#d5a642] transition-colors">Тест</span>
+              <span className="cursor-pointer hover:text-[#d5a642] transition-colors">Тестирование</span>
             </Link>
           </nav>
 
@@ -47,7 +43,7 @@ export default function Dashboard() {
         </Link>
         <div className="w-px h-4 bg-[#dde5dc]" />
         <Link href="/quiz">
-          <span className="flex items-center gap-1.5 py-1 px-3 rounded-lg hover:bg-white/60">📝 Тест</span>
+          <span className="flex items-center gap-1.5 py-1 px-3 rounded-lg hover:bg-white/60">📝 Тестирование</span>
         </Link>
       </div>
 
@@ -79,7 +75,7 @@ export default function Dashboard() {
               <Link href="/quiz">
                 <button className="bg-white hover:bg-[#e8efe5] text-[#194f38] font-bold text-sm px-6 sm:px-8 py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 border border-[#dde5dc] shadow-xs w-full sm:w-auto">
                   <Award className="w-4 h-4 text-[#d5a642]" />
-                  <span>Тест прайса</span>
+                  <span>Тестирование</span>
                 </button>
               </Link>
             </div>
@@ -127,7 +123,7 @@ export default function Dashboard() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#e8efe5] flex items-center justify-center text-[#2e7d52] mb-4 sm:mb-6 group-hover:scale-105 transition-transform border border-[#dde5dc]">
                     <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-[#12352a] mb-2">Тест</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-[#12352a] mb-2">Тестирование</h3>
                   <p className="text-[#6f7a73] text-xs sm:text-sm leading-relaxed mb-6 font-medium">
                     Проверка продуктовой экспертизы сотрудников с фиксированным таймером, звуковым оповещением и детальным разбором ошибок.
                   </p>
