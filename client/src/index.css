@@ -356,3 +356,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .font-jakarta {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
+
+.font-dm {
+  font-family: 'DM Sans', sans-serif;
+}
