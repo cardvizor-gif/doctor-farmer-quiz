@@ -73,11 +73,21 @@ export default function AgroHelper() {
     }).filter(step => step.products.length > 0);
   }, [currentScheme, selectedProblemCategory]);
 
-  // Список доступных альтернатив из прайса по группе
-  function getRegisteredAlternatives(group: string): PriceItem[] {
+  // Список доступных альтернатив из прайса по группе (для зерновых против двудольных — только заводские бинарные упаковки)
+  function getRegisteredAlternatives(group: string, currentProductName: string): PriceItem[] {
     const lower = group.toLowerCase();
+    const isBinaryBilingualGroup = lower.includes('гербицид') && (currentProductName.includes('КлопЭфир') || currentProductName.includes('Триатлон') || currentProductName.includes('Биогем') || currentProductName.includes('Магнум') || currentProductName.includes('Интенсив'));
+
     return PRICE_CATALOG.filter(item => {
       const itemGroup = item.group.toLowerCase();
+      const itemName = item.name.toLowerCase();
+
+      if (isBinaryBilingualGroup) {
+        // Оставляем только заводские бинарные упаковки для зерновых из прайса
+        const isBinary = itemName.includes('клопэфир') || itemName.includes('триатлон') || itemName.includes('биогем') || itemName.includes('магнум твин');
+        return isBinary && item.cultures.some(c => c.toLowerCase().includes('пшениц') || c.toLowerCase().includes('ячмен') || c.toLowerCase().includes('зернов'));
+      }
+
       if (lower.includes('гербицид') && itemGroup.includes('гербицид')) return true;
       if (lower.includes('фунгицид') && itemGroup.includes('фунгицид')) return true;
       if (lower.includes('инсектицид') && itemGroup.includes('инсектицид')) return true;
@@ -390,7 +400,7 @@ export default function AgroHelper() {
                           const rateVal = parseRateValue(activeProduct.rate);
                           const totalNeeded = rateVal * fieldArea;
 
-                          const alternatives = getRegisteredAlternatives(activeProduct.group);
+                          const alternatives = getRegisteredAlternatives(activeProduct.group, activeProduct.name);
 
                           return (
                             <div key={prodIndex} className="bg-white border border-[#dde5dc] rounded-xl p-4 space-y-3">
