@@ -108,7 +108,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
                 Ваши ФИО <span className="text-red-500">*</span>
               </label>
               <Input
-                placeholder="Исмаилов Тимур"
+                placeholder="Введите ваше имя"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="rounded-xl border-slate-200 focus:border-emerald-600 focus:ring-emerald-600"
