@@ -371,20 +371,20 @@ export default function Home() {
   if (screen === "start") {
     return (
       <main className="site-shell start-shell">
-        <header className="site-header flex flex-col sm:flex-row items-center justify-between gap-3 py-2">
-          <div className="flex items-center justify-between w-full sm:w-auto">
+        <header className="site-header flex items-center justify-between gap-2 py-1 mb-4">
+          <div className="flex items-center">
             <Link href="/">
-              <DoctorFarmerLogo className="h-9 sm:h-11 w-auto cursor-pointer" />
+              <DoctorFarmerLogo className="h-7 sm:h-11 w-auto cursor-pointer" />
             </Link>
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+          <div className="flex items-center gap-1.5">
             <Link href="/">
-              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[11px] h-8 px-2.5">
-                На главную
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[10px] h-7 px-2">
+                Главная
               </Button>
             </Link>
             <Link href="/agro-helper">
-              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[11px] h-8 px-2.5">
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[10px] h-7 px-2">
                 АгроПомощник
               </Button>
             </Link>
@@ -433,25 +433,18 @@ export default function Home() {
     const matchItems = currentQuestion.kind === "match" ? currentQuestion.items : [];
     return (
       <main className="site-shell quiz-shell">
-        <header className="quiz-topbar flex flex-col sm:flex-row items-center justify-between gap-3 py-2">
-          <div className="flex items-center justify-between w-full sm:w-auto gap-2 flex-wrap">
-            <button type="button" className="back-link text-xs flex items-center gap-1 text-[#194f38]" onClick={goStart}><ArrowLeft size={14} /> К настройкам</button>
-            <div className="flex items-center gap-1.5">
-              <Link href="/">
-                <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[10px] h-7 px-2">
-                  На главную
-                </Button>
-              </Link>
-              <Link href="/agro-helper">
-                <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[10px] h-7 px-2">
-                  АгроПомощник
-                </Button>
-              </Link>
-            </div>
-          </div>
-          <div className="quiz-brand flex items-center gap-2">
+        <header className="quiz-topbar flex items-center justify-between gap-2 py-1 mb-4">
+          <div className="flex items-center gap-2">
+            <button type="button" className="back-link text-[11px] flex items-center gap-1 text-[#194f38]" onClick={goStart}><ArrowLeft size={13} /> К настройкам</button>
             <Link href="/">
-              <DoctorFarmerLogo className="h-7 sm:h-9 w-auto cursor-pointer" />
+              <Button size="sm" variant="outline" className="border-emerald-700 text-emerald-800 hover:bg-emerald-50 text-[10px] h-7 px-2">
+                Главная
+              </Button>
+            </Link>
+          </div>
+          <div className="quiz-brand flex items-center gap-1">
+            <Link href="/">
+              <DoctorFarmerLogo className="h-6 sm:h-9 w-auto cursor-pointer" />
             </Link>
           </div>
           <div className="quiz-score"><span>Счёт</span><strong>{score}</strong></div>
