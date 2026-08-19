@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
@@ -25,14 +25,13 @@ const KNOWLEDGE_BASE_ITEMS: KnowledgeItem[] = [
     title: "Трибенурон-метил (Группа сульфонилмочевин)",
     category: "действующие вещества",
     subtitle: "Системный гербицид против двудольных сорняков в посевах зерновых",
-    description: "Ингибирует фермент ацетолактатсинтазу (АЛС), что приводит к остановке деления клеток и гибели сорных растений. Эффективен против широкого спектра двудольных, включая устойчивые к 2,4-Д виды.",
+    description: "Ингибирует фермент ацетолактатсинтазу (АЛС), что приводит к остановке деления клеток и гибели сорных растений. Эффективен против широкого спектра двудольных сорняков.",
     details: [
       "Применение: Зерновые культуры (пшеница, ячмень) от кущения до выхода в трубку.",
-      "Температурный режим: +15...+25 °C (работает от +10 °C, но скорость действия снижается).",
-      "Ограничения в севообороте: Отсутствуют при стандартной технологии. При пересеве через 60 дней можно сеять зерновые.",
-      "Препараты в прайсе: Магнум, Магнум Твин, Триатлон Плюс, Триатлон Экстра."
+      "Температурный режим: +15...+25 °C в сухую погоду.",
+      "Препараты в прайсе: Богдэн (ВДГ, 750 г/кг трибенурон-метил), а также в составе бинарных упаковок (Триатлон Плюс)."
     ],
-    tags: ["Гербициды", "Двудольные", "Зерновые", "Сульфонилмочевины"]
+    tags: ["Гербициды", "Двудольные", "Зерновые", "Сульфонилмочевины", "Богдэн"]
   },
   {
     id: "dv-glyphosate",
@@ -46,32 +45,44 @@ const KNOWLEDGE_BASE_ITEMS: KnowledgeItem[] = [
       "Особенности: Не обладает почвенной активностью, действует только по вегетирующим сорнякам.",
       "Препараты в прайсе: Торнадо 540, Ураган Форте."
     ],
-    tags: ["Десикация", "Пары", "Сплошное действие", "Глифосат"]
+    tags: ["Десикация", "Пары", "Сплошное действие", "Глифосат", "Торнадо", "Ураган"]
   },
   {
     id: "prep-klopethir-int",
     title: "КлопЭфир Интенсив (Клопиралид + Флорасулам + 2,4-Д)",
     category: "препараты",
-    subtitle: "Высокоэффективный трехкомпонентный гербицид для зерновых",
-    description: "Эталонный выбор для борьбы с самыми злостными двудольными сорняками (включая подмаренник цепкий, виды осота, бодяк, ромашку, марь белую) в посевах озимой и яровой пшеницы и ячменя.",
+    subtitle: "Заводская бинарная упаковка для зерновых",
+    description: "Высокоэффективная комбинация для борьбы со злостными двудольными сорняками (включая подмаренник цепкий, виды осота, бодяк, ромашку, марь белую) в посевах озимой и яровой пшеницы и ячменя.",
     details: [
       "Норма применения: 1 канистра на 12-16 га (стандартная средняя норма — 1 канистра на 14 га).",
       "Фаза культуры: Кущение зерновых до образования 2-го междоузлия.",
-      "Баковые смеси: Отлично совместим с граминицидами и фунгицидами. Первыми в бак добавляются водорастворимые пакеты/порошки, затем суспензии и эмульсии.",
-      "Регистрация: Пшеница озимая и яровая, ячмень озимый и яровой."
+      "Баковые смеси: Первыми в бак добавляются водорастворимые пакеты/порошки, затем суспензии и эмульсии."
     ],
-    tags: ["Зерновые", "Двудольные", "КлопЭфир", "Трехкомпонентный"]
+    tags: ["Зерновые", "Двудольные", "КлопЭфир", "Заводская упаковка"]
+  },
+  {
+    id: "prep-triatlon-plus",
+    title: "Триатлон Плюс (Элант Премиум + Сталкер)",
+    category: "препараты",
+    subtitle: "Заводская бинарная упаковка (2,4-Д + дикамба + трибенурон-метил)",
+    description: "Комплексное решение для зерновых культур против широкого спектра двудольных сорняков.",
+    details: [
+      "Норма применения: 4,5 л + 0,15 кг на 10-12 га.",
+      "Культуры: Пшеница озимая и яровая, ячмень яровой, овес.",
+      "Особенности: Мощное синергетическое действие трех действующих веществ."
+    ],
+    tags: ["Зерновые", "Двудольные", "Триатлон Плюс", "Заводская упаковка"]
   },
   {
     id: "reg-cereal-weeds",
     title: "Гербицидная защита зерновых от двудольных",
     category: "регламенты",
-    subtitle: "Стратегия применения баковых смесей и двух/трехкомпонентных упаковок",
+    subtitle: "Стратегия применения бинарных упаковок и баковых смесей",
     description: "В защите зерновых (пшеница, ячмень) против двудольных сорняков ключевую роль играет фаза кущения культуры и фаза розетки у многолетних сорняков.",
     details: [
-      "Правило подбора: Монопрепараты (например, Гуарил) не используются как базовые на зерновых; применяются проверенные бинарные и трехкомпонентные упаковки (КлопЭфир Интенсив, КлопЭфир Микс, Триатлон Плюс, Триатлон Экстра).",
+      "Правило подбора: Применяются проверенные заводские упаковки и комплексы (КлопЭфир Интенсив, КлопЭфир Микс, Триатлон Плюс, Триатлон Экстра).",
       "Температурный оптимум: +12...+22 °C в солнечную безветренную погоду.",
-      "Ограничения: Не проводить обработку при угрозе заморозков ночью или при сильной росе."
+      "Ограничения: Не проводить обработку при угрозе заморозков ночью."
     ],
     tags: ["Зерновые", "Регламенты", "Гербициды", "Двудольные"]
   },
@@ -79,11 +90,11 @@ const KNOWLEDGE_BASE_ITEMS: KnowledgeItem[] = [
     id: "tech-clearfield",
     title: "Технология Clearfield (Чистое поле)",
     category: "технологии",
-    subtitle: "Возделывание устойчивых гибридов рапса, подсолнечника и льна",
-    description: "Технология возделывания устойчивых гибридов с применением имидазолиноновых гербицидов (например, Евро-Лайтинг, Парадокс). Позволяет уничтожить весь спектр сорняков, включая трудноискорежимые (заразиха, амброзия).",
+    subtitle: "Возделывание устойчивых гибридов рапса и подсолнечника",
+    description: "Технология возделывания устойчивых гибридов с применением имадазолиноновых гербицидов. Позволяет уничтожить весь спектр сорняков, включая трудноискорежимые.",
     details: [
-      "Культуры: Подсолнечник ( Clearfield), Рапс (Clearfield).",
-      "Особенность: Строго контролировать севооборот из-за последействия имидазолинонов на чувствительные культуры (свекла, овощные, злаковые при неблагоприятных условиях).",
+      "Культуры: Подсолнечник, Рапс (устойчивые гибриды).",
+      "Особенность: Строго контролировать севооборот из-за последействия на чувствительные культуры.",
       "Фаза внесения: 2-4 настоящих листа культуры."
     ],
     tags: ["Clearfield", "Подсолнечник", "Рапс", "Технологии"]
@@ -92,14 +103,14 @@ const KNOWLEDGE_BASE_ITEMS: KnowledgeItem[] = [
     id: "prep-verner-timeterr",
     title: "Протравители семян: Тиметерр и Вернер",
     category: "препараты",
-    subtitle: "Фунгицидная и инсекто-фунгицидная защита семенного материала",
-    description: "Обязательный этап предпосевной подготовки семян зерновых культур. Предотвращают развитие корневых гнилей, головневых болезней и защищают всходы от почвенных и ранних наземных вредителей.",
+    subtitle: "Фунгицидная защита семенного материала",
+    description: "Обязательный этап предпосевной подготовки семян зерновых культур. Предотвращают развитие корневых гнилей и головневых болезней.",
     details: [
-      "Тиметерр: Надежный фунгицидный протравитель для зерновых против комплекса семенной и почвенной инфекции.",
-      "Вернер: Комбинированный препарат с фунгицидным действием (содержит тебуконазол и др.), обеспечивающий длительное сохранение энергии прорастания.",
-      "Качество обработки: Равномерное покрытие семян с обязательным контролем влажности семенного материала."
+      "Тиметерр: Надежный протравитель для зерновых против комплекса семенной и почвенной инфекции.",
+      "Вернер: Комбинированный препарат, обеспечивающий длительное сохранение энергии прорастания и защиту от болезней.",
+      "Качество обработки: Равномерное покрытие семян с обязательным контролем влажности."
     ],
-    tags: ["Протравливание", "Семена", "Фунгициды", "Зерновые"]
+    tags: ["Протравливание", "Семена", "Фунгициды", "Зерновые", "Тиметерр", "Вернер"]
   }
 ];
 
@@ -154,48 +165,50 @@ export default function KnowledgeBase() {
       {/* Hero-секция */}
       <section className="bg-white border-b border-[#dde5dc] py-10 px-4 sm:px-8">
         <div className="max-w-4xl mx-auto text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8efe5] text-[#194f38] text-xs font-bold">
-            <BookOpen className="w-4 h-4 text-[#2e7d52]" /> Экспертный справочник
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8efe5] border border-[#2e7d52]/20 text-[#194f38] text-xs font-bold uppercase tracking-wider">
+            <BookOpen className="w-3.5 h-3.5 text-[#2e7d52]" /> Экспертный справочник
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#12352a]">
+          <h1 className="text-3xl sm:text-4xl font-black text-[#12352a] tracking-tight">
             База знаний агронома
           </h1>
           <p className="text-sm sm:text-base text-[#6f7a73] max-w-2xl mx-auto font-medium">
             Официальные регламенты, свойства действующих веществ, особенности препаратов из каталога Doctor Farmer и проверенные агрономические практики.
           </p>
 
-          {/* Поиск */}
-          <div className="pt-4 max-w-xl mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6f7a73]" />
-            <Input
-              placeholder="Поиск по препаратам, действующим веществам, терминам..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 pr-4 py-3 bg-[#f4f7f1] border border-[#dde5dc] rounded-2xl text-sm focus:border-[#2e7d52] focus:ring-[#2e7d52] shadow-xs"
-            />
-          </div>
+          {/* Поиск и категории */}
+          <div className="pt-6 max-w-xl mx-auto space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6f7a73]" />
+              <Input
+                type="text"
+                placeholder="Поиск по препаратам, действующим веществам, регламентам..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-[#f4f7f1] border-[#dde5dc] text-[#15211c] placeholder:text-[#6f7a73] text-sm h-11 rounded-xl focus-visible:ring-[#2e7d52]"
+              />
+            </div>
 
-          {/* Фильтры категорий */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-3">
-            {[
-              { id: "all", label: "Все темы" },
-              { id: "препараты", label: "Препараты" },
-              { id: "действующие вещества", label: "Действующие вещества" },
-              { id: "регламенты", label: "Регламенты" },
-              { id: "технологии", label: "Технологии" },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  selectedCategory === cat.id
-                    ? "bg-[#194f38] text-white shadow-xs"
-                    : "bg-[#f4f7f1] text-[#6f7a73] border border-[#dde5dc] hover:border-[#66a46c]"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {[
+                { id: "all", label: "Все темы" },
+                { id: "препараты", label: "Препараты" },
+                { id: "действующие вещества", label: "Действующие вещества" },
+                { id: "регламенты", label: "Регламенты" },
+                { id: "технологии", label: "Технологии" },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    selectedCategory === cat.id
+                      ? "bg-[#194f38] text-white shadow-xs"
+                      : "bg-[#f4f7f1] text-[#6f7a73] border border-[#dde5dc] hover:border-[#66a46c]"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -242,9 +255,9 @@ export default function KnowledgeBase() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5 pt-4 border-t border-[#dde5dc] mt-4">
+                  <div className="pt-4 border-t border-[#dde5dc] flex flex-wrap gap-1.5">
                     {item.tags.map((tag, tIdx) => (
-                      <span key={tIdx} className="text-[10px] font-mono px-2 py-0.5 bg-[#f4f7f1] text-[#6f7a73] rounded-md border border-[#dde5dc]">
+                      <span key={tIdx} className="px-2 py-0.5 bg-[#f4f7f1] text-[#6f7a73] rounded-md text-[10px] font-medium border border-[#dde5dc]">
                         #{tag}
                       </span>
                     ))}
@@ -257,23 +270,21 @@ export default function KnowledgeBase() {
       </main>
 
       {/* Футер */}
-      <footer className="bg-[#fbfcf9] border-t border-[#dde5dc] py-8 px-4 sm:px-6 text-xs text-[#6f7a73] relative z-10 mt-auto">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div className="flex items-center gap-2 justify-center sm:justify-start">
+      <footer className="bg-white border-t border-[#dde5dc] py-6 px-4 text-center text-xs text-[#6f7a73]">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
             <DoctorFarmerLogo className="h-6 w-auto" />
-            <span className="font-bold text-[#12352a]">DOCTOR FARMER</span>
+            <span className="font-semibold text-[#12352a]">Doctor Farmer • Кабинет команды</span>
           </div>
-          <p>© 2026 ООО ТД Доктор Фармер. Внутренний корпоративный портал.</p>
-          <span 
-            onClick={() => setIsSupportOpen(true)}
-            className="cursor-pointer text-[#194f38] font-semibold hover:underline inline-flex items-center gap-1 justify-center"
-          >
-            <HelpCircle className="w-3.5 h-3.5" /> Поддержка
-          </span>
+          <div className="flex items-center gap-4">
+            <Link href="/" className="hover:text-[#2e7d52] transition-colors">Главная</Link>
+            <Link href="/agro-helper" className="hover:text-[#2e7d52] transition-colors">АгроПомощник</Link>
+            <Link href="/quiz" className="hover:text-[#2e7d52] transition-colors">Тестирование</Link>
+            <button onClick={() => setIsSupportOpen(true)} className="hover:text-[#2e7d52] transition-colors">Поддержка</button>
+          </div>
         </div>
       </footer>
 
-      {/* Модальное окно поддержки */}
       <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
     </div>
   );
