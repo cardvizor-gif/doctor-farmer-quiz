@@ -31,8 +31,8 @@ export default function KnowledgeBase() {
       item.dv.toLowerCase().includes(q) ||
       item.category.toLowerCase().includes(q) ||
       item.cultures.some(c => c.toLowerCase().includes(q)) ||
-      item.regulation.phase.toLowerCase().includes(q) ||
-      item.regulation.objects.toLowerCase().includes(q);
+      item.regulation?.phase || 'Требует уточнения регламента'.toLowerCase().includes(q) ||
+      item.regulation?.objects || 'Вредные объекты по регламенту'.toLowerCase().includes(q);
     return matchesGroup && matchesCulture && matchesQuery;
   });
 
@@ -176,7 +176,7 @@ export default function KnowledgeBase() {
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5 text-[#2e7d52]" /> Регламент применения:
                         </span>
-                        {item.regulation.phase.includes("соответствии с регламентом") && (
+                        {item.regulation?.phase || 'Требует уточнения регламента'.includes("соответствии с регламентом") && (
                           <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 flex items-center gap-0.5 font-medium">
                             <AlertCircle className="w-3 h-3" /> Требует уточнения
                           </span>
@@ -185,19 +185,19 @@ export default function KnowledgeBase() {
                       <div className="bg-[#f8faf6] p-3 rounded-xl border border-[#dde5dc] space-y-2 text-xs text-[#15211c]">
                         <div>
                           <span className="font-bold text-[#2e7d52]">Фаза и время внесения:</span>
-                          <p className="mt-0.5 text-[#334138]">{item.regulation.phase}</p>
+                          <p className="mt-0.5 text-[#334138]">{item.regulation?.phase || 'Требует уточнения регламента'}</p>
                         </div>
                         <div>
                           <span className="font-bold text-[#2e7d52]">Вредные объекты / назначение:</span>
-                          <p className="mt-0.5 text-[#334138]">{item.regulation.objects}</p>
+                          <p className="mt-0.5 text-[#334138]">{item.regulation?.objects || 'Вредные объекты по регламенту'}</p>
                         </div>
                         <div>
                           <span className="font-bold text-[#2e7d52]">Условия и температура:</span>
-                          <p className="mt-0.5 text-[#334138]">{item.regulation.conditions}</p>
+                          <p className="mt-0.5 text-[#334138]">{item.regulation?.conditions || 'Применять по рекомендациям агрономической службы (+10...+25 °C).'}</p>
                         </div>
                         <div>
                           <span className="font-bold text-[#b91c1c]">Ограничения и требования:</span>
-                          <p className="mt-0.5 text-[#7f1d1d]">{item.regulation.restrictions}</p>
+                          <p className="mt-0.5 text-[#7f1d1d]">{item.regulation?.restrictions || 'Соблюдать регламент безопасности и нормы расхода.'}</p>
                         </div>
                       </div>
                     </div>
