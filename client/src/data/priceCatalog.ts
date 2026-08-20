@@ -1,4 +1,5 @@
 export interface PriceItem {
+  regulation?: { phase: string; objects: string; conditions: string; restrictions: string; };
   name: string;
   dv: string;
   rate: string;
