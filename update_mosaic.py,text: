@@ -1,0 +1,40 @@
+with open('/home/ubuntu/doctor-farmer-quiz/client/src/pages/Dashboard.tsx', 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# Найдем начало и конец блока с картинками
+start_marker = '<div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3'
+end_marker = '</div>\n        </div>'
+
+start_idx = content.find(start_marker)
+if start_idx != -1:
+    # заменим весь этот div на SVG мозаику
+    # найдем закрывающий тег этого div
+    # проще найти по структуре
+    pass
+
+# Заменим каждую строку с manus-storage изображением в Dashboard.tsx на красивую SVG иконку колоса/лита
+new_mosaic = '''<div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3 gap-3 sm:gap-6 p-5 sm:p-8 opacity-[0.16]">
+            {[
+              "Пшеница", "Ячмень", "Кукуруза", "Овёс", "Рапс", "Подсолнечник", "Горох", "Кукуруза", "Овёс", "Подсолнечник", "Рапс", "Ячмень"
+            ].map((name, index) => (
+              <div key={`${name}-${index}`} className={`flex items-center justify-center text-[#194f38] ${index % 3 === 1 ? "translate-y-3 sm:translate-y-5" : ""}`}>
+                <svg className="w-12 h-12 sm:w-16 sm:h-16 text-[#194f38]/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </div>
+            ))}
+          </div>'''
+
+# Нам нужно найти блок от <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true"> до закрывающего div
+import re
+pattern = r'<div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true">.*?</div>\s*</div>\s*</section>'
+match = re.search(pattern, content, re.DOTALL)
+if match:
+    # заменим только внутренний блок с сеткой
+    inner_pattern = r'<div className="absolute inset-0 grid grid-cols-3.*?</div>\s*</div>'
+    content = re.sub(inner_pattern, new_mosaic, content, flags=re.DOTALL)
+    with open('/home/ubuntu/doctor-farmer-quiz/client/src/pages/Dashboard.tsx', 'w', encoding='utf-8') as f:
+        f.write(content)
+    print('Мозаика успешно обновлена на SVG!')
+else:
+    print('Паттерн не найден')

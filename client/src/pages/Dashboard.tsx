@@ -43,21 +43,23 @@ export default function Dashboard() {
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true">
           <div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3 gap-3 sm:gap-6 p-5 sm:p-8 opacity-[0.22]">
             {[
-              ["/manus-storage/df-green-wheat_icon_5f103e9a.png", "Пшеница"],
-              ["/manus-storage/df-green-barley_icon_4f609506.png", "Ячмень"],
-              ["/manus-storage/df-green-corn_icon_6c35bf86.png", "Кукуруза"],
-              ["/manus-storage/df-green-oats_icon_f913a11f.png", "Овёс"],
-              ["/manus-storage/df-green-rapeseed_icon_f8c194b4.png", "Рапс"],
-              ["/manus-storage/df-green-sunflower_icon_011ba21e.png", "Подсолнечник"],
-              ["/manus-storage/df-green-pea_icon_fa7f50ea.png", "Горох"],
-              ["/manus-storage/df-green-corn_icon_6c35bf86.png", "Кукуруза"],
-              ["/manus-storage/df-green-oats_icon_f913a11f.png", "Овёс"],
-              ["/manus-storage/df-green-sunflower_icon_011ba21e.png", "Подсолнечник"],
-              ["/manus-storage/df-green-rapeseed_icon_f8c194b4.png", "Рапс"],
-              ["/manus-storage/df-green-barley_icon_4f609506.png", "Ячмень"],
-            ].map(([src, alt], index) => (
-              <div key={`${src}-${index}`} className={`flex items-center justify-center ${index % 3 === 1 ? "translate-y-3 sm:translate-y-5" : ""}`}>
-                <img src={src} alt={alt} className="h-full w-full object-contain drop-shadow-[0_2px_6px_rgba(25,79,56,0.12)]" />
+              ["Пшеница"],
+              ["Ячмень"],
+              ["Кукуруза"],
+              ["Овёс"],
+              ["Рапс"],
+              ["Подсолнечник"],
+              ["Горох"],
+              ["Кукуруза"],
+              ["Овёс"],
+              ["Подсолнечник"],
+              ["Рапс"],
+              ["Ячмень"],
+            ].map((name, index) => (
+              <div key={`${name}-${index}`} className={`flex items-center justify-center ${index % 3 === 1 ? "translate-y-3 sm:translate-y-5" : ""}`}>
+                <svg className="w-full h-full text-[#194f38]/60 p-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
               </div>
             ))}
           </div>
