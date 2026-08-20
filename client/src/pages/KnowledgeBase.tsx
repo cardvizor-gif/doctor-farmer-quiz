@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
 import { Button } from "@/components/ui/button";
@@ -245,9 +245,9 @@ export default function KnowledgeBase() {
             <span className="font-semibold text-[#12352a]">Doctor Farmer • Кабинет команды</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/" className="hover:text-[#2e7d52] transition-colors">Главная</Link>
-            <Link href="/agro-helper" className="hover:text-[#2e7d52] transition-colors">АгроПомощник</Link>
-            <Link href="/quiz" className="hover:text-[#2e7d52] transition-colors">Тестирование</Link>
+            <span onClick={() => window.location.href = "/"} className="cursor-pointer hover:text-[#2e7d52] transition-colors">Главная</span>
+            <span onClick={() => window.location.href = "/agro-helper"} className="cursor-pointer hover:text-[#2e7d52] transition-colors">АгроПомощник</span>
+            <span onClick={() => window.location.href = "/quiz"} className="cursor-pointer hover:text-[#2e7d52] transition-colors">Тестирование</span>
             <button onClick={() => setIsSupportOpen(true)} className="hover:text-[#2e7d52] transition-colors">Поддержка</button>
           </div>
         </div>
