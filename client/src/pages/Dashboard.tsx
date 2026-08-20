@@ -35,16 +35,16 @@ export default function Dashboard() {
       {/* Hero-секция с белым фоном и отчётливой зелёной мозаикой пиктограмм */}
       <section className="relative overflow-hidden py-14 sm:py-22 md:py-28 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10 bg-white text-[#12352a] shadow-lg rounded-3xl my-6 mx-4 sm:mx-auto border border-[#dde5dc]">
         
-        {/* Мозаика из реальных иконок культур, предоставленных пользователем */}
+        {/* Увеличенные реальные иконки культур в мозаике */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true">
-          <div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3 gap-4 sm:gap-8 p-6 sm:p-10 opacity-[0.16]">
+          <div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3 gap-6 sm:gap-10 p-4 sm:p-6 opacity-[0.18]">
             {[
               "/crops/oats.png", "/crops/corn.png", "/crops/pea.png", "/crops/rapeseed.png",
               "/crops/barley.png", "/crops/oats.png", "/crops/corn.png", "/crops/pea.png",
               "/crops/rapeseed.png", "/crops/barley.png", "/crops/oats.png", "/crops/corn.png"
             ].map((src, index) => (
-              <div key={`${src}-${index}`} className={`flex items-center justify-center ${index % 3 === 1 ? "translate-y-4 sm:translate-y-6" : ""}`}>
-                <img src={src} alt="Crop icon" className="h-14 w-14 sm:h-20 sm:w-20 object-contain filter contrast-125 drop-shadow-[0_2px_4px_rgba(25,79,56,0.12)]" />
+              <div key={`${src}-${index}`} className={`flex items-center justify-center ${index % 3 === 1 ? "translate-y-6 sm:translate-y-10" : ""}`}>
+                <img src={src} alt="Crop icon" className="h-24 w-24 sm:h-36 sm:w-36 object-contain filter contrast-125 drop-shadow-[0_4px_8px_rgba(25,79,56,0.15)]" />
               </div>
             ))}
           </div>
