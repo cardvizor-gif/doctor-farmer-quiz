@@ -165,8 +165,8 @@ export default function KnowledgeBase() {
                         <span className="font-bold text-[#12352a]">{item.rate}</span>
                       </div>
                       <div className="bg-[#fbfcf9] p-2 rounded-xl border border-[#dde5dc]">
-                        <span className="text-[10px] font-bold text-[#6f7a73] uppercase block">Регламент:</span>
-                        <span className="font-bold text-[#194f38]">Из прайса</span>
+                        <span className="text-[10px] font-bold text-[#6f7a73] uppercase block">Профиль применения:</span>
+                        <span className="font-bold text-[#194f38]">{item.regulation ? 'Заполнен' : 'Не указан'}</span>
                       </div>
                     </div>
 
@@ -176,7 +176,7 @@ export default function KnowledgeBase() {
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5 text-[#2e7d52]" /> Регламент применения:
                         </span>
-                        {item.regulation?.phase || 'Требует уточнения регламента'.includes("соответствии с регламентом") && (
+                        {!item.regulation && (
                           <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 flex items-center gap-0.5 font-medium">
                             <AlertCircle className="w-3 h-3" /> Требует уточнения
                           </span>
