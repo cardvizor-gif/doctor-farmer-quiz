@@ -35,35 +35,16 @@ export default function Dashboard() {
       {/* Hero-секция с белым фоном и отчётливой зелёной мозаикой пиктограмм */}
       <section className="relative overflow-hidden py-14 sm:py-22 md:py-28 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10 bg-white text-[#12352a] shadow-lg rounded-3xl my-6 mx-4 sm:mx-auto border border-[#dde5dc]">
         
-        {/* Встроенная векторная мозаика агрономических культур (гарантированно работает везде) */}
+        {/* Мозаика из реальных иконок культур, предоставленных пользователем */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true">
-          <div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3 gap-3 sm:gap-6 p-5 sm:p-8 opacity-[0.20]">
+          <div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3 gap-4 sm:gap-8 p-6 sm:p-10 opacity-[0.16]">
             {[
-              "Овёс", "Кукуруза", "Горох", "Рапс", "Ячмень", "Овёс", "Кукуруза", "Горох", "Рапс", "Ячмень", "Овёс", "Кукуруза"
-            ].map((name, index) => (
-              <div key={`${name}-${index}`} className={`flex items-center justify-center text-[#194f38] ${index % 3 === 1 ? "translate-y-3 sm:translate-y-5" : ""}`}>
-                <svg className="w-12 h-12 sm:w-16 sm:h-16 text-[#194f38]/80 drop-shadow-[0_2px_4px_rgba(25,79,56,0.12)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  {index % 5 === 0 && (
-                    /* Колос овса / зерновых */
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6M8 9h8M8 15h8" />
-                  )}
-                  {index % 5 === 1 && (
-                    /* Початок кукурузы */
-                    <path d="M12 2v20M15 4H9a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM9 9h6M9 13h6M9 17h6" />
-                  )}
-                  {index % 5 === 2 && (
-                    /* Горох в стручке */
-                    <path d="M4 20c4 0 8-4 10-10C16 6 18 4 20 2M6 18c3-1 6-4 7-8M9 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm4 4a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
-                  )}
-                  {index % 5 === 3 && (
-                    /* Рапс (цветки / стебель) */
-                    <path d="M12 22V10M12 10c-3-3-6-3-8-1M12 10c3-3 6-3 8-1M12 6c-2-2-4-2-6 0M12 6c2-2 4-2 6 0" />
-                  )}
-                  {index % 5 === 4 && (
-                    /* Ячмень */
-                    <path d="M12 2v20M16 4l-4 4-4-4M16 10l-4 4-4-4M16 16l-4 4-4-4" />
-                  )}
-                </svg>
+              "/crops/oats.png", "/crops/corn.png", "/crops/pea.png", "/crops/rapeseed.png",
+              "/crops/barley.png", "/crops/oats.png", "/crops/corn.png", "/crops/pea.png",
+              "/crops/rapeseed.png", "/crops/barley.png", "/crops/oats.png", "/crops/corn.png"
+            ].map((src, index) => (
+              <div key={`${src}-${index}`} className={`flex items-center justify-center ${index % 3 === 1 ? "translate-y-4 sm:translate-y-6" : ""}`}>
+                <img src={src} alt="Crop icon" className="h-14 w-14 sm:h-20 sm:w-20 object-contain filter contrast-125 drop-shadow-[0_2px_4px_rgba(25,79,56,0.12)]" />
               </div>
             ))}
           </div>
