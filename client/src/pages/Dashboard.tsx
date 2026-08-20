@@ -57,12 +57,12 @@ export default function Dashboard() {
               ["Ячмень"],
             ].map((name, index) => (
               <div key={`${name}-${index}`} className={`flex items-center justify-center ${index % 3 === 1 ? "translate-y-3 sm:translate-y-5" : ""}`}>
-                <svg className="w-full h-full text-[#194f38]/50 p-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  {index % 4 === 0 && <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />}
-                  {index % 4 === 1 && <path d="M12 22V12C12 7 8 4 4 6c1 5 4 8 8 6zm0 0c0-5 4-8 8-6-1 5-4 8-8 6z" />}
-                  {index % 4 === 2 && <path d="M2 22s3-10 10-10 10 10 10 10-3-2-10-2-10 2-10 2zM12 12v10" />}
-                  {index % 4 === 3 && <path d="M12 2a10 10 0 0 1 7 17M12 2a10 10 0 0 0-7 17M12 10v12" />}
-                </svg>
+                <img src={
+                  index % 5 === 0 ? "/crops/oats.png" :
+                  index % 5 === 1 ? "/crops/corn.png" :
+                  index % 5 === 2 ? "/crops/pea.png" :
+                  index % 5 === 3 ? "/crops/rapeseed.png" : "/crops/barley.png"
+                } alt="Crop icon" className="h-full w-full object-contain filter brightness-90 drop-shadow-[0_2px_4px_rgba(25,79,56,0.1)]" />
               </div>
             ))}
           </div>
