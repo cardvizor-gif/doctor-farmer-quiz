@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
 import { Button } from "@/components/ui/button";
