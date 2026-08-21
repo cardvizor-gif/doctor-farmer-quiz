@@ -4,6 +4,7 @@ import { PROTECTION_SCHEMES, CropProtectionScheme } from '../data/protectionSche
 import { getCropRecommendation } from '../data/cropRecommendations';
 import { PRICE_CATALOG, PriceItem } from "@/data/priceCatalog";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ShieldCheck, Droplet, Filter, Download, Award, BookmarkCheck, Thermometer, Clock, Info } from "lucide-react";
@@ -197,31 +198,32 @@ export default function AgroHelper() {
               
               {/* Выбор культуры */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#6f7a73] mb-2">Сельхозкультура</label>
-                <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
-                  {CROP_OPTIONS.map((crop) => {
-                    const active = selectedCrop?.id === crop.id;
-                    return (
-                      <button
-                        key={crop.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedCrop(crop);
-                          if (!crop.technologies.includes(selectedTech)) {
-                            setSelectedTech(crop.technologies[0] || 'Классическая');
-                          }
-                        }}
-                        className={`text-left px-3 py-2.5 rounded-xl text-xs font-medium transition-all border ${
-                          active 
-                            ? 'bg-[#194f38] text-white border-[#194f38] shadow-xs' 
-                            : 'bg-[#f4f7f1] text-[#15211c] border-[#dde5dc] hover:border-[#66a46c]'
-                        }`}
-                      >
+                <label htmlFor="crop-select" className="block text-xs font-semibold uppercase tracking-wider text-[#6f7a73] mb-2">
+                  Сельхозкультура
+                </label>
+                <Select
+                  value={selectedCrop?.id ?? ""}
+                  onValueChange={(cropId) => {
+                    const crop = CROP_OPTIONS.find((option) => option.id === cropId);
+                    if (!crop) return;
+                    setSelectedCrop(crop);
+                    if (!crop.technologies.includes(selectedTech)) {
+                      setSelectedTech(crop.technologies[0] || "Классическая");
+                    }
+                  }}
+                >
+                  <SelectTrigger id="crop-select" className="h-11 w-full rounded-xl border-[#dde5dc] bg-[#f4f7f1] px-3 text-sm font-semibold text-[#15211c] shadow-none focus:border-[#2e7d52] focus:ring-[#2e7d52]/20">
+                    <SelectValue placeholder="Выберите культуру" />
+                  </SelectTrigger>
+                  <SelectContent className="border-[#dde5dc] bg-white text-[#15211c]">
+                    {CROP_OPTIONS.map((crop) => (
+                      <SelectItem key={crop.id} value={crop.id} className="text-sm focus:bg-[#e8efe5] focus:text-[#194f38]">
                         {crop.name}
-                      </button>
-                    );
-                  })}
-                </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1.5 text-[11px] text-[#6f7a73]">Доступно культур: {CROP_OPTIONS.length}</p>
               </div>
 
               {/* Выбор технологии */}
