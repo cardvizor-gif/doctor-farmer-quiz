@@ -70,6 +70,26 @@ const GROUP_DISTRACTOR_ORDER: Record<string, string[]> = {
   "Фумигант": ["Протравитель", "Инсектицид", "Вспомогательный"],
 };
 
+// Рубрика «Культуры применения» должна работать только с культурами,
+// а не с функциями вспомогательных средств или объектами хранения.
+const CULTURE_QUESTION_GROUPS = new Set(["Удобрение", "Гербицид", "Фунгицид", "Инсектицид", "Протравитель", "Десикант"]);
+
+function isCropRegistration(drug: Drug): boolean {
+  return CULTURE_QUESTION_GROUPS.has(drug.group) && Boolean(drug.cult.trim());
+}
+
+function wrongCultureAnswers(except: Drug, count = 3): string[] {
+  const candidates = DRUGS.filter((drug) => drug !== except && isCropRegistration(drug) && drug.cult !== except.cult);
+  const sameGroup = candidates.filter((drug) => drug.group === except.group);
+  const preferred = sameGroup.length >= count ? sameGroup : candidates;
+  const unique = new Map<string, Drug>();
+  shuffle(preferred).forEach((drug) => unique.set(drug.cult, drug));
+  if (unique.size < count) {
+    shuffle(candidates).forEach((drug) => unique.set(drug.cult, drug));
+  }
+  return Array.from(unique.keys()).slice(0, count);
+}
+
 function hasDistinctAnswer(drug: Drug, except: Drug, key: ChoiceKey) {
   if (key === "name") return drug.dv !== except.dv;
   return drug[key] !== except[key];
@@ -132,7 +152,7 @@ export function buildQuestions(modes: Mode[]): Question[] {
         explanation: `${drug.dv} → ${drug.name} (${drug.group})`,
       });
     }
-    if (modes.includes("cult") && !drug.name.startsWith("Контур")) {
+    if (modes.includes("cult") && isCropRegistration(drug)) {
       questions.push({
         id: `cult-${drug.n}-${drugIndex}`,
         type: "cult",
@@ -140,7 +160,7 @@ export function buildQuestions(modes: Mode[]): Question[] {
         kind: "choice",
         prompt: `«${drug.name}»\n\nДля каких культур зарегистрирован?`,
         correct: drug.cult,
-        wrong: wrongAnswers(drug, "cult"),
+        wrong: wrongCultureAnswers(drug),
         explanation: `${drug.name}: ${drug.cult}`,
       });
     }
