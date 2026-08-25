@@ -219,6 +219,18 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("/node_modules/react/") || id.includes("/node_modules/react-dom/") || id.includes("/node_modules/scheduler/")) return "react-vendor";
+          if (id.includes("/node_modules/@radix-ui/")) return "radix-vendor";
+          if (id.includes("/node_modules/lucide-react/")) return "icons-vendor";
+          if (id.includes("/node_modules/@emailjs/")) return "email-vendor";
+          return "vendor";
+        },
+      },
+    },
   },
   server: {
     port: 3000,
