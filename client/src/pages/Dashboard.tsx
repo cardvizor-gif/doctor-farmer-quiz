@@ -1,203 +1,126 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, ShieldCheck, Award, BookOpen, Layers, Building2 } from "lucide-react";
+import { ArrowRight, Award, BookOpen, Building2, FileText, HelpCircle, Layers3, Sprout } from "lucide-react";
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
-import { HelpCircle } from "lucide-react";
+
+const modules = [
+  {
+    title: "АгроПомощник",
+    description: "Подберите готовую схему защиты по культуре, технологии и площади.",
+    action: "Открыть схему",
+    href: "/agro-helper",
+    icon: Layers3,
+    tone: "emerald",
+  },
+  {
+    title: "Хозяйства",
+    description: "Ведите карточки клиентов, площади, культуры и следующие действия.",
+    action: "Открыть реестр",
+    href: "/farms",
+    icon: Building2,
+    tone: "sage",
+  },
+  {
+    title: "Генератор КП",
+    description: "Сформируйте расчёт по схеме, прайсу, фасовкам и условиям оплаты.",
+    action: "Создать КП",
+    href: "/proposals/new",
+    icon: FileText,
+    tone: "gold",
+  },
+  {
+    title: "База знаний",
+    description: "Используйте справочник препаратов, действующих веществ и регламентов.",
+    action: "Открыть справочник",
+    href: "/knowledge-base",
+    icon: BookOpen,
+    tone: "blue",
+  },
+  {
+    title: "Тестирование",
+    description: "Проверьте продуктовую экспертизу и закрепите материал по культурам.",
+    action: "Начать тест",
+    href: "/quiz",
+    icon: Award,
+    tone: "violet",
+  },
+] as const;
+
+const toneClasses = {
+  emerald: "bg-emerald-50 text-emerald-700 ring-emerald-100 group-hover:bg-emerald-600",
+  sage: "bg-lime-50 text-lime-700 ring-lime-100 group-hover:bg-lime-600",
+  gold: "bg-amber-50 text-amber-700 ring-amber-100 group-hover:bg-amber-500",
+  blue: "bg-sky-50 text-sky-700 ring-sky-100 group-hover:bg-sky-600",
+  violet: "bg-violet-50 text-violet-700 ring-violet-100 group-hover:bg-violet-600",
+} as const;
 
 export default function Dashboard() {
   const [isSupportOpen, setIsSupportOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-[#f4f7f1] text-[#15211c] flex flex-col font-sans selection:bg-[#66a46c] selection:text-white relative overflow-hidden">
-      
-      {/* Верхняя навигация */}
-      <header className="w-full border-b border-[#dde5dc] bg-[#fbfcf9] sticky top-0 z-30 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
-          
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Link href="/">
-              <DoctorFarmerLogo className="h-10 sm:h-12 w-auto cursor-pointer" clickable={false} />
-            </Link>
-          </div>
-
-          <nav className="hidden md:flex items-center space-x-6 text-xs font-semibold text-[#194f38] uppercase tracking-wider">
-            <Link href="/agro-helper">
-              <span className="cursor-pointer hover:text-[#d5a642] transition-colors">АгроПомощник</span>
-            </Link>
-            <Link href="/farms">
-              <span className="cursor-pointer hover:text-[#d5a642] transition-colors">Хозяйства</span>
-            </Link>
-            <Link href="/quiz">
-              <span className="cursor-pointer hover:text-[#d5a642] transition-colors">Тестирование</span>
-            </Link>
+    <div className="min-h-screen bg-[#f5f7f2] text-[#15211c] selection:bg-emerald-200">
+      <header className="sticky top-0 z-30 border-b border-[#dde5dc] bg-[#fbfcf9]/95 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-6">
+          <Link href="/" className="shrink-0" aria-label="Doctor Farmer — рабочий кабинет">
+            <DoctorFarmerLogo className="h-10 w-auto sm:h-12" clickable={false} />
+          </Link>
+          <nav className="hidden items-center gap-5 text-[11px] font-bold uppercase tracking-[0.09em] text-[#315443] lg:flex">
+            {modules.map((module) => <Link key={module.href} href={module.href} className="transition-colors hover:text-[#c99228]">{module.title}</Link>)}
           </nav>
-
+          <Link href="/proposals/new" className="rounded-lg border border-[#194f38] px-3 py-2 text-xs font-bold text-[#194f38] transition-colors hover:bg-[#194f38] hover:text-white sm:px-4">
+            Новое КП
+          </Link>
         </div>
       </header>
 
-      {/* Hero-секция с белым фоном и отчётливой зелёной мозаикой пиктограмм */}
-      <section className="relative overflow-hidden py-14 sm:py-22 md:py-28 flex-1 flex items-center max-w-5xl mx-auto px-4 sm:px-6 w-full text-center z-10 bg-white text-[#12352a] shadow-lg rounded-3xl my-6 mx-4 sm:mx-auto border border-[#dde5dc]">
-        
-        {/* Увеличенные реальные иконки культур в мозаике */}
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true">
-          <div className="absolute inset-0 grid grid-cols-3 sm:grid-cols-4 grid-rows-3 gap-6 sm:gap-10 p-4 sm:p-6 opacity-[0.18]">
-            {[
-              "/manus-storage/oats_47d38ab3.png", "/manus-storage/corn_bdb740d2.png", "/manus-storage/pea_fb912394.png", "/manus-storage/rapeseed_dca45a80.png",
-              "/manus-storage/barley_fcda2081.png", "/manus-storage/oats_47d38ab3.png", "/manus-storage/corn_bdb740d2.png", "/manus-storage/pea_fb912394.png",
-              "/manus-storage/rapeseed_dca45a80.png", "/manus-storage/barley_fcda2081.png", "/manus-storage/oats_47d38ab3.png", "/manus-storage/corn_bdb740d2.png"
-            ].map((src, index) => (
-              <div key={`${src}-${index}`} className={`flex items-center justify-center ${index % 3 === 1 ? "translate-y-6 sm:translate-y-10" : ""}`}>
-                <img src={src} alt="Crop icon" className="h-24 w-24 sm:h-36 sm:w-36 object-contain filter contrast-125 drop-shadow-[0_4px_8px_rgba(25,79,56,0.15)]" />
-              </div>
-            ))}
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+        <section className="mb-8 flex flex-col gap-5 border-b border-[#dbe5da] pb-7 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:pb-9">
+          <div className="max-w-2xl">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#d5e3d4] bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#315443]">
+              <Sprout className="h-3.5 w-3.5 text-[#2e7d52]" /> Doctor Farmer · рабочий кабинет
+            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-[#12352a] sm:text-4xl">Выберите рабочий модуль</h1>
+            <p className="mt-3 text-sm leading-relaxed text-[#607065] sm:text-base">Все основные задачи собраны в одном месте: от агрономической схемы до коммерческого предложения, клиентской карточки и обучения команды.</p>
           </div>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.85)_48%,rgba(255,255,255,0.45)_100%)]" />
-        </div>
-
-        <div className="w-full space-y-6 sm:space-y-8 max-w-3xl mx-auto relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#e8efe5] text-[#194f38] text-xs font-bold tracking-wide uppercase border border-[#dde5dc] mx-auto shadow-2xs">
-            <ShieldCheck className="w-4 h-4 text-[#2e7d52]" /> Рабочий кабинет команды
+          <div className="rounded-xl border border-[#dbe5da] bg-white px-4 py-3 text-sm text-[#486656] shadow-sm">
+            <span className="font-bold text-[#194f38]">5 модулей</span> для работы с хозяйствами и схемами
           </div>
-          
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold font-dm tracking-tight text-[#12352a] leading-[1.2]">
-            Профессиональная <br />
-            <span className="text-[#2e7d52]">экспертиза на поле</span>
-          </h1>
+        </section>
 
-          <p className="text-[#6f7a73] text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium">
-            Единое пространство агрономических решений.
-          </p>
+        <section aria-label="Основные модули рабочего кабинета" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {modules.map((module) => {
+            const Icon = module.icon;
+            return (
+              <Link key={module.href} href={module.href} className="group min-h-[268px] rounded-2xl border border-[#dce6db] bg-white p-5 shadow-[0_8px_24px_rgba(21,57,38,0.045)] transition-all duration-200 hover:-translate-y-1 hover:border-[#9fc3a3] hover:shadow-[0_16px_32px_rgba(21,57,38,0.10)]">
+                <div className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 transition-colors duration-200 group-hover:text-white ${toneClasses[module.tone]}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h2 className="mt-7 text-lg font-extrabold tracking-tight text-[#12352a]">{module.title}</h2>
+                <p className="mt-2 text-sm leading-relaxed text-[#66766b]">{module.description}</p>
+                <div className="mt-7 flex items-center gap-2 border-t border-[#e5ece4] pt-4 text-xs font-bold text-[#194f38]">
+                  <span>{module.action}</span><ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                </div>
+              </Link>
+            );
+          })}
+        </section>
 
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/agro-helper">
-              <div role="button" className="bg-[#194f38] hover:bg-[#12352a] text-white font-bold text-sm px-8 py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group w-full sm:w-auto cursor-pointer">
-                <span>АгроПомощник ДФ</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-            <Link href="/quiz">
-              <div role="button" className="bg-white hover:bg-[#e8efe5] text-[#194f38] font-bold text-sm px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 border border-[#dde5dc] shadow-xs w-full sm:w-auto cursor-pointer">
-                <Award className="w-4 h-4 text-[#d5a642]" />
-                <span>Тестирование</span>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
+        <section className="mt-8 grid gap-4 border-t border-[#dbe5da] pt-7 sm:grid-cols-3">
+          <div className="rounded-xl bg-[#eaf2e9] p-4 text-sm text-[#315443]"><strong className="block text-[#194f38]">Для агронома</strong><span className="mt-1 block">Схемы защиты, нормы и регламенты применения.</span></div>
+          <div className="rounded-xl bg-[#fdf6e7] p-4 text-sm text-[#6e5828]"><strong className="block text-[#5f4a1c]">Для менеджера</strong><span className="mt-1 block">Хозяйства, расчёт КП, фасовки и условия оплаты.</span></div>
+          <div className="rounded-xl bg-[#edf3fa] p-4 text-sm text-[#3f617c]"><strong className="block text-[#234b6e]">Для команды</strong><span className="mt-1 block">База знаний и проверка продуктовой экспертизы.</span></div>
+        </section>
+      </main>
 
-      {/* Карточки модулей снизу */}
-      <section className="bg-white py-16 sm:py-20 border-t border-[#dde5dc] relative z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-            
-            <Link href="/agro-helper">
-              <div className="bg-[#f4f7f1] p-8 rounded-2xl border border-[#dde5dc] hover:border-[#2e7d52] transition-all shadow-xs cursor-pointer group flex flex-col justify-between h-full">
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-[#e8efe5] flex items-center justify-center text-[#2e7d52] mb-6 group-hover:scale-105 transition-transform border border-[#dde5dc]">
-                    <Layers className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-[#12352a] mb-2 flex items-center justify-between">
-                    <span>АгроПомощник ДФ</span>
-                    <ArrowRight className="w-5 h-5 text-[#2e7d52] group-hover:translate-x-1 transition-transform" />
-                  </h3>
-                  <p className="text-sm text-[#6f7a73] leading-relaxed font-medium">
-                    Интерактивный подбор схем защиты растений по культурам с учётом официальных регламентов, расчётом дозировок на гектары и возможностью экспорта в PDF.
-                  </p>
-                </div>
-                <div className="mt-8 pt-4 border-t border-[#dde5dc] flex items-center gap-2 text-xs font-bold text-[#194f38]">
-                  <span>Запустить консультант</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/quiz">
-              <div className="bg-[#f4f7f1] p-8 rounded-2xl border border-[#dde5dc] hover:border-[#2e7d52] transition-all shadow-xs cursor-pointer group flex flex-col justify-between h-full">
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-[#e8efe5] flex items-center justify-center text-[#2e7d52] mb-6 group-hover:scale-105 transition-transform border border-[#dde5dc]">
-                    <Award className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-[#12352a] mb-2 flex items-center justify-between">
-                    <span>Тестирование</span>
-                    <ArrowRight className="w-5 h-5 text-[#2e7d52] group-hover:translate-x-1 transition-transform" />
-                  </h3>
-                  <p className="text-sm text-[#6f7a73] leading-relaxed font-medium">
-                    Проверка продуктовой экспертизы сотрудников с фиксированным таймером, случайным распределением вопросов и автоматическим отчётом на почту руководству.
-                  </p>
-                </div>
-                <div className="mt-8 pt-4 border-t border-[#dde5dc] flex items-center gap-2 text-xs font-bold text-[#194f38]">
-                  <span>Начать аттестацию</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/farms">
-              <div className="bg-[#f4f7f1] p-8 rounded-2xl border border-[#dde5dc] hover:border-[#2e7d52] transition-all shadow-xs cursor-pointer group flex flex-col justify-between h-full">
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-[#e8efe5] flex items-center justify-center text-[#2e7d52] mb-6 group-hover:scale-105 transition-transform border border-[#dde5dc]">
-                    <Building2 className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-[#12352a] mb-2 flex items-center justify-between">
-                    <span>Хозяйства</span>
-                    <ArrowRight className="w-5 h-5 text-[#2e7d52] group-hover:translate-x-1 transition-transform" />
-                  </h3>
-                  <p className="text-sm text-[#6f7a73] leading-relaxed font-medium">
-                    Карточки хозяйств, контакты, площади, культуры и сценарий следующего действия перед визитом или подготовкой КП.
-                  </p>
-                </div>
-                <div className="mt-8 pt-4 border-t border-[#dde5dc] flex items-center gap-2 text-xs font-bold text-[#194f38]">
-                  <span>Открыть реестр</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/knowledge-base">
-              <div className="bg-[#f4f7f1] p-8 rounded-2xl border border-[#dde5dc] hover:border-[#2e7d52] transition-all shadow-xs cursor-pointer group flex flex-col justify-between h-full">
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-[#e8efe5] flex items-center justify-center text-[#2e7d52] mb-6 group-hover:scale-105 transition-transform border border-[#dde5dc]">
-                    <BookOpen className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-[#12352a] mb-2 flex items-center justify-between">
-                    <span>База знаний</span>
-                    <ArrowRight className="w-5 h-5 text-[#2e7d52] group-hover:translate-x-1 transition-transform" />
-                  </h3>
-                  <p className="text-sm text-[#6f7a73] leading-relaxed font-medium">
-                    Справочник действующих веществ, препаратов каталога, регламентов применения и агрономических регламентов защиты.
-                  </p>
-                </div>
-                <div className="mt-8 pt-4 border-t border-[#dde5dc] flex items-center gap-2 text-xs font-bold text-[#194f38]">
-                  <span>Открыть справочник</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </div>
-              </div>
-            </Link>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Футер */}
-      <footer className="bg-[#fbfcf9] border-t border-[#dde5dc] py-8 px-4 sm:px-6 text-xs text-[#6f7a73] relative z-10">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div className="flex items-center gap-2 justify-center sm:justify-start">
-            <DoctorFarmerLogo className="h-6 w-auto" />
-            <span className="font-bold text-[#12352a]">DOCTOR FARMER</span>
-          </div>
-          <p>© 2026 ООО ТД Доктор Фармер. Внутренний корпоративный портал.</p>
-          <span 
-            onClick={() => setIsSupportOpen(true)}
-            className="cursor-pointer text-[#194f38] font-semibold hover:underline inline-flex items-center gap-1 justify-center"
-          >
-            <HelpCircle className="w-3.5 h-3.5" /> Поддержка
-          </span>
+      <footer className="border-t border-[#dde5dc] bg-[#fbfcf9] px-4 py-6 text-xs text-[#6f7a73] sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 sm:flex-row">
+          <span>Doctor Farmer · рабочий портал</span>
+          <button type="button" onClick={() => setIsSupportOpen(true)} className="inline-flex items-center gap-1 font-semibold text-[#194f38] hover:underline"><HelpCircle className="h-3.5 w-3.5" />Поддержка</button>
         </div>
       </footer>
 
-      {/* Модальное окно поддержки */}
       <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
-
     </div>
   );
 }

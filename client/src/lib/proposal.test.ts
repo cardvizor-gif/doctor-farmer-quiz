@@ -56,4 +56,14 @@ describe("proposal helpers", () => {
     expect(pricing.maxDiscount).toBe(1872);
     expect(pricing.maxTotal).toBe(60528);
   });
+
+  it("removes a manager-excluded position from the commercial total while retaining it in the scheme", () => {
+    const scheme = { cropId: "test", technology: "Классическая", title: "Тест", description: "", steps: [{ stage: "Тест", task: "Тест", products: [{ name: "Контур Антистресс, ВР", rate: "0,2 л/га", dv: "", group: "Удобрение" }, { name: "Неон-99", rate: "0,2 л/га", dv: "", group: "ПАВ" }] }] };
+    const pricing = calculateSchemePricing(scheme, 100, "deferred", 0, ["0-0"]);
+
+    expect(pricing.managerExcludedProducts).toEqual(["Контур Антистресс, ВР"]);
+    expect(pricing.lines[0]?.excludedByManager).toBe(true);
+    expect(pricing.lines[0]?.maxTotal).toBeNull();
+    expect(pricing.maxTotal).toBe(7600);
+  });
 });

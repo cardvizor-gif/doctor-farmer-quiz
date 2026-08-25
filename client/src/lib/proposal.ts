@@ -106,6 +106,7 @@ export function calculateProductRequirement(rate: string, area: number, stage = 
 export type SchemePriceLine = {
   key: string;
   productName: string;
+  excludedByManager: boolean;
   requirement: ProductRequirement;
   price: PriceRecord | null;
   logistics: ProductLogistics | null;
@@ -135,6 +136,7 @@ export type SchemePricing = {
   maxPallets: number;
   missingProducts: string[];
   excludedProducts: string[];
+  managerExcludedProducts: string[];
   unconfirmedLogisticsProducts: string[];
   complete: boolean;
 };
@@ -159,10 +161,11 @@ function roundForLogistics(requirement: ProductRequirement, logistics: ProductLo
   };
 }
 
-export function calculateSchemePricing(scheme: CropProtectionScheme, area: number, paymentTerm: PaymentTerm, discountPercent = 0): SchemePricing {
+export function calculateSchemePricing(scheme: CropProtectionScheme, area: number, paymentTerm: PaymentTerm, discountPercent = 0, excludedLineKeys: string[] = []): SchemePricing {
   const lines: SchemePriceLine[] = [];
   const missingProducts: string[] = [];
   const excludedProducts: string[] = [];
+  const managerExcludedProducts: string[] = [];
   const unconfirmedLogisticsProducts: string[] = [];
   const safeDiscount = Math.max(0, Math.min(3, Number.isFinite(discountPercent) ? discountPercent : 0));
   let grossMinTotal = 0;
@@ -172,25 +175,29 @@ export function calculateSchemePricing(scheme: CropProtectionScheme, area: numbe
 
   scheme.steps.forEach((step, stageIndex) => {
     step.products.forEach((product, productIndex) => {
+      const key = `${stageIndex}-${productIndex}`;
       const requirement = calculateProductRequirement(product.rate, area, step.stage);
       const price = findSpkUralPrice(product.name);
       const logistics = findSpkUralLogistics(product.name);
       const pricePerUnit = price ? price[paymentTerm] : null;
       const rounded = roundForLogistics(requirement, logistics);
       const excluded = EXCLUDED_FROM_AUTO_PRICING.includes(product.name as typeof EXCLUDED_FROM_AUTO_PRICING[number]);
+      const excludedByManager = excludedLineKeys.includes(key);
       const canPrice = Boolean(price && pricePerUnit !== null && rounded.minPurchaseQuantity !== null && rounded.maxPurchaseQuantity !== null);
       const line: SchemePriceLine = {
-        key: `${stageIndex}-${productIndex}`,
+        key,
         productName: product.name,
+        excludedByManager,
         requirement,
         price,
         logistics,
         pricePerUnit,
         ...rounded,
-        minTotal: canPrice ? rounded.minPurchaseQuantity! * pricePerUnit! : null,
-        maxTotal: canPrice ? rounded.maxPurchaseQuantity! * pricePerUnit! : null,
+        minTotal: canPrice && !excludedByManager ? rounded.minPurchaseQuantity! * pricePerUnit! : null,
+        maxTotal: canPrice && !excludedByManager ? rounded.maxPurchaseQuantity! * pricePerUnit! : null,
       };
-      if (excluded) excludedProducts.push(product.name);
+      if (excludedByManager) managerExcludedProducts.push(product.name);
+      else if (excluded) excludedProducts.push(product.name);
       else if (!canPrice) missingProducts.push(product.name);
       else {
         grossMinTotal += line.minTotal!;
@@ -223,6 +230,7 @@ export function calculateSchemePricing(scheme: CropProtectionScheme, area: numbe
     maxPallets,
     missingProducts,
     excludedProducts,
+    managerExcludedProducts,
     unconfirmedLogisticsProducts,
     complete: area > 0 && missingProducts.length === 0,
   };
