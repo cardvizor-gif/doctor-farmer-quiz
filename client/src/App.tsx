@@ -10,6 +10,8 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Home = lazy(() => import("./pages/Home"));
 const AgroHelper = lazy(() => import("./pages/AgroHelper"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
+const FarmWorkspace = lazy(() => import("./pages/FarmWorkspace"));
+const ProposalBuilder = lazy(() => import("./pages/ProposalBuilder"));
 
 function RouteFallback() {
   return (
@@ -26,6 +28,8 @@ function Router() {
       <Route path={"/quiz"} component={Home} />
       <Route path={"/agro-helper"} component={AgroHelper} />
       <Route path={"/knowledge-base"} component={KnowledgeBase} />
+      <Route path={"/farms"} component={FarmWorkspace} />
+      <Route path={"/proposals/new"} component={ProposalBuilder} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

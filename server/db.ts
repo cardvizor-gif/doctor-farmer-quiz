@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { farms, InsertFarm, InsertProposal, InsertUser, proposals, users } from "../drizzle/schema";
+import type { FarmInput, ProposalInput } from "../shared/farm";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +90,109 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+function toNullable(value: string | null | undefined) {
+  return value?.trim() ? value.trim() : null;
+}
+
+function toOptionalDate(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function toFarmValues(input: FarmInput): InsertFarm {
+  return {
+    name: input.name,
+    district: toNullable(input.district),
+    settlement: toNullable(input.settlement),
+    contactName: toNullable(input.contactName),
+    contactRole: toNullable(input.contactRole),
+    phone: toNullable(input.phone),
+    email: toNullable(input.email),
+    totalArea: input.totalArea.toFixed(1),
+    crops: toNullable(input.crops),
+    technology: toNullable(input.technology),
+    salesStage: input.salesStage,
+    potentialValue: input.potentialValue.toFixed(2),
+    nextAction: toNullable(input.nextAction),
+    nextActionAt: toOptionalDate(input.nextActionAt),
+    notes: toNullable(input.notes),
+  };
+}
+
+function toProposalValues(input: ProposalInput): InsertProposal {
+  return {
+    farmId: input.farmId,
+    title: input.title,
+    crop: input.crop,
+    technology: toNullable(input.technology),
+    area: input.area.toFixed(1),
+    costPerHectare: input.costPerHectare.toFixed(2),
+    totalCost: input.totalCost.toFixed(2),
+    status: input.status,
+    schemeJson: input.schemeJson,
+    notes: toNullable(input.notes),
+  };
+}
+
+export async function listFarms() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(farms).orderBy(desc(farms.updatedAt));
+}
+
+export async function getFarmById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(farms).where(eq(farms.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createFarm(input: FarmInput) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const result = await db.insert(farms).values(toFarmValues(input));
+  return getFarmById(Number(result[0].insertId));
+}
+
+export async function updateFarm(id: number, input: FarmInput) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  await db.update(farms).set(toFarmValues(input)).where(eq(farms.id, id));
+  return getFarmById(id);
+}
+
+export async function removeFarm(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  await db.delete(farms).where(eq(farms.id, id));
+  return { success: true } as const;
+}
+
+export async function listProposals(farmId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const query = db.select().from(proposals).orderBy(desc(proposals.updatedAt));
+  return farmId ? query.where(eq(proposals.farmId, farmId)) : query;
+}
+
+export async function getProposalById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(proposals).where(eq(proposals.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createProposal(input: ProposalInput) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const result = await db.insert(proposals).values(toProposalValues(input));
+  return getProposalById(Number(result[0].insertId));
+}
+
+export async function updateProposalStatus(id: number, status: ProposalInput["status"]) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  await db.update(proposals).set({ status }).where(eq(proposals.id, id));
+  return getProposalById(id);
+}

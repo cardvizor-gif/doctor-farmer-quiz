@@ -1,0 +1,136 @@
+import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { CROP_OPTIONS } from "@/data/agropom";
+import { PROTECTION_SCHEMES } from "@/data/protectionSchemes";
+import { buildProposalTitle, calculateProductRequirement, calculateProposalTotal, getSchemeForProposal, parseProposalContext } from "@/lib/proposal";
+import { trpc } from "@/lib/trpc";
+import { ArrowLeft, Building2, CheckCircle2, ChevronRight, CircleDollarSign, FileDown, FileText, Layers3, Printer, Save, Sprout } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "wouter";
+import { toast } from "sonner";
+
+const formatMoney = (value: number) => new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(value || 0);
+
+export default function ProposalBuilder() {
+  const utils = trpc.useUtils();
+  const [, setLocation] = useLocation();
+  const initialContext = parseProposalContext(window.location.search);
+  const initialCrop = CROP_OPTIONS.find(crop => crop.id === initialContext.cropId) ?? CROP_OPTIONS[0];
+  const initialTechnology = initialCrop.technologies.includes(initialContext.technology ?? "") ? initialContext.technology! : initialCrop.technologies[0];
+  const farmsQuery = trpc.farms.list.useQuery();
+  const farms = farmsQuery.data ?? [];
+  const [selectedFarmId, setSelectedFarmId] = useState<number | null>(() => {
+    return initialContext.farmId;
+  });
+  const [cropId, setCropId] = useState(initialCrop.id);
+  const [technology, setTechnology] = useState(initialTechnology);
+  const [area, setArea] = useState(initialContext.area ? String(initialContext.area) : "");
+  const [costPerHectare, setCostPerHectare] = useState("");
+  const [notes, setNotes] = useState("");
+  const [savedProposalId, setSavedProposalId] = useState<number | null>(null);
+  const selectedFarm = farms.find(farm => farm.id === selectedFarmId) ?? null;
+  const selectedCrop = CROP_OPTIONS.find(crop => crop.id === cropId) ?? CROP_OPTIONS[0];
+  const scheme = useMemo(() => getSchemeForProposal(PROTECTION_SCHEMES, cropId, technology), [cropId, technology]);
+  const numericArea = Number(area || 0);
+  const numericCostPerHectare = Number(costPerHectare || 0);
+  const totalCost = calculateProposalTotal(numericArea, numericCostPerHectare);
+  const proposalsQuery = trpc.proposals.list.useQuery(selectedFarmId ? { farmId: selectedFarmId } : undefined);
+
+  useEffect(() => {
+    if (farms.length && !selectedFarm) {
+      const firstFarm = farms[0];
+      setSelectedFarmId(firstFarm.id);
+      setArea(String(firstFarm.totalArea ?? ""));
+    }
+  }, [farms, selectedFarm]);
+
+  useEffect(() => {
+    if (selectedFarm && !area) setArea(String(selectedFarm.totalArea ?? ""));
+  }, [selectedFarm, area]);
+
+  const createProposal = trpc.proposals.create.useMutation({
+    onSuccess: async proposal => {
+      if (proposal) setSavedProposalId(proposal.id);
+      await utils.proposals.list.invalidate();
+      toast.success("Коммерческое предложение сохранено в карточке хозяйства");
+    },
+    onError: error => toast.error(error.message),
+  });
+
+  const chooseFarm = (farmId: number) => {
+    const farm = farms.find(item => item.id === farmId);
+    setSelectedFarmId(farmId);
+    setArea(String(farm?.totalArea ?? ""));
+    setSavedProposalId(null);
+  };
+
+  const chooseCrop = (newCropId: string) => {
+    const crop = CROP_OPTIONS.find(item => item.id === newCropId) ?? CROP_OPTIONS[0];
+    setCropId(crop.id);
+    setTechnology(crop.technologies[0]);
+    setSavedProposalId(null);
+  };
+
+  const saveProposal = () => {
+    if (!selectedFarm) return toast.error("Сначала выберите хозяйство");
+    if (!scheme) return toast.error("Для выбранной культуры нет готовой схемы");
+    if (numericArea <= 0) return toast.error("Укажите площадь обработки больше нуля");
+    createProposal.mutate({
+      farmId: selectedFarm.id,
+      title: buildProposalTitle(scheme, selectedFarm.name),
+      crop: selectedCrop.name,
+      technology,
+      area: numericArea,
+      costPerHectare: numericCostPerHectare,
+      totalCost,
+      schemeJson: JSON.stringify({ scheme, selectedCrop, area: numericArea, costPerHectare: numericCostPerHectare, totalCost }),
+      notes: notes || null,
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f4f7f1] text-[#15211c]">
+      <header className="sticky top-0 z-30 border-b border-[#dde5dc] bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <Link href="/" className="shrink-0"><DoctorFarmerLogo className="h-9 w-auto" clickable={false} /></Link>
+          <div className="flex items-center gap-2"><Button variant="outline" size="sm" onClick={() => setLocation(selectedFarm ? `/farms` : "/farms")}><ArrowLeft className="mr-1.5 h-4 w-4" />К хозяйствам</Button><Link href="/agro-helper" className="hidden sm:block"><Button variant="outline" size="sm">АгроПомощник</Button></Link></div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
+        <section className="mb-7 overflow-hidden rounded-3xl border border-[#dce8dc] bg-[#173f30] p-6 text-white shadow-[0_18px_60px_rgba(19,53,42,0.16)] lg:flex lg:items-end lg:justify-between lg:p-8">
+          <div><div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-emerald-100"><FileText className="h-3.5 w-3.5" />Рабочее КП</div><h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Коммерческое предложение из схемы</h1><p className="mt-3 max-w-2xl text-sm leading-relaxed text-emerald-50/80">Используйте утверждённую схему защиты из АгроПомощника, укажите реальную площадь и актуальную стоимость на гектар. Состав препаратов и нормы формируются автоматически.</p></div>
+          <div className="mt-5 rounded-2xl border border-white/10 bg-white/10 p-4 lg:mt-0"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Бюджет по КП</span><strong className="mt-1 block text-2xl">{formatMoney(totalCost)}</strong><span className="text-xs text-emerald-100/75">{numericArea || 0} га · {formatMoney(numericCostPerHectare)}/га</span></div>
+        </section>
+
+        {!farmsQuery.isLoading && farms.length === 0 && <section className="rounded-2xl border border-[#dde5dc] bg-white p-8 text-center shadow-sm"><Building2 className="mx-auto mb-4 h-12 w-12 text-[#8cac91]" /><h2 className="text-xl font-bold text-[#12352a]">Сначала добавьте хозяйство</h2><p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[#6f7a73]">Коммерческое предложение всегда привязывается к карточке клиента, чтобы сохранялись площадь, контакты и история работы.</p><Button className="mt-5 bg-[#194f38] hover:bg-[#12352a]" onClick={() => setLocation("/farms")}>Открыть реестр хозяйств <ChevronRight className="ml-1 h-4 w-4" /></Button></section>}
+
+        {farms.length > 0 && <div className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
+          <section className="space-y-5 rounded-2xl border border-[#dde5dc] bg-white p-5 shadow-sm sm:p-6">
+            <div><p className="text-xs font-bold uppercase tracking-wide text-[#2e7d52]">01 · Контекст хозяйства</p><h2 className="mt-1 text-xl font-extrabold text-[#12352a]">Параметры предложения</h2></div>
+            <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Хозяйство</span><select value={selectedFarmId ?? ""} onChange={event => chooseFarm(Number(event.target.value))} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{farms.map(farm => <option key={farm.id} value={farm.id}>{farm.name}{farm.district ? ` · ${farm.district}` : ""}</option>)}</select></label>
+            <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Культура</span><select value={cropId} onChange={event => chooseCrop(event.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{CROP_OPTIONS.map(crop => <option key={crop.id} value={crop.id}>{crop.name}</option>)}</select></label>
+            <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Технология</span><select value={technology} onChange={event => { setTechnology(event.target.value); setSavedProposalId(null); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{selectedCrop.technologies.map(item => <option key={item} value={item}>{item}</option>)}</select></label>
+            <div className="grid grid-cols-2 gap-3"><label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Площадь, га *</span><Input type="number" min="0" value={area} onChange={event => { setArea(event.target.value); setSavedProposalId(null); }} /></label><label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Стоимость, ₽/га</span><Input type="number" min="0" value={costPerHectare} onChange={event => { setCostPerHectare(event.target.value); setSavedProposalId(null); }} placeholder="Из актуального прайса" /></label></div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900"><strong>Цена вводится вручную.</strong> В текущем каталоге портала нет опубликованных цен; это защищает КП от использования устаревшего прайса. После загрузки утверждённого прайса стоимость можно будет подставлять автоматически.</div>
+            <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Примечание для КП</span><Textarea value={notes} onChange={event => { setNotes(event.target.value); setSavedProposalId(null); }} rows={4} placeholder="Условия, договорённости, срок действия предложения" /></label>
+            <div className="rounded-xl bg-[#f5f8f4] p-4"><div className="flex items-center gap-2 text-[#194f38]"><CircleDollarSign className="h-5 w-5 text-[#2e7d52]" /><span className="text-xs font-bold uppercase tracking-wide">Итоговый бюджет</span></div><strong className="mt-2 block text-3xl text-[#12352a]">{formatMoney(totalCost)}</strong><p className="mt-1 text-xs text-[#6f7a73]">{numericArea || 0} га × {formatMoney(numericCostPerHectare)} за гектар</p></div>
+            <Button className="w-full bg-[#194f38] hover:bg-[#12352a]" onClick={saveProposal} disabled={createProposal.isPending || !scheme}><Save className="mr-1.5 h-4 w-4" />Сохранить КП в карточке хозяйства</Button>
+            {savedProposalId && <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"><CheckCircle2 className="h-5 w-5" />КП №{savedProposalId} сохранено</div>}
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-[#dde5dc] bg-white shadow-sm">
+            <div className="border-b border-[#e7eee5] p-5 sm:p-6"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#2e7d52]"><Layers3 className="h-4 w-4" />Готовая схема</div><h2 className="text-2xl font-extrabold tracking-tight text-[#12352a]">{scheme?.title ?? "Схема не найдена"}</h2><p className="mt-1 text-sm text-[#6f7a73]">{selectedFarm?.name ?? "Выберите хозяйство"} · {selectedCrop.name} · {technology}</p></div><Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="mr-1.5 h-4 w-4" />PDF / печать</Button></div>{scheme && <p className="mt-4 rounded-xl bg-[#f5f8f4] p-3 text-sm leading-relaxed text-[#486656]">{scheme.description}</p>}</div>
+            {!scheme && <div className="p-10 text-center"><Sprout className="mx-auto mb-3 h-10 w-10 text-[#8cac91]" /><p className="font-semibold text-[#194f38]">Для этой комбинации пока нет готовой схемы</p><p className="mt-1 text-sm text-[#6f7a73]">Выберите другую культуру или дополните схемы в АгроПомощнике.</p></div>}
+            {scheme && <div className="space-y-4 p-5 sm:p-6">{scheme.steps.map((step, stepIndex) => <article key={`${step.stage}-${stepIndex}`} className="rounded-xl border border-[#dde5dc] bg-[#fcfdfb]"><div className="border-b border-[#e7eee5] px-4 py-3"><span className="text-[10px] font-bold uppercase tracking-wide text-[#2e7d52]">Этап {stepIndex + 1} · {step.stage}</span><h3 className="mt-1 font-bold text-[#12352a]">{step.task}</h3></div><div className="divide-y divide-[#e7eee5]">{step.products.map(product => { const requirement = calculateProductRequirement(product.rate, numericArea, step.stage); return <div key={`${step.stage}-${product.name}`} className="grid gap-2 px-4 py-3 sm:grid-cols-[1.1fr_0.7fr_0.8fr_0.8fr]"><div><p className="font-bold text-[#12352a]">{product.name}</p><p className="mt-0.5 text-xs leading-relaxed text-[#6f7a73]">{product.dv}</p></div><p className="text-xs font-medium text-[#486656]">{product.group}</p><p className="text-sm font-bold text-[#194f38]">{product.rate}</p><p className="rounded-lg bg-[#e8f1e7] px-2 py-1 text-xs font-bold text-[#194f38]">{requirement.label}</p></div>; })}</div></article>)}</div>}
+            {notes && <div className="mx-5 mb-5 rounded-xl border border-[#dce8dc] bg-[#f5f8f4] p-4 text-sm text-[#486656] sm:mx-6 sm:mb-6"><strong className="block text-[#194f38]">Примечание</strong><span className="mt-1 block whitespace-pre-line">{notes}</span></div>}
+          </section>
+        </div>}
+
+        {selectedFarmId && proposalsQuery.data && proposalsQuery.data.length > 0 && <section className="mt-6 rounded-2xl border border-[#dde5dc] bg-white p-5 shadow-sm sm:p-6"><div className="mb-4 flex items-center gap-2"><FileDown className="h-5 w-5 text-[#2e7d52]" /><h2 className="font-bold text-[#12352a]">Сохранённые КП по хозяйству</h2></div><div className="grid gap-3 md:grid-cols-2">{proposalsQuery.data.map(proposal => <div key={proposal.id} className="rounded-xl border border-[#e0eadf] p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-[#12352a]">{proposal.title}</p><p className="mt-1 text-xs text-[#6f7a73]">{proposal.crop} · {proposal.area} га · {formatMoney(Number(proposal.totalCost))}</p></div><span className="rounded-full bg-[#e8efe5] px-2.5 py-1 text-[10px] font-bold text-[#194f38]">{proposal.status === "draft" ? "Черновик" : proposal.status}</span></div></div>)}</div></section>}
+      </main>
+    </div>
+  );
+}

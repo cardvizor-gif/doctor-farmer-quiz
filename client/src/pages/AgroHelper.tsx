@@ -7,17 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ShieldCheck, Droplet, Filter, Download, Award, BookmarkCheck, Thermometer, Clock, Info } from "lucide-react";
-import { Link } from "wouter";
+import { ArrowLeft, ShieldCheck, Droplet, Filter, Download, Award, BookmarkCheck, Thermometer, Clock, Info, FileText } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
+import { buildProposalContextQuery, parseProposalContext } from "@/lib/proposal";
 import { HelpCircle } from "lucide-react";
 
 export default function AgroHelper() {
+  const [, setLocation] = useLocation();
+  const initialContext = parseProposalContext(window.location.search);
   const [selectedCrop, setSelectedCrop] = useState<CropOption | null>(CROP_OPTIONS[0]);
   const [selectedTech, setSelectedTech] = useState<string>("Классическая");
   const [selectedProblemCategory, setSelectedProblemCategory] = useState<string>("all");
-  const [fieldArea, setFieldArea] = useState<number>(100); // га
+  const [fieldArea, setFieldArea] = useState<number>(initialContext.area ?? 100); // га
 
   // Заменители препаратов (ключ: cropId-stepIndex-productIndex)
   const [customReplacements, setCustomReplacements] = useState<Record<string, PriceItem>>({});
@@ -359,7 +362,14 @@ export default function AgroHelper() {
                 </p>
               </div>
 
-              <div className="no-print">
+              <div className="no-print flex flex-wrap gap-2">
+                <Button
+                  onClick={() => selectedCrop && setLocation(`/proposals/new?${buildProposalContextQuery({ farmId: initialContext.farmId, cropId: selectedCrop.id, technology: selectedTech, area: fieldArea })}`)}
+                  variant="outline"
+                  className="border-[#2e7d52] text-[#194f38] hover:bg-[#e8efe5] text-xs font-bold gap-2 shadow-xs"
+                >
+                  <FileText className="w-4 h-4" /> Создать КП
+                </Button>
                 <Button 
                   onClick={handleExportPDF}
                   className="bg-[#194f38] hover:bg-[#12352a] text-white text-xs font-bold gap-2 shadow-xs"
