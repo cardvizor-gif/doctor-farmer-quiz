@@ -15,6 +15,13 @@
       "when": 1787648958134,
       "tag": "0001_flat_ultimates",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1787656790950,
+      "tag": "0002_fast_thunderbird",
+      "breakpoints": true
     }
   ]
 }

@@ -90,6 +90,16 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function updateUserDisplayName(openId: string, displayName: string) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database is not available");
+  }
+
+  await db.update(users).set({ displayName }).where(eq(users.openId, openId));
+  return getUserByOpenId(openId);
+}
+
 function toNullable(value: string | null | undefined) {
   return value?.trim() ? value.trim() : null;
 }
