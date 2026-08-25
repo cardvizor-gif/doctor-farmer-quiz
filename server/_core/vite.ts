@@ -9,6 +9,9 @@ import viteConfig from "../../vite.config";
 export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
     middlewareMode: true,
+    // Vite runs in middleware mode on the same HTTP server as Express. Explicitly
+    // keep its client metadata on this server's port instead of the 5173 default.
+    port: Number(process.env.PORT ?? 3000),
     hmr: { server },
     allowedHosts: true as const,
   };
