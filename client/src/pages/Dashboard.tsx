@@ -87,7 +87,6 @@ export default function Dashboard() {
           <div className="overview-hero-stat-grid">
             <div><strong>5</strong><span>рабочих модулей</span></div>
             <div><strong>1</strong><span>единый кабинет</span></div>
-            <div><strong>0–3%</strong><span>контроль скидки</span></div>
           </div>
         </section>
 
