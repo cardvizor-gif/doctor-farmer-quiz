@@ -1,0 +1,58 @@
+{
+  "count": 10,
+  "entries": [
+    {
+      "timestamp": "2026-08-25T11:32:16Z",
+      "severity": "Default",
+      "message": "[OAuth] Initialized with baseURL: https://api.manus.ai"
+    },
+    {
+      "timestamp": "2026-08-25T11:32:16Z",
+      "severity": "Default",
+      "message": "Server running on http://localhost:3000/"
+    },
+    {
+      "timestamp": "2026-08-25T11:32:55Z",
+      "severity": "Default",
+      "message": "[OAuth] Initialized with baseURL: https://api.manus.ai"
+    },
+    {
+      "timestamp": "2026-08-25T11:32:55Z",
+      "severity": "Default",
+      "message": "Server running on http://localhost:3000/"
+    },
+    {
+      "timestamp": "2026-08-25T11:32:57Z",
+      "severity": "Default",
+      "message": "[Auth] Missing session cookie"
+    },
+    {
+      "timestamp": "2026-08-25T11:32:58Z",
+      "severity": "Default",
+      "message": "[Auth] Missing session cookie"
+    },
+    {
+      "timestamp": "2026-08-25T11:35:30Z",
+      "severity": "Default",
+      "message": "[Auth] Missing session cookie"
+    },
+    {
+      "timestamp": "2026-08-25T11:35:34Z",
+      "severity": "Default",
+      "message": "[Auth] Missing session cookie"
+    },
+    {
+      "timestamp": "2026-08-25T11:36:55Z",
+      "severity": "Default",
+      "message": "Tue, 25 Aug 2026 11:36:55 GMT express deprecated res.clearCookie: Passing \"options.maxAge\" is deprecated. In v5.0.0 of Express, this option will be ignored, as res.clearCookie will automatically set cookies to expire immediately. Please update your code to omit this option. at file:/usr/src/app/dist/index.js:871:15"
+    },
+    {
+      "timestamp": "2026-08-25T11:36:55Z",
+      "severity": "Default",
+      "message": "[Auth] Missing session cookie"
+    }
+  ],
+  "has_more": false,
+  "oldest_time": "",
+  "project_id": "4txFmjApCptjrLwSaxiHvk"
+}
