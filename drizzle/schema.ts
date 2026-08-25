@@ -29,6 +29,8 @@ export const farms = mysqlTable(
   "farms",
   {
     id: int("id").autoincrement().primaryKey(),
+    /** Manus OAuth openId владельца. Null допускается только для исторических записей до миграции. */
+    ownerOpenId: varchar("ownerOpenId", { length: 64 }),
     name: varchar("name", { length: 255 }).notNull(),
     district: varchar("district", { length: 160 }),
     settlement: varchar("settlement", { length: 160 }),
@@ -47,7 +49,11 @@ export const farms = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  table => [index("farms_sales_stage_idx").on(table.salesStage), index("farms_updated_at_idx").on(table.updatedAt)],
+  table => [
+    index("farms_owner_updated_at_idx").on(table.ownerOpenId, table.updatedAt),
+    index("farms_sales_stage_idx").on(table.salesStage),
+    index("farms_updated_at_idx").on(table.updatedAt),
+  ],
 );
 
 export const proposals = mysqlTable(

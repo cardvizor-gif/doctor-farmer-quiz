@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { farms, InsertFarm, InsertProposal, InsertUser, proposals, users } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
@@ -100,8 +100,9 @@ function toOptionalDate(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function toFarmValues(input: FarmInput): InsertFarm {
+function toFarmValues(input: FarmInput, ownerOpenId: string): InsertFarm {
   return {
+    ownerOpenId,
     name: input.name,
     district: toNullable(input.district),
     settlement: toNullable(input.settlement),
@@ -135,72 +136,95 @@ function toProposalValues(input: ProposalInput): InsertProposal {
   };
 }
 
-export async function listFarms() {
+export async function listFarms(ownerOpenId: string) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(farms).orderBy(desc(farms.updatedAt));
+  return db.select().from(farms).where(eq(farms.ownerOpenId, ownerOpenId)).orderBy(desc(farms.updatedAt));
 }
 
-export async function getFarmById(id: number) {
+export async function getFarmById(id: number, ownerOpenId: string) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(farms).where(eq(farms.id, id)).limit(1);
+  const result = await db.select().from(farms).where(and(eq(farms.id, id), eq(farms.ownerOpenId, ownerOpenId))).limit(1);
   return result[0];
 }
 
-export async function createFarm(input: FarmInput) {
+export async function createFarm(input: FarmInput, ownerOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
-  const result = await db.insert(farms).values(toFarmValues(input));
-  return getFarmById(Number(result[0].insertId));
+  const result = await db.insert(farms).values(toFarmValues(input, ownerOpenId));
+  return getFarmById(Number(result[0].insertId), ownerOpenId);
 }
 
-export async function createFarms(inputs: FarmInput[]) {
+export async function createFarms(inputs: FarmInput[], ownerOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
   if (inputs.length === 0) return { created: 0 };
-  await db.insert(farms).values(inputs.map(toFarmValues));
+  await db.insert(farms).values(inputs.map(input => toFarmValues(input, ownerOpenId)));
   return { created: inputs.length };
 }
 
-export async function updateFarm(id: number, input: FarmInput) {
+export async function updateFarm(id: number, input: FarmInput, ownerOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
-  await db.update(farms).set(toFarmValues(input)).where(eq(farms.id, id));
-  return getFarmById(id);
+  const { ownerOpenId: _ownerOpenId, ...farmValues } = toFarmValues(input, ownerOpenId);
+  await db.update(farms).set(farmValues).where(and(eq(farms.id, id), eq(farms.ownerOpenId, ownerOpenId)));
+  return getFarmById(id, ownerOpenId);
 }
 
-export async function removeFarm(id: number) {
+export async function removeFarm(id: number, ownerOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
-  await db.delete(farms).where(eq(farms.id, id));
+  await db.delete(farms).where(and(eq(farms.id, id), eq(farms.ownerOpenId, ownerOpenId)));
   return { success: true } as const;
 }
 
-export async function listProposals(farmId?: number) {
+export async function listProposals(ownerOpenId: string, farmId?: number) {
   const db = await getDb();
   if (!db) return [];
-  const query = db.select().from(proposals).orderBy(desc(proposals.updatedAt));
-  return farmId ? query.where(eq(proposals.farmId, farmId)) : query;
+  const ownerCondition = farmId
+    ? and(eq(farms.ownerOpenId, ownerOpenId), eq(proposals.farmId, farmId))
+    : eq(farms.ownerOpenId, ownerOpenId);
+  const result = await db
+    .select({ proposal: proposals })
+    .from(proposals)
+    .innerJoin(farms, eq(proposals.farmId, farms.id))
+    .where(ownerCondition)
+    .orderBy(desc(proposals.updatedAt));
+  return result.map(row => row.proposal);
 }
 
-export async function getProposalById(id: number) {
+export async function getProposalById(id: number, ownerOpenId: string) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(proposals).where(eq(proposals.id, id)).limit(1);
-  return result[0];
+  const result = await db
+    .select({ proposal: proposals })
+    .from(proposals)
+    .innerJoin(farms, eq(proposals.farmId, farms.id))
+    .where(and(eq(proposals.id, id), eq(farms.ownerOpenId, ownerOpenId)))
+    .limit(1);
+  return result[0]?.proposal;
 }
 
-export async function createProposal(input: ProposalInput) {
+export async function createProposal(input: ProposalInput, ownerOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
   const result = await db.insert(proposals).values(toProposalValues(input));
-  return getProposalById(Number(result[0].insertId));
+  return getProposalById(Number(result[0].insertId), ownerOpenId);
 }
 
-export async function updateProposalStatus(id: number, status: ProposalInput["status"]) {
+export async function updateProposalStatus(id: number, status: ProposalInput["status"], ownerOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
+  const existingProposal = await getProposalById(id, ownerOpenId);
+  if (!existingProposal) return undefined;
   await db.update(proposals).set({ status }).where(eq(proposals.id, id));
-  return getProposalById(id);
+  return getProposalById(id, ownerOpenId);
+}
+
+export async function claimLegacyFarms(ownerOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const result = await db.update(farms).set({ ownerOpenId }).where(isNull(farms.ownerOpenId));
+  return { claimed: Number(result[0].affectedRows ?? 0) };
 }

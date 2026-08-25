@@ -8,6 +8,7 @@ vi.mock("./db", () => ({
   createFarms: vi.fn(),
   updateFarm: vi.fn(),
   removeFarm: vi.fn(),
+  claimLegacyFarms: vi.fn(),
   listProposals: vi.fn(),
   getProposalById: vi.fn(),
   createProposal: vi.fn(),
@@ -17,8 +18,12 @@ vi.mock("./db", () => ({
 import * as db from "./db";
 import { appRouter } from "./routers";
 
+const ownerOpenId = "owner-test-open-id";
+const otherOpenId = "other-test-open-id";
+
 const farm = {
   id: 12,
+  ownerOpenId,
   name: "Проверка API",
   district: null,
   settlement: null,
@@ -54,42 +59,44 @@ const proposal = {
   updatedAt: new Date(),
 };
 
-function createPublicContext(): TrpcContext {
+function createContext(openId: string | null, role: "user" | "admin" = "user"): TrpcContext {
   return {
-    user: null,
+    user: openId
+      ? ({ id: 1, openId, name: "Тестовый пользователь", email: null, loginMethod: "test", role, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() } as NonNullable<TrpcContext["user"]>)
+      : null,
     req: {} as TrpcContext["req"],
     res: {} as TrpcContext["res"],
   };
 }
 
-describe("farms and proposals router", () => {
+describe("farms and proposals privacy", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("creates and updates a farm card through public procedures", async () => {
+  it("rejects unauthenticated access to private farm data", async () => {
+    const caller = appRouter.createCaller(createContext(null));
+    await expect(caller.farms.list()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    expect(db.listFarms).not.toHaveBeenCalled();
+  });
+
+  it("creates and updates a farm only for the authenticated owner", async () => {
     vi.mocked(db.createFarm).mockResolvedValue(farm);
     vi.mocked(db.updateFarm).mockResolvedValue({ ...farm, salesStage: "proposal" });
-    const caller = appRouter.createCaller(createPublicContext());
+    const caller = appRouter.createCaller(createContext(ownerOpenId));
 
     const created = await caller.farms.create({ name: farm.name, totalArea: 125 });
     const updated = await caller.farms.update({ id: farm.id, name: farm.name, totalArea: 125, salesStage: "proposal" });
 
     expect(created.id).toBe(farm.id);
-    expect(db.createFarm).toHaveBeenCalledWith(expect.objectContaining({ name: farm.name, totalArea: 125, salesStage: "lead" }));
+    expect(db.createFarm).toHaveBeenCalledWith(expect.objectContaining({ name: farm.name, totalArea: 125, salesStage: "lead" }), ownerOpenId);
     expect(updated.salesStage).toBe("proposal");
-    expect(db.updateFarm).toHaveBeenCalledWith(farm.id, expect.objectContaining({ salesStage: "proposal" }));
+    expect(db.updateFarm).toHaveBeenCalledWith(farm.id, expect.objectContaining({ salesStage: "proposal" }), ownerOpenId);
   });
 
-  it("saves a proposal only after confirming that its farm exists", async () => {
+  it("saves a proposal only after confirming the authenticated user owns its farm", async () => {
     vi.mocked(db.getFarmById).mockResolvedValue(farm);
     vi.mocked(db.createProposal).mockResolvedValue(proposal);
-    const caller = appRouter.createCaller(createPublicContext());
-    const editedSchemeJson = JSON.stringify({
-      scheme: {
-        steps: [{
-          products: [{ name: "Тайсон, КС", note: "Добавлено менеджером" }],
-        }],
-      },
-    });
+    const caller = appRouter.createCaller(createContext(ownerOpenId));
+    const editedSchemeJson = JSON.stringify({ scheme: { steps: [{ products: [{ name: "Тайсон, КС", note: "Добавлено менеджером" }] }] } });
 
     const result = await caller.proposals.create({
       farmId: farm.id,
@@ -100,15 +107,14 @@ describe("farms and proposals router", () => {
       schemeJson: editedSchemeJson,
     });
 
-    expect(db.getFarmById).toHaveBeenCalledWith(farm.id);
-    expect(db.createProposal).toHaveBeenCalledWith(expect.objectContaining({ farmId: farm.id, status: "draft", schemeJson: editedSchemeJson }));
-    expect(JSON.parse(vi.mocked(db.createProposal).mock.calls[0]?.[0].schemeJson ?? "{}").scheme.steps[0].products[0]).toEqual({ name: "Тайсон, КС", note: "Добавлено менеджером" });
+    expect(db.getFarmById).toHaveBeenCalledWith(farm.id, ownerOpenId);
+    expect(db.createProposal).toHaveBeenCalledWith(expect.objectContaining({ farmId: farm.id, status: "draft", schemeJson: editedSchemeJson }), ownerOpenId);
     expect(result.id).toBe(proposal.id);
   });
 
-  it("creates only the user-confirmed validated batch of imported farms", async () => {
+  it("imports only the user-confirmed validated farms for the authenticated owner", async () => {
     vi.mocked(db.createFarms).mockResolvedValue({ created: 2 });
-    const caller = appRouter.createCaller(createPublicContext());
+    const caller = appRouter.createCaller(createContext(ownerOpenId));
     const importedFarms = [
       { name: "Импорт 1", totalArea: 100, salesStage: "lead" as const },
       { name: "Импорт 2", totalArea: 250, salesStage: "proposal" as const },
@@ -119,21 +125,54 @@ describe("farms and proposals router", () => {
     expect(db.createFarms).toHaveBeenCalledWith([
       expect.objectContaining({ name: "Импорт 1", totalArea: 100, salesStage: "lead", potentialValue: 0 }),
       expect.objectContaining({ name: "Импорт 2", totalArea: 250, salesStage: "proposal", potentialValue: 0 }),
-    ]);
+    ], ownerOpenId);
     expect(result).toEqual({ created: 2 });
   });
 
-  it("returns a farm proposal history and an individual saved proposal", async () => {
+  it("filters the farm and proposal history by the authenticated owner", async () => {
+    vi.mocked(db.listFarms).mockResolvedValue([farm]);
     vi.mocked(db.listProposals).mockResolvedValue([proposal]);
     vi.mocked(db.getProposalById).mockResolvedValue(proposal);
-    const caller = appRouter.createCaller(createPublicContext());
+    const caller = appRouter.createCaller(createContext(ownerOpenId));
 
+    const farms = await caller.farms.list();
     const history = await caller.proposals.list({ farmId: farm.id });
     const found = await caller.proposals.byId({ id: proposal.id });
 
-    expect(db.listProposals).toHaveBeenCalledWith(farm.id);
+    expect(db.listFarms).toHaveBeenCalledWith(ownerOpenId);
+    expect(db.listProposals).toHaveBeenCalledWith(ownerOpenId, farm.id);
+    expect(db.getProposalById).toHaveBeenCalledWith(proposal.id, ownerOpenId);
+    expect(farms).toEqual([farm]);
     expect(history).toEqual([proposal]);
-    expect(db.getProposalById).toHaveBeenCalledWith(proposal.id);
     expect(found).toEqual(proposal);
+  });
+
+  it("does not expose or mutate another user's farm or proposal", async () => {
+    vi.mocked(db.getFarmById).mockResolvedValue(undefined);
+    vi.mocked(db.getProposalById).mockResolvedValue(undefined);
+    vi.mocked(db.updateFarm).mockResolvedValue(undefined);
+    vi.mocked(db.updateProposalStatus).mockResolvedValue(undefined);
+    const caller = appRouter.createCaller(createContext(otherOpenId));
+
+    await expect(caller.farms.byId({ id: farm.id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(caller.farms.update({ id: farm.id, name: "Чужая запись", totalArea: 125 })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(caller.proposals.byId({ id: proposal.id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(caller.proposals.updateStatus({ id: proposal.id, status: "sent" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(caller.proposals.create({ farmId: farm.id, title: proposal.title, crop: proposal.crop, area: 125, schemeJson: "{}" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    expect(db.getFarmById).toHaveBeenCalledWith(farm.id, otherOpenId);
+    expect(db.updateFarm).toHaveBeenCalledWith(farm.id, expect.any(Object), otherOpenId);
+    expect(db.getProposalById).toHaveBeenCalledWith(proposal.id, otherOpenId);
+    expect(db.updateProposalStatus).toHaveBeenCalledWith(proposal.id, "sent", otherOpenId);
+  });
+
+  it("allows only an administrator to claim unassigned legacy farms", async () => {
+    vi.mocked(db.claimLegacyFarms).mockResolvedValue({ claimed: 1 });
+    const adminCaller = appRouter.createCaller(createContext(ownerOpenId, "admin"));
+    const userCaller = appRouter.createCaller(createContext(otherOpenId));
+
+    await expect(userCaller.farms.claimLegacy()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(adminCaller.farms.claimLegacy()).resolves.toEqual({ claimed: 1 });
+    expect(db.claimLegacyFarms).toHaveBeenCalledWith(ownerOpenId);
   });
 });

@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Toaster } from "@/components/ui/sonner";
 import CabinetShell from "@/components/CabinetShell";
+import PrivateWorkspaceGate from "@/components/PrivateWorkspaceGate";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Home = lazy(() => import("./pages/Home"));
@@ -28,8 +29,13 @@ function Router() {
   const CabinetHome = cabinetPage(Home);
   const CabinetAgroHelper = cabinetPage(AgroHelper);
   const CabinetKnowledgeBase = cabinetPage(KnowledgeBase);
-  const CabinetFarmWorkspace = cabinetPage(FarmWorkspace);
-  const CabinetProposalBuilder = cabinetPage(ProposalBuilder);
+  const privateCabinetPage = (Page: React.ComponentType) => () => (
+    <CabinetShell>
+      <PrivateWorkspaceGate><Page /></PrivateWorkspaceGate>
+    </CabinetShell>
+  );
+  const CabinetFarmWorkspace = privateCabinetPage(FarmWorkspace);
+  const CabinetProposalBuilder = privateCabinetPage(ProposalBuilder);
 
   return (
     <Switch>

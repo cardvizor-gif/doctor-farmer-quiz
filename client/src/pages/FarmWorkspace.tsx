@@ -2,6 +2,7 @@ import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { buildAgroHelperContextQuery, buildProposalContextQuery } from "@/lib/proposal";
 import { downloadFarmImportTemplate, downloadFarmsWorkbook, readFarmImportFile, type ImportFilePreview } from "@/lib/workspaceTransfer";
@@ -167,6 +168,7 @@ function FarmFields({ draft, onChange, showNotes = true }: { draft: FarmDraft; o
 
 export default function FarmWorkspace() {
   const utils = trpc.useUtils();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -221,6 +223,14 @@ export default function FarmWorkspace() {
       setImportPreview(null);
       setIsImportOpen(false);
       toast.success(`Добавлено карточек хозяйств: ${result.created}`);
+    },
+    onError: error => toast.error(error.message),
+  });
+
+  const claimLegacyFarms = trpc.farms.claimLegacy.useMutation({
+    onSuccess: async result => {
+      await utils.farms.list.invalidate();
+      toast.success(result.claimed > 0 ? `Исторические записи перенесены в ваш кабинет: ${result.claimed}` : "Нераспределённых исторических записей нет");
     },
     onError: error => toast.error(error.message),
   });
@@ -298,7 +308,7 @@ export default function FarmWorkspace() {
             <div className="max-h-[620px] overflow-y-auto p-2">
               {farmsQuery.isLoading && <div className="p-6 text-center text-sm text-[#6f7a73]">Загружаем хозяйства…</div>}
               {farmsQuery.isError && <div className="p-6 text-center text-sm text-red-700">Не удалось загрузить реестр. Обновите страницу.</div>}
-              {!farmsQuery.isLoading && filteredFarms.length === 0 && <div className="p-6 text-center"><Building2 className="mx-auto mb-3 h-9 w-9 text-[#9bb3a2]" /><p className="text-sm font-semibold text-[#194f38]">Пока нет карточек хозяйств</p><p className="mt-1 text-xs leading-relaxed text-[#6f7a73]">Можно сразу рассчитать КП по схеме; для сохранения его в историю добавьте карточку хозяйства.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><Button onClick={() => setIsCreating(true)} size="sm" className="bg-[#194f38] hover:bg-[#12352a]"><Plus className="mr-1 h-4 w-4" />Добавить хозяйство</Button><Button onClick={() => setLocation("/proposals/new")} variant="outline" size="sm" className="border-[#2e7d52] text-[#194f38]"><FileText className="mr-1 h-4 w-4" />Генератор КП</Button></div></div>}
+              {!farmsQuery.isLoading && filteredFarms.length === 0 && <div className="p-6 text-center"><Building2 className="mx-auto mb-3 h-9 w-9 text-[#9bb3a2]" /><p className="text-sm font-semibold text-[#194f38]">Пока нет ваших карточек хозяйств</p><p className="mt-1 text-xs leading-relaxed text-[#6f7a73]">Здесь отображаются только записи вашего аккаунта. Добавьте хозяйство или импортируйте собственный реестр.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><Button onClick={() => setIsCreating(true)} size="sm" className="bg-[#194f38] hover:bg-[#12352a]"><Plus className="mr-1 h-4 w-4" />Добавить хозяйство</Button><Button onClick={() => setLocation("/proposals/new")} variant="outline" size="sm" className="border-[#2e7d52] text-[#194f38]"><FileText className="mr-1 h-4 w-4" />Генератор КП</Button>{user?.role === "admin" && <Button onClick={() => claimLegacyFarms.mutate()} variant="outline" size="sm" disabled={claimLegacyFarms.isPending} className="border-[#8cac48] text-[#365d24]">{claimLegacyFarms.isPending ? "Переносим…" : "Принять тестовые записи"}</Button>}</div></div>}
               {filteredFarms.map(farm => <button key={farm.id} type="button" onClick={() => selectFarm(farm)} className={`mb-1 w-full rounded-xl p-3 text-left transition-colors ${selectedFarmId === farm.id ? "bg-[#e8f1e7]" : "hover:bg-[#f5f8f4]"}`}>
                 <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-bold text-[#12352a]">{farm.name}</p><p className="mt-0.5 flex items-center gap-1 text-xs text-[#6f7a73]"><MapPin className="h-3 w-3" />{[farm.district, farm.settlement].filter(Boolean).join(" · ") || "Локация не указана"}</p></div><span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${stages[farm.salesStage].className}`}>{stages[farm.salesStage].label}</span></div>
                 <div className="mt-3 flex items-center justify-between border-t border-[#dce8dc] pt-2 text-xs text-[#486656]"><span>{displayNumber(farm.totalArea)} га</span><span>{farm.nextAction?.trim() ? "Есть следующий шаг" : "Без задачи"}</span></div>

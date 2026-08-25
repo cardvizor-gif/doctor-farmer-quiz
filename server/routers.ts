@@ -6,7 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -22,44 +22,45 @@ export const appRouter = router({
     }),
   }),
   farms: router({
-    list: publicProcedure.query(() => db.listFarms()),
-    byId: publicProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input }) => {
-      const farm = await db.getFarmById(input.id);
+    list: protectedProcedure.query(({ ctx }) => db.listFarms(ctx.user.openId)),
+    byId: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
+      const farm = await db.getFarmById(input.id, ctx.user.openId);
       if (!farm) throw new TRPCError({ code: "NOT_FOUND", message: "Хозяйство не найдено" });
       return farm;
     }),
-    create: publicProcedure.input(farmInputSchema).mutation(async ({ input }) => {
-      const farm = await db.createFarm(input);
+    create: protectedProcedure.input(farmInputSchema).mutation(async ({ input, ctx }) => {
+      const farm = await db.createFarm(input, ctx.user.openId);
       if (!farm) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Не удалось создать карточку хозяйства" });
       return farm;
     }),
-    bulkCreate: publicProcedure.input(z.object({ farms: z.array(farmInputSchema).min(1).max(FARM_IMPORT_MAX_ROWS) })).mutation(async ({ input }) => {
-      return db.createFarms(input.farms);
+    bulkCreate: protectedProcedure.input(z.object({ farms: z.array(farmInputSchema).min(1).max(FARM_IMPORT_MAX_ROWS) })).mutation(async ({ input, ctx }) => {
+      return db.createFarms(input.farms, ctx.user.openId);
     }),
-    update: publicProcedure.input(farmInputSchema.extend({ id: z.number().int().positive() })).mutation(async ({ input }) => {
+    update: protectedProcedure.input(farmInputSchema.extend({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
       const { id, ...farmInput } = input;
-      const farm = await db.updateFarm(id, farmInput);
+      const farm = await db.updateFarm(id, farmInput, ctx.user.openId);
       if (!farm) throw new TRPCError({ code: "NOT_FOUND", message: "Хозяйство не найдено" });
       return farm;
     }),
-    remove: publicProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ input }) => db.removeFarm(input.id)),
+    remove: protectedProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ input, ctx }) => db.removeFarm(input.id, ctx.user.openId)),
+    claimLegacy: adminProcedure.mutation(({ ctx }) => db.claimLegacyFarms(ctx.user.openId)),
   }),
   proposals: router({
-    list: publicProcedure.input(z.object({ farmId: z.number().int().positive().optional() }).optional()).query(({ input }) => db.listProposals(input?.farmId)),
-    byId: publicProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input }) => {
-      const proposal = await db.getProposalById(input.id);
+    list: protectedProcedure.input(z.object({ farmId: z.number().int().positive().optional() }).optional()).query(({ input, ctx }) => db.listProposals(ctx.user.openId, input?.farmId)),
+    byId: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
+      const proposal = await db.getProposalById(input.id, ctx.user.openId);
       if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено" });
       return proposal;
     }),
-    create: publicProcedure.input(proposalInputSchema).mutation(async ({ input }) => {
-      const farm = await db.getFarmById(input.farmId);
+    create: protectedProcedure.input(proposalInputSchema).mutation(async ({ input, ctx }) => {
+      const farm = await db.getFarmById(input.farmId, ctx.user.openId);
       if (!farm) throw new TRPCError({ code: "NOT_FOUND", message: "Сначала выберите существующее хозяйство" });
-      const proposal = await db.createProposal(input);
+      const proposal = await db.createProposal(input, ctx.user.openId);
       if (!proposal) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Не удалось сохранить коммерческое предложение" });
       return proposal;
     }),
-    updateStatus: publicProcedure.input(z.object({ id: z.number().int().positive(), status: z.enum(proposalStatuses) })).mutation(async ({ input }) => {
-      const proposal = await db.updateProposalStatus(input.id, input.status);
+    updateStatus: protectedProcedure.input(z.object({ id: z.number().int().positive(), status: z.enum(proposalStatuses) })).mutation(async ({ input, ctx }) => {
+      const proposal = await db.updateProposalStatus(input.id, input.status, ctx.user.openId);
       if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено" });
       return proposal;
     }),
