@@ -285,17 +285,17 @@ export default function FarmWorkspace() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
-        <section className="farm-workspace-hero mb-7 grid gap-5 rounded-3xl border border-[#dce8dc] bg-[#173f30] p-6 text-white shadow-[0_18px_60px_rgba(19,53,42,0.16)] lg:grid-cols-[1.4fr_1fr] lg:p-8">
+        <section className="farm-workspace-hero mb-7 grid gap-5 rounded-3xl border border-[#f0e6df] bg-[#fbefed] p-6 text-[#292945] shadow-[0_18px_60px_rgba(48,47,74,0.06)] lg:grid-cols-[1.4fr_1fr] lg:p-8">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-emerald-100"><Building2 className="h-3.5 w-3.5" />Клиентская база</div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#f0e2e1] bg-white/75 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-[#858394]"><Building2 className="h-3.5 w-3.5" />Клиентская база</div>
             <h1 className="max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">Хозяйства и возможности продаж</h1>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-emerald-50/80">Соберите агрономический и коммерческий контекст хозяйства, зафиксируйте следующий шаг и подготовьте основу для персонального коммерческого предложения.</p>
-            <div className="mt-5 flex flex-wrap gap-2"><Button variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setLocation("/proposals/new")}><FileText className="mr-1.5 h-4 w-4" />Открыть генератор КП</Button><Button variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setIsImportOpen(true)}><Upload className="mr-1.5 h-4 w-4" />Импорт Excel</Button><Button variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => void downloadFarmsWorkbook(farms)}><Download className="mr-1.5 h-4 w-4" />Экспорт реестра</Button></div>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#737182]">Соберите агрономический и коммерческий контекст хозяйства, зафиксируйте следующий шаг и подготовьте основу для персонального коммерческого предложения.</p>
+            <div className="mt-5 flex flex-wrap gap-2"><Button variant="outline" size="sm" className="border-[#e7dedd] bg-white/75 text-[#292945] hover:bg-white" onClick={() => setLocation("/proposals/new")}><FileText className="mr-1.5 h-4 w-4" />Открыть генератор КП</Button><Button variant="outline" size="sm" className="border-[#e7dedd] bg-white/75 text-[#292945] hover:bg-white" onClick={() => setIsImportOpen(true)}><Upload className="mr-1.5 h-4 w-4" />Импорт Excel</Button><Button variant="outline" size="sm" className="border-[#e7dedd] bg-white/75 text-[#292945] hover:bg-white" onClick={() => void downloadFarmsWorkbook(farms)}><Download className="mr-1.5 h-4 w-4" />Экспорт реестра</Button></div>
           </div>
           <div className="grid grid-cols-3 gap-2 self-end">
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Хозяйств</span><strong className="mt-1 block text-2xl">{farms.length}</strong></div>
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Площадь</span><strong className="mt-1 block text-2xl">{displayNumber(totalArea)}<small className="ml-1 text-sm font-medium">га</small></strong></div>
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Действий</span><strong className="mt-1 block text-2xl">{nextActions}</strong></div>
+            <div className="rounded-2xl border border-[#f0e2e1] bg-white/75 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-[#858394]">Хозяйств</span><strong className="mt-1 block text-2xl">{farms.length}</strong></div>
+            <div className="rounded-2xl border border-[#f0e2e1] bg-white/75 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-[#858394]">Площадь</span><strong className="mt-1 block text-2xl">{displayNumber(totalArea)}<small className="ml-1 text-sm font-medium">га</small></strong></div>
+            <div className="rounded-2xl border border-[#f0e2e1] bg-white/75 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-[#858394]">Действий</span><strong className="mt-1 block text-2xl">{nextActions}</strong></div>
           </div>
         </section>
 

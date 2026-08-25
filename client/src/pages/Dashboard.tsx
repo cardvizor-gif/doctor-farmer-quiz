@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, Award, BookOpen, Building2, FileText, HelpCircle, Layers3, Sprout } from "lucide-react";
-import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
 
 const modules = [
@@ -60,38 +59,21 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-transparent text-[#25243a] selection:bg-violet-200">
-      <header className="sticky top-0 z-30 border-b border-[#dde5dc] bg-[#fbfcf9]/95 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-6">
-          <Link href="/" className="shrink-0" aria-label="Doctor Farmer — рабочий кабинет">
-            <DoctorFarmerLogo className="h-10 w-auto sm:h-12" clickable={false} />
-          </Link>
-          <nav className="hidden items-center gap-5 text-[11px] font-bold uppercase tracking-[0.09em] text-[#315443] lg:flex">
-            {modules.map((module) => <Link key={module.href} href={module.href} className="transition-colors hover:text-[#c99228]">{module.title}</Link>)}
-          </nav>
-          <Link href="/proposals/new" className="rounded-lg border border-[#194f38] px-3 py-2 text-xs font-bold text-[#194f38] transition-colors hover:bg-[#194f38] hover:text-white sm:px-4">
-            Новое КП
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-0 py-0">
-        <section className="overview-hero mb-7">
-          <div className="overview-hero-copy">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-violet-100">
-              <Sprout className="h-3.5 w-3.5 text-lime-300" /> Doctor Farmer · рабочий кабинет
-            </div>
-            <h2>Управляйте полями,<br />схемами и КП в одном месте</h2>
-            <p>Рабочее пространство менеджера и агронома: контекст хозяйства, защита культуры, прозрачный расчёт и обучение команды.</p>
-            <div className="mt-6 flex flex-wrap gap-2"><Link href="/farms" className="overview-hero-action">Открыть хозяйства</Link><Link href="/proposals/new" className="overview-hero-quiet">Создать КП</Link></div>
-          </div>
-          <div className="overview-hero-stat-grid">
-            <div><strong>5</strong><span>рабочих модулей</span></div>
-            <div><strong>1</strong><span>единый кабинет</span></div>
-            <div><strong>0–3%</strong><span>контроль скидки</span></div>
+      <main className="dashboard-v2 mx-auto max-w-7xl px-0 py-0">
+        <section className="dashboard-v2-chart" aria-label="Рабочая панель модулей">
+          <div className="dashboard-v2-heading"><div><p>Рабочая панель</p><h2>Динамика задач по модулям</h2></div><span><i />Схемы <i />КП <i />Задачи</span></div>
+          <div className="dashboard-v2-bars" aria-hidden="true">
+            {[48, 31, 23, 45, 62, 29, 40, 54, 31, 37, 48, 25, 46, 60, 34].map((height, index) => <b key={`${height}-${index}`} className={`tone-${index % 3}`} style={{ height: `${height}%` }} />)}
           </div>
         </section>
 
-        <section aria-label="Основные модули рабочего кабинета" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="dashboard-v2-highlights" aria-label="Рабочие точки входа">
+          <Link href="/agro-helper" className="dashboard-v2-highlight tone-mint"><span className="dashboard-v2-icon"><Sprout className="h-4 w-4" /></span><p>АгроПомощник</p><h2>Схемы защиты</h2><small>Культура, технология и площадь</small><div><strong>29</strong><strong>144</strong><strong>14</strong></div></Link>
+          <Link href="/farms" className="dashboard-v2-highlight tone-blush"><span className="dashboard-v2-icon"><Building2 className="h-4 w-4" /></span><p>Рабочий фокус</p><h2>Карточка<br />хозяйства</h2><small>Контакты, культуры, площади и следующие действия.</small><em>Открыть →</em></Link>
+          <Link href="/proposals/new" className="dashboard-v2-highlight tone-sand"><span className="dashboard-v2-icon"><FileText className="h-4 w-4" /></span><p>Генератор КП</p><strong className="dashboard-v2-kpi">36</strong><small>новых расчётов в этом сезоне</small><em>▲ 3,4%</em></Link>
+        </section>
+
+        <section aria-label="Основные модули рабочего кабинета" className="dashboard-v2-modules grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {modules.map((module) => {
             const Icon = module.icon;
             return (
@@ -109,14 +91,14 @@ export default function Dashboard() {
           })}
         </section>
 
-        <section className="mt-7 grid gap-4 sm:grid-cols-3">
+        <section className="dashboard-v2-notes mt-7 grid gap-4 sm:grid-cols-3">
           <div className="rounded-xl bg-[#edebf7] p-4 text-sm text-[#56516f]"><strong className="block text-[#2d2a50]">Для агронома</strong><span className="mt-1 block">Схемы защиты, нормы и регламенты применения.</span></div>
           <div className="rounded-xl bg-[#fff2db] p-4 text-sm text-[#77603c]"><strong className="block text-[#573e1a]">Для менеджера</strong><span className="mt-1 block">Хозяйства, расчёт КП, фасовки и условия оплаты.</span></div>
           <div className="rounded-xl bg-[#e8f1ff] p-4 text-sm text-[#465f7d]"><strong className="block text-[#253d60]">Для команды</strong><span className="mt-1 block">База знаний и проверка продуктовой экспертизы.</span></div>
         </section>
       </main>
 
-      <footer className="border-t border-[#e5e4ec] bg-transparent px-0 py-5 text-xs text-[#858498]">
+      <footer className="dashboard-v2-footer border-t border-[#e5e4ec] bg-transparent px-0 py-5 text-xs text-[#858498]">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 sm:flex-row">
           <span>Doctor Farmer · рабочий портал</span>
           <button type="button" onClick={() => setIsSupportOpen(true)} className="inline-flex items-center gap-1 font-semibold text-[#194f38] hover:underline"><HelpCircle className="h-3.5 w-3.5" />Поддержка</button>

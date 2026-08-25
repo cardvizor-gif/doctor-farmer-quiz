@@ -48,12 +48,13 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   }, []);
 
   return (
-    <div className="cabinet-canvas">
+    <div className="cabinet-canvas cabinet-v2">
       <div className="cabinet-frame">
         <aside className={`cabinet-sidebar ${isMobileMenuOpen ? "is-open" : ""}`} aria-label="Навигация рабочего кабинета">
           <div className="cabinet-sidebar-top">
             <Link href="/" className="cabinet-brand" onClick={() => setIsMobileMenuOpen(false)} aria-label="Doctor Farmer — обзор">
-              <DoctorFarmerLogo className="h-10 w-auto" clickable={false} />
+              <span className="cabinet-v2-mark" aria-hidden="true">DF</span>
+              <span className="cabinet-v2-brand-name">Doctor<br />Farmer</span>
             </Link>
             <button type="button" className="cabinet-mobile-close" onClick={() => setIsMobileMenuOpen(false)} aria-label="Закрыть меню"><X className="h-5 w-5" /></button>
           </div>
@@ -61,7 +62,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
             {cabinetNavigation.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.href;
-              return <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)} className={`cabinet-nav-item ${isActive ? "is-active" : ""}`}>
+              return <Link key={item.href} href={item.href} title={item.label} onClick={() => setIsMobileMenuOpen(false)} className={`cabinet-nav-item ${isActive ? "is-active" : ""}`}>
                 <Icon className="h-4 w-4" />
                 <span>{item.label}</span>
               </Link>;
@@ -76,7 +77,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
           <header className="cabinet-topbar">
             <div className="flex items-center gap-3">
               <button type="button" className="cabinet-menu-trigger" onClick={() => setIsMobileMenuOpen(true)} aria-label="Открыть меню"><Menu className="h-5 w-5" /></button>
-              <div><p className="cabinet-page-kicker">Doctor Farmer · рабочий кабинет</p><h1>{pageTitle}</h1></div>
+              <div><p className="cabinet-page-kicker">Добрый вечер, Шамиль!</p><h1>{pageTitle === "Обзор" ? "Рабочая панель" : pageTitle}</h1></div>
             </div>
             <div className="cabinet-topbar-actions">
               <button type="button" className="cabinet-search-hint" onClick={() => setIsSearchOpen(true)} aria-label="Открыть поиск по кабинету"><Search className="h-4 w-4" /><span>Поиск по кабинету</span><kbd>⌘ K</kbd></button>
