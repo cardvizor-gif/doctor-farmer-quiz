@@ -27,6 +27,16 @@ describe("farm Excel import preview", () => {
     expect(rows[0]?.errors.length).toBeGreaterThanOrEqual(3);
   });
 
+  it("ignores fully blank rows left by the official Excel template", () => {
+    const rows = previewFarmImportRows([
+      { "Название хозяйства *": "", "Район": "", "Площадь, га": "" },
+      { "Название хозяйства *": "Хозяйство после пустой строки", "Площадь, га": "500" },
+    ]);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ rowNumber: 3, name: "Хозяйство после пустой строки", totalArea: 500, errors: [] });
+  });
+
   it("requires the identifying column from the official template", () => {
     expect(getMissingFarmImportColumns(["Район", "Площадь, га"])).toEqual(["Название хозяйства *"]);
     expect(getMissingFarmImportColumns(["Название хозяйства *", "Район"])).toEqual([]);

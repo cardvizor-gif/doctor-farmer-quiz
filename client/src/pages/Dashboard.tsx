@@ -59,7 +59,7 @@ export default function Dashboard() {
   const [isSupportOpen, setIsSupportOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f5f7f2] text-[#15211c] selection:bg-emerald-200">
+    <div className="min-h-screen bg-transparent text-[#25243a] selection:bg-violet-200">
       <header className="sticky top-0 z-30 border-b border-[#dde5dc] bg-[#fbfcf9]/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-6">
           <Link href="/" className="shrink-0" aria-label="Doctor Farmer — рабочий кабинет">
@@ -74,17 +74,20 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <section className="mb-8 flex flex-col gap-5 border-b border-[#dbe5da] pb-7 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:pb-9">
-          <div className="max-w-2xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#d5e3d4] bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#315443]">
-              <Sprout className="h-3.5 w-3.5 text-[#2e7d52]" /> Doctor Farmer · рабочий кабинет
+      <main className="mx-auto max-w-7xl px-0 py-0">
+        <section className="overview-hero mb-7">
+          <div className="overview-hero-copy">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-violet-100">
+              <Sprout className="h-3.5 w-3.5 text-lime-300" /> Doctor Farmer · рабочий кабинет
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-[#12352a] sm:text-4xl">Выберите рабочий модуль</h1>
-            <p className="mt-3 text-sm leading-relaxed text-[#607065] sm:text-base">Все основные задачи собраны в одном месте: от агрономической схемы до коммерческого предложения, клиентской карточки и обучения команды.</p>
+            <h2>Управляйте полями,<br />схемами и КП в одном месте</h2>
+            <p>Рабочее пространство менеджера и агронома: контекст хозяйства, защита культуры, прозрачный расчёт и обучение команды.</p>
+            <div className="mt-6 flex flex-wrap gap-2"><Link href="/farms" className="overview-hero-action">Открыть хозяйства</Link><Link href="/proposals/new" className="overview-hero-quiet">Создать КП</Link></div>
           </div>
-          <div className="rounded-xl border border-[#dbe5da] bg-white px-4 py-3 text-sm text-[#486656] shadow-sm">
-            <span className="font-bold text-[#194f38]">5 модулей</span> для работы с хозяйствами и схемами
+          <div className="overview-hero-stat-grid">
+            <div><strong>5</strong><span>рабочих модулей</span></div>
+            <div><strong>1</strong><span>единый кабинет</span></div>
+            <div><strong>0–3%</strong><span>контроль скидки</span></div>
           </div>
         </section>
 
@@ -92,7 +95,7 @@ export default function Dashboard() {
           {modules.map((module) => {
             const Icon = module.icon;
             return (
-              <Link key={module.href} href={module.href} className="group min-h-[268px] rounded-2xl border border-[#dce6db] bg-white p-5 shadow-[0_8px_24px_rgba(21,57,38,0.045)] transition-all duration-200 hover:-translate-y-1 hover:border-[#9fc3a3] hover:shadow-[0_16px_32px_rgba(21,57,38,0.10)]">
+              <Link key={module.href} href={module.href} className="group min-h-[238px] rounded-2xl border border-[#e5e4ec] bg-white p-5 shadow-[0_8px_24px_rgba(39,37,61,0.045)] transition-all duration-200 hover:-translate-y-1 hover:border-[#c8c5df] hover:shadow-[0_16px_32px_rgba(39,37,61,0.10)]">
                 <div className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 transition-colors duration-200 group-hover:text-white ${toneClasses[module.tone]}`}>
                   <Icon className="h-5 w-5" />
                 </div>
@@ -106,14 +109,14 @@ export default function Dashboard() {
           })}
         </section>
 
-        <section className="mt-8 grid gap-4 border-t border-[#dbe5da] pt-7 sm:grid-cols-3">
-          <div className="rounded-xl bg-[#eaf2e9] p-4 text-sm text-[#315443]"><strong className="block text-[#194f38]">Для агронома</strong><span className="mt-1 block">Схемы защиты, нормы и регламенты применения.</span></div>
-          <div className="rounded-xl bg-[#fdf6e7] p-4 text-sm text-[#6e5828]"><strong className="block text-[#5f4a1c]">Для менеджера</strong><span className="mt-1 block">Хозяйства, расчёт КП, фасовки и условия оплаты.</span></div>
-          <div className="rounded-xl bg-[#edf3fa] p-4 text-sm text-[#3f617c]"><strong className="block text-[#234b6e]">Для команды</strong><span className="mt-1 block">База знаний и проверка продуктовой экспертизы.</span></div>
+        <section className="mt-7 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl bg-[#edebf7] p-4 text-sm text-[#56516f]"><strong className="block text-[#2d2a50]">Для агронома</strong><span className="mt-1 block">Схемы защиты, нормы и регламенты применения.</span></div>
+          <div className="rounded-xl bg-[#fff2db] p-4 text-sm text-[#77603c]"><strong className="block text-[#573e1a]">Для менеджера</strong><span className="mt-1 block">Хозяйства, расчёт КП, фасовки и условия оплаты.</span></div>
+          <div className="rounded-xl bg-[#e8f1ff] p-4 text-sm text-[#465f7d]"><strong className="block text-[#253d60]">Для команды</strong><span className="mt-1 block">База знаний и проверка продуктовой экспертизы.</span></div>
         </section>
       </main>
 
-      <footer className="border-t border-[#dde5dc] bg-[#fbfcf9] px-4 py-6 text-xs text-[#6f7a73] sm:px-6">
+      <footer className="border-t border-[#e5e4ec] bg-transparent px-0 py-5 text-xs text-[#858498]">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 sm:flex-row">
           <span>Doctor Farmer · рабочий портал</span>
           <button type="button" onClick={() => setIsSupportOpen(true)} className="inline-flex items-center gap-1 font-semibold text-[#194f38] hover:underline"><HelpCircle className="h-3.5 w-3.5" />Поддержка</button>

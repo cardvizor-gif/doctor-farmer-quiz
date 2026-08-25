@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Toaster } from "@/components/ui/sonner";
+import CabinetShell from "@/components/CabinetShell";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Home = lazy(() => import("./pages/Home"));
@@ -22,14 +23,22 @@ function RouteFallback() {
 }
 
 function Router() {
+  const cabinetPage = (Page: React.ComponentType) => () => <CabinetShell><Page /></CabinetShell>;
+  const CabinetDashboard = cabinetPage(Dashboard);
+  const CabinetHome = cabinetPage(Home);
+  const CabinetAgroHelper = cabinetPage(AgroHelper);
+  const CabinetKnowledgeBase = cabinetPage(KnowledgeBase);
+  const CabinetFarmWorkspace = cabinetPage(FarmWorkspace);
+  const CabinetProposalBuilder = cabinetPage(ProposalBuilder);
+
   return (
     <Switch>
-      <Route path={"/"} component={Dashboard} />
-      <Route path={"/quiz"} component={Home} />
-      <Route path={"/agro-helper"} component={AgroHelper} />
-      <Route path={"/knowledge-base"} component={KnowledgeBase} />
-      <Route path={"/farms"} component={FarmWorkspace} />
-      <Route path={"/proposals/new"} component={ProposalBuilder} />
+      <Route path={"/"} component={CabinetDashboard} />
+      <Route path={"/quiz"} component={CabinetHome} />
+      <Route path={"/agro-helper"} component={CabinetAgroHelper} />
+      <Route path={"/knowledge-base"} component={CabinetKnowledgeBase} />
+      <Route path={"/farms"} component={CabinetFarmWorkspace} />
+      <Route path={"/proposals/new"} component={CabinetProposalBuilder} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

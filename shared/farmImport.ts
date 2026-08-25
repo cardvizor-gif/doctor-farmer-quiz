@@ -61,7 +61,9 @@ export function getMissingFarmImportColumns(headers: string[]) {
 }
 
 export function previewFarmImportRows(rows: Record<string, unknown>[]): FarmImportPreviewRow[] {
-  return rows.map((row, index) => {
+  return rows.flatMap((row, index) => {
+    const isEmptyRow = FARM_IMPORT_COLUMNS.every((column) => !asText(row[column]));
+    if (isEmptyRow) return [];
     const candidate = {
       name: asText(row["Название хозяйства *"]),
       district: asText(row["Район"]) || null,

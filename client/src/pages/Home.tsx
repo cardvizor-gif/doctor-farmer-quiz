@@ -370,7 +370,7 @@ export default function Home() {
 
   if (screen === "start") {
     return (
-      <main className="site-shell start-shell">
+      <main className="quiz-workspace site-shell start-shell">
         <header className="site-header flex items-center justify-between gap-2 py-1 mb-4">
           <div className="flex items-center">
             <Link href="/">
@@ -432,7 +432,7 @@ export default function Home() {
     const options = currentOptions;
     const matchItems = currentQuestion.kind === "match" ? currentQuestion.items : [];
     return (
-      <main className="site-shell quiz-shell">
+      <main className="quiz-workspace site-shell quiz-shell">
         <header className="quiz-topbar flex items-center justify-between gap-2 py-1 mb-4">
           <div className="flex items-center gap-2">
             <button type="button" className="back-link text-[11px] flex items-center gap-1 text-[#194f38]" onClick={goStart}><ArrowLeft size={13} /> К настройкам</button>
@@ -471,7 +471,7 @@ export default function Home() {
   const resultMessage = percentage >= 90 ? "Мастер продуктовой карты" : percentage >= 75 ? "Сильный результат" : percentage >= 55 ? "Хороший старт" : "Время для практики";
   const resultSub = percentage >= 75 ? "Вы уверенно ориентируетесь в ключевых характеристиках препаратов." : "Повторите темы с наименьшим результатом и пройдите сессию ещё раз.";
   return (
-    <main className="site-shell result-shell">
+    <main className="quiz-workspace site-shell result-shell">
       <header className="quiz-topbar flex flex-col sm:flex-row items-center justify-between gap-3 py-2">
         <div className="flex items-center justify-between w-full sm:w-auto gap-2 flex-wrap">
           <button type="button" className="back-link text-xs flex items-center gap-1 text-[#194f38]" onClick={goStart}><ArrowLeft size={14} /> К настройкам</button>

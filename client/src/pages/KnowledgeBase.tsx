@@ -37,7 +37,7 @@ export default function KnowledgeBase() {
   });
 
   return (
-    <div className="min-h-screen bg-[#f4f7f1] text-[#15211c] font-sans antialiased pb-20 flex flex-col">
+    <div className="knowledge-workspace min-h-screen bg-[#f4f7f1] text-[#15211c] font-sans antialiased pb-20 flex flex-col">
       {/* Шапка */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#dde5dc] px-3 py-2.5 sm:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
@@ -69,7 +69,7 @@ export default function KnowledgeBase() {
       </header>
 
       {/* Hero-секция */}
-      <section className="bg-white border-b border-[#dde5dc] py-10 px-4 sm:px-8">
+      <section className="knowledge-workspace-hero bg-white border-b border-[#dde5dc] py-10 px-4 sm:px-8">
         <div className="max-w-4xl mx-auto text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8efe5] border border-[#2e7d52]/20 text-[#194f38] text-xs font-bold uppercase tracking-wider">
             <BookOpen className="w-3.5 h-3.5 text-[#2e7d52]" /> Экспертный справочник регламентов

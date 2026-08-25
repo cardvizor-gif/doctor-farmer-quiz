@@ -171,6 +171,7 @@ export default function FarmWorkspace() {
   const [search, setSearch] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [draft, setDraft] = useState<FarmDraft>(blankDraft());
   const [createDraft, setCreateDraft] = useState<FarmDraft>(blankDraft());
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -208,6 +209,7 @@ export default function FarmWorkspace() {
     onSuccess: async farm => {
       await utils.farms.list.invalidate();
       if (farm) selectFarm(farm);
+      setLastSavedAt(Date.now());
       toast.success("Карточка хозяйства сохранена");
     },
     onError: error => toast.error(error.message),
@@ -257,7 +259,7 @@ export default function FarmWorkspace() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f7f1] text-[#15211c]">
+    <div className="farm-workspace min-h-screen bg-[#f4f7f1] text-[#15211c]">
       <header className="sticky top-0 z-30 border-b border-[#dde5dc] bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <Link href="/" className="shrink-0"><DoctorFarmerLogo className="h-9 w-auto" clickable={false} /></Link>
@@ -273,7 +275,7 @@ export default function FarmWorkspace() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
-        <section className="mb-7 grid gap-5 rounded-3xl border border-[#dce8dc] bg-[#173f30] p-6 text-white shadow-[0_18px_60px_rgba(19,53,42,0.16)] lg:grid-cols-[1.4fr_1fr] lg:p-8">
+        <section className="farm-workspace-hero mb-7 grid gap-5 rounded-3xl border border-[#dce8dc] bg-[#173f30] p-6 text-white shadow-[0_18px_60px_rgba(19,53,42,0.16)] lg:grid-cols-[1.4fr_1fr] lg:p-8">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-emerald-100"><Building2 className="h-3.5 w-3.5" />Клиентская база</div>
             <h1 className="max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">Хозяйства и возможности продаж</h1>
@@ -309,7 +311,7 @@ export default function FarmWorkspace() {
             {selectedFarm && <form onSubmit={event => { event.preventDefault(); updateFarm.mutate({ id: selectedFarm.id, ...makePayload(draft) }); }}>
               <div className="mb-6 flex flex-col gap-4 border-b border-[#e7eee5] pb-5 sm:flex-row sm:items-start sm:justify-between">
                 <div><div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#2e7d52]"><UsersRound className="h-4 w-4" />Карточка хозяйства</div><h2 className="text-2xl font-extrabold tracking-tight text-[#12352a]">{selectedFarm.name}</h2><p className="mt-1 text-sm text-[#6f7a73]">Обновляйте договорённости и контекст перед визитом или подготовкой КП.</p></div>
-                <div className="flex gap-2"><span className={`rounded-full px-3 py-2 text-xs font-bold ${stages[selectedFarm.salesStage].className}`}>{stages[selectedFarm.salesStage].label}</span><Button type="submit" disabled={updateFarm.isPending} className="bg-[#194f38] hover:bg-[#12352a]"><Save className="mr-1.5 h-4 w-4" />Сохранить</Button></div>
+                <div className="flex flex-wrap items-center justify-end gap-2"><span className={`rounded-full px-3 py-2 text-xs font-bold ${stages[selectedFarm.salesStage].className}`}>{stages[selectedFarm.salesStage].label}</span>{lastSavedAt && <span className="rounded-full bg-[#e8f1e7] px-2.5 py-1.5 text-[10px] font-bold text-[#194f38]" role="status">Карточка сохранена</span>}<Button type="submit" disabled={updateFarm.isPending} className="bg-[#194f38] hover:bg-[#12352a]"><Save className="mr-1.5 h-4 w-4" />Сохранить</Button></div>
               </div>
               <div className="mb-5 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl bg-[#f5f8f4] p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-[#6f7a73]">Площадь</span><strong className="mt-1 block text-lg text-[#12352a]">{displayNumber(draft.totalArea)} га</strong></div>

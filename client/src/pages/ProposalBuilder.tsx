@@ -218,7 +218,7 @@ export default function ProposalBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f7f1] text-[#15211c]">
+    <div className="proposal-workspace min-h-screen bg-[#f4f7f1] text-[#15211c]">
       <header className="sticky top-0 z-30 border-b border-[#dde5dc] bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <Link href="/" className="shrink-0"><DoctorFarmerLogo className="h-9 w-auto" clickable={false} /></Link>
@@ -230,7 +230,7 @@ export default function ProposalBuilder() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
-        <section className="mb-7 overflow-hidden rounded-3xl border border-[#dce8dc] bg-[#173f30] p-6 text-white shadow-[0_18px_60px_rgba(19,53,42,0.16)] lg:flex lg:items-end lg:justify-between lg:p-8">
+        <section className="proposal-workspace-hero mb-7 overflow-hidden rounded-3xl border border-[#dce8dc] bg-[#173f30] p-6 text-white shadow-[0_18px_60px_rgba(19,53,42,0.16)] lg:flex lg:items-end lg:justify-between lg:p-8">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-emerald-100"><FileText className="h-3.5 w-3.5" />Рабочее КП</div>
             <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Коммерческое предложение из схемы</h1>

@@ -22,10 +22,10 @@ export function DoctorFarmerLogo({ className = "h-11 w-auto", clickable = true }
       </g>
 
       {/* Текст Doctor Farmer */}
-      <text x="94" y="34" fontFamily="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" fontSize="28" fontWeight="700" fill="#4B9B12" letterSpacing="-0.3">
+      <text x="94" y="34" fontFamily="'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif" fontSize="28" fontWeight="700" fill="#4B9B12" letterSpacing="-0.7">
         Doctor
       </text>
-      <text x="94" y="67" fontFamily="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" fontSize="28" fontWeight="700" fill="#003399" letterSpacing="-0.3">
+      <text x="94" y="67" fontFamily="'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif" fontSize="28" fontWeight="700" fill="#003399" letterSpacing="-0.7">
         Farmer
       </text>
     </svg>
