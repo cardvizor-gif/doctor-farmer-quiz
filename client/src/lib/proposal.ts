@@ -2,6 +2,25 @@ import type { CropProtectionScheme } from "@/data/protectionSchemes";
 import { findSpkUralLogistics, type ProductLogistics } from "@/data/spkUralLogistics";
 import { EXCLUDED_FROM_AUTO_PRICING, findSpkUralPrice, type PaymentTerm, type PriceRecord } from "@/data/spkUralPrice";
 
+export type AddedSchemeProduct = {
+  name: string;
+  rate: string;
+  dv: string;
+  group: string;
+};
+
+export function addProductToScheme(scheme: CropProtectionScheme, stepIndex: number, product: AddedSchemeProduct): CropProtectionScheme {
+  const step = scheme.steps[stepIndex];
+  if (!step || step.products.some((item) => item.name === product.name)) return scheme;
+  return {
+    ...scheme,
+    steps: scheme.steps.map((currentStep, index) => index === stepIndex ? {
+      ...currentStep,
+      products: [...currentStep.products, { ...product, note: "Добавлено менеджером" }],
+    } : currentStep),
+  };
+}
+
 export function calculateProposalTotal(area: number, costPerHectare: number) {
   const normalizedArea = Number.isFinite(area) && area > 0 ? area : 0;
   const normalizedCost = Number.isFinite(costPerHectare) && costPerHectare > 0 ? costPerHectare : 0;
@@ -204,7 +223,7 @@ export function calculateSchemePricing(scheme: CropProtectionScheme, area: numbe
         grossMaxTotal += line.maxTotal!;
         minPallets += line.minPallets ?? 0;
         maxPallets += line.maxPallets ?? 0;
-        if (!logistics) unconfirmedLogisticsProducts.push(product.name);
+        if (!logistics || !logistics.unitsPerPallet) unconfirmedLogisticsProducts.push(product.name);
       }
       lines.push(line);
     });

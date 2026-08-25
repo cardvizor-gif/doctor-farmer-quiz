@@ -82,6 +82,13 @@ describe("farms and proposals router", () => {
     vi.mocked(db.getFarmById).mockResolvedValue(farm);
     vi.mocked(db.createProposal).mockResolvedValue(proposal);
     const caller = appRouter.createCaller(createPublicContext());
+    const editedSchemeJson = JSON.stringify({
+      scheme: {
+        steps: [{
+          products: [{ name: "Тайсон, КС", note: "Добавлено менеджером" }],
+        }],
+      },
+    });
 
     const result = await caller.proposals.create({
       farmId: farm.id,
@@ -89,11 +96,12 @@ describe("farms and proposals router", () => {
       crop: proposal.crop,
       technology: proposal.technology,
       area: 125,
-      schemeJson: proposal.schemeJson,
+      schemeJson: editedSchemeJson,
     });
 
     expect(db.getFarmById).toHaveBeenCalledWith(farm.id);
-    expect(db.createProposal).toHaveBeenCalledWith(expect.objectContaining({ farmId: farm.id, status: "draft" }));
+    expect(db.createProposal).toHaveBeenCalledWith(expect.objectContaining({ farmId: farm.id, status: "draft", schemeJson: editedSchemeJson }));
+    expect(JSON.parse(vi.mocked(db.createProposal).mock.calls[0]?.[0].schemeJson ?? "{}").scheme.steps[0].products[0]).toEqual({ name: "Тайсон, КС", note: "Добавлено менеджером" });
     expect(result.id).toBe(proposal.id);
   });
 

@@ -31,6 +31,7 @@ export const SPK_URAL_LOGISTICS: ProductLogistics[] = [
   { productName: "Сотейра, ВРК", sourceName: "Сотейра", packageSize: 10, unit: "л", unitsPerBox: 2, unitsPerPallet: 540, storage: "0…+30 °C" },
   { productName: "Софт, КЭ", sourceName: "Софт", packageSize: 10, unit: "л", unitsPerBox: 2, unitsPerPallet: 540, storage: "−10…+30 °C" },
   { productName: "Тайпан, КЭ", sourceName: "Тайпан", packageSize: 5, unit: "л", unitsPerBox: 4, unitsPerPallet: 480, storage: "−15…+30 °C" },
+  { productName: "Тайсон, КС", sourceName: "Подтверждённая фасовка", packageSize: 5, unit: "л" },
   { productName: "Тифи, ВДГ", sourceName: "Тифи (Китай)", packageSize: 0.1, unit: "кг", unitsPerBox: 100 },
   { productName: "Фэнсди, КС", sourceName: "ФэнсДи", packageSize: 5, unit: "л", unitsPerBox: 4, unitsPerPallet: 480, storage: "+5…+25 °C" },
   { productName: "Царумин, ВРК", sourceName: "Царумин (Китай)", packageSize: 5, unit: "л", unitsPerBox: 4 },

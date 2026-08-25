@@ -13,9 +13,9 @@ export type PriceRecord = {
 };
 
 export const SPK_URAL_PRICE_SOURCE = {
-  title: "Предложение СПК «Урал» — Doctor Farmer",
-  sheet: "прайс",
-  priceNote: "Цены по условиям оплаты из предоставленного файла «СПКУРАЛ.xlsx»",
+  title: "Актуальный прайс Doctor Farmer",
+  sheet: "актуальная версия",
+  priceNote: "Цены определяются выбранным условием оплаты",
 } as const;
 
 export const PAYMENT_TERMS: Record<PaymentTerm, { label: string; description: string }> = {
