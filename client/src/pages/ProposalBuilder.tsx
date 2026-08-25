@@ -62,6 +62,15 @@ export default function ProposalBuilder() {
     onError: error => toast.error(error.message),
   });
 
+  const canSaveProposal = Boolean(scheme && selectedFarm && pricing?.complete && !createProposal.isPending);
+  const saveButtonLabel = createProposal.isPending
+    ? "Сохраняем КП…"
+    : !selectedFarm
+      ? "Выберите хозяйство для сохранения КП"
+      : !pricing?.complete
+        ? "Не все позиции имеют цену"
+        : "Сохранить КП по прайсу";
+
   const chooseFarm = (farmId: number) => {
     const farm = farms.find(item => item.id === farmId);
     setSelectedFarmId(farmId);
@@ -127,7 +136,7 @@ export default function ProposalBuilder() {
             <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>Основание цены: {SPK_URAL_PRICE_SOURCE.title}.</strong> {PAYMENT_TERMS[paymentTerm].description}. Стоимость считается по норме, фасовке и площади; скидка ограничена 3%.</div>
             <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Примечание для КП</span><Textarea value={notes} onChange={event => { setNotes(event.target.value); setSavedProposalId(null); }} rows={4} placeholder="Условия, договорённости, срок действия предложения" /></label>
             <div className="rounded-xl bg-[#f5f8f4] p-4"><div className="flex items-center gap-2 text-[#194f38]"><CircleDollarSign className="h-5 w-5 text-[#2e7d52]" /><span className="text-xs font-bold uppercase tracking-wide">Итог по прайсу</span></div><strong className="mt-2 block text-3xl text-[#12352a]">{pricing ? formatMoneyRange(pricing.minTotal, pricing.maxTotal) : "—"}</strong><p className="mt-1 text-xs text-[#6f7a73]">{pricing ? `${formatMoneyRange(pricing.minPerHectare, pricing.maxPerHectare)} на гектар · ${PAYMENT_TERMS[paymentTerm].label}` : "Укажите площадь для расчёта"}</p>{pricing && pricing.managerExcludedProducts.length > 0 && <p className="mt-2 text-xs font-semibold text-amber-700">Менеджер исключил из КП: {pricing.managerExcludedProducts.join(", ")}.</p>}{pricing && pricing.discountPercent > 0 && <p className="mt-2 text-xs text-[#486656]">До скидки: {formatMoneyRange(pricing.grossMinTotal, pricing.grossMaxTotal)} · скидка: −{formatMoneyRange(pricing.minDiscount, pricing.maxDiscount)}</p>}{pricing && pricing.maxPallets > 0 && <p className="mt-2 text-xs font-semibold text-[#194f38]">Логистика: {pricing.minPallets === pricing.maxPallets ? pricing.maxPallets : `${pricing.minPallets}–${pricing.maxPallets}`} палл. только по позициям с подтверждённой загрузкой.</p>}{pricing && pricing.unconfirmedLogisticsProducts.length > 0 && <p className="mt-2 text-xs font-semibold text-amber-700">Фасовка или паллетная загрузка требует уточнения: {pricing.unconfirmedLogisticsProducts.join(", ")}.</p>}{pricing && pricing.excludedProducts.length > 0 && <p className="mt-2 text-xs font-semibold text-amber-700">В итог временно не включено: {pricing.excludedProducts.join(", ")}.</p>}{pricing && !pricing.complete && <p className="mt-2 text-xs font-semibold text-amber-700">Нужна цена для: {pricing.missingProducts.join(", ")}</p>}</div>
-            <Button className="w-full bg-[#194f38] hover:bg-[#12352a]" onClick={saveProposal} disabled={createProposal.isPending || !scheme || !selectedFarm || !pricing?.complete}><Save className="mr-1.5 h-4 w-4" />{!selectedFarm ? "Выберите хозяйство для сохранения КП" : !pricing?.complete ? "Не все позиции имеют цену" : "Сохранить КП по прайсу"}</Button>
+            <Button className={`w-full font-bold transition-colors disabled:pointer-events-none disabled:opacity-100 ${canSaveProposal ? "bg-[#194f38] text-white hover:bg-[#12352a]" : "border border-[#c5d2c5] bg-[#e8ede8] text-[#526257] shadow-none"}`} onClick={saveProposal} disabled={!canSaveProposal}><Save className="mr-1.5 h-4 w-4" />{saveButtonLabel}</Button>
             {savedProposalId && <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"><CheckCircle2 className="h-5 w-5" />КП №{savedProposalId} сохранено</div>}
           </section>
 
