@@ -1,0 +1,250 @@
+/* Doctor Farmer Quiz — Corporate Modern Agro style: data-first quiz mechanics with clear, calm interactions. */
+import { DRUGS } from "@/data/drugs";
+import { SITUATIONAL_QUESTIONS } from "@/data/situations";
+
+export type Mode = "dv" | "prep" | "cult" | "group" | "norma" | "situation" | "match";
+export type ChoiceQuestion = {
+  id: string;
+  type: Exclude<Mode, "match">;
+  typeLabel: string;
+  kind: "choice";
+  prompt: string;
+  correct: string;
+  wrong: string[];
+  explanation: string;
+};
+export type MatchQuestion = {
+  id: string;
+  type: "match";
+  typeLabel: string;
+  kind: "match";
+  prompt: string;
+  items: { name: string; dv: string }[];
+  explanation: string;
+};
+export type Question = ChoiceQuestion | MatchQuestion;
+
+export const MODE_META: Record<Mode, { label: string; short: string; icon: string; color: string; tint: string }> = {
+  dv: { label: "Действующее вещество", short: "ДВ препарата", icon: "✦", color: "#23633F", tint: "#E8F5E9" },
+  prep: { label: "Препарат по ДВ", short: "Препарат по ДВ", icon: "⌕", color: "#2F6F60", tint: "#E4F2EE" },
+  cult: { label: "Культуры применения", short: "Культуры", icon: "⌁", color: "#9A650F", tint: "#FFF3DD" },
+  group: { label: "Группа препарата", short: "Группа", icon: "▦", color: "#6B5B8E", tint: "#F1ECF8" },
+  norma: { label: "Норма расхода", short: "Норма расхода", icon: "◌", color: "#3F6E98", tint: "#E9F2FA" },
+  situation: { label: "Практика применения", short: "Практика применения", icon: "⌁", color: "#A15E48", tint: "#FFF0EA" },
+  match: { label: "Сопоставление", short: "Сопоставление", icon: "↔", color: "#A16207", tint: "#FEFCE8" },
+};
+
+export const DEFAULT_MODES: Mode[] = ["dv", "prep", "cult", "group", "norma", "situation"];
+
+export function shuffle<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+type Drug = (typeof DRUGS)[number];
+type ChoiceKey = "dv" | "name" | "cult" | "norma";
+
+const RELATED_GROUPS: Record<string, string[]> = {
+  "Удобрение": ["Удобрение", "Вспомогательный"],
+  "Вспомогательный": ["Вспомогательный", "Удобрение"],
+  "Гербицид": ["Гербицид"],
+  "Фунгицид": ["Фунгицид"],
+  "Инсектицид": ["Инсектицид"],
+  "Протравитель": ["Протравитель"],
+  "Десикант": ["Десикант", "Гербицид"],
+  "Фумигант": ["Фумигант", "Протравитель", "Инсектицид"],
+};
+
+const GROUP_DISTRACTOR_ORDER: Record<string, string[]> = {
+  "Удобрение": ["Вспомогательный", "Гербицид", "Фунгицид"],
+  "Вспомогательный": ["Удобрение", "Десикант", "Гербицид"],
+  "Гербицид": ["Фунгицид", "Инсектицид", "Протравитель"],
+  "Фунгицид": ["Гербицид", "Протравитель", "Инсектицид"],
+  "Инсектицид": ["Фунгицид", "Гербицид", "Протравитель"],
+  "Протравитель": ["Фунгицид", "Инсектицид", "Гербицид"],
+  "Десикант": ["Гербицид", "Фунгицид", "Протравитель"],
+  "Фумигант": ["Протравитель", "Инсектицид", "Вспомогательный"],
+};
+
+// Рубрика «Культуры применения» должна работать только с культурами,
+// а не с функциями вспомогательных средств или объектами хранения.
+const CULTURE_QUESTION_GROUPS = new Set(["Удобрение", "Гербицид", "Фунгицид", "Инсектицид", "Протравитель", "Десикант"]);
+
+function isCropRegistration(drug: Drug): boolean {
+  return CULTURE_QUESTION_GROUPS.has(drug.group) && Boolean(drug.cult.trim());
+}
+
+function wrongCultureAnswers(except: Drug, count = 3): string[] {
+  const candidates = DRUGS.filter((drug) => drug !== except && isCropRegistration(drug) && drug.cult !== except.cult);
+  const sameGroup = candidates.filter((drug) => drug.group === except.group);
+  const preferred = sameGroup.length >= count ? sameGroup : candidates;
+  const unique = new Map<string, Drug>();
+  shuffle(preferred).forEach((drug) => unique.set(drug.cult, drug));
+  if (unique.size < count) {
+    shuffle(candidates).forEach((drug) => unique.set(drug.cult, drug));
+  }
+  return Array.from(unique.keys()).slice(0, count);
+}
+
+function hasDistinctAnswer(drug: Drug, except: Drug, key: ChoiceKey) {
+  if (key === "name") return drug.dv !== except.dv;
+  return drug[key] !== except[key];
+}
+
+function getCandidatePool(except: Drug, key: ChoiceKey, count: number) {
+  const base = DRUGS.filter((drug) => drug !== except && hasDistinctAnswer(drug, except, key));
+  const relatedGroups = RELATED_GROUPS[except.group] ?? [except.group];
+  const sameGroup = base.filter((drug) => drug.group === except.group);
+  const sameUnit = key === "norma" ? sameGroup.filter((drug) => drug.normaUnit === except.normaUnit) : sameGroup;
+  const related = base.filter((drug) => relatedGroups.includes(drug.group));
+  const preferred = sameUnit.length >= count ? sameUnit : sameGroup.length >= count ? sameGroup : related;
+  const fallback = base.filter((drug) => !preferred.includes(drug));
+  const orderedPreferred = key === "norma"
+    ? [...preferred].sort((left, right) => {
+        const leftDistance = Math.abs(left.normaMin - except.normaMin) + Math.abs(left.normaMax - except.normaMax);
+        const rightDistance = Math.abs(right.normaMin - except.normaMin) + Math.abs(right.normaMax - except.normaMax);
+        return leftDistance - rightDistance;
+      })
+    : shuffle(preferred);
+  const unique = new Map<string, Drug>();
+  orderedPreferred.forEach((drug) => unique.set(String(drug[key]), drug));
+  if (unique.size < count) {
+    shuffle(fallback).forEach((drug) => unique.set(String(drug[key]), drug));
+  }
+  return Array.from(unique.values()).slice(0, count);
+}
+
+function wrongAnswers(except: Drug, key: ChoiceKey, count = 3): string[] {
+  return getCandidatePool(except, key, count).map((drug) => String(drug[key]));
+}
+
+export function buildQuestions(modes: Mode[]): Question[] {
+  const questions: Question[] = [];
+  const groups = Array.from(new Set(DRUGS.map((drug) => drug.group)));
+
+  DRUGS.forEach((drug, drugIndex) => {
+    if (modes.includes("dv")) {
+      questions.push({
+        id: `dv-${drug.n}-${drugIndex}`,
+        type: "dv",
+        typeLabel: MODE_META.dv.label,
+        kind: "choice",
+        prompt: `Препарат «${drug.name}»\n\nКакое действующее вещество?`,
+        correct: drug.dv,
+        wrong: wrongAnswers(drug, "dv"),
+        explanation: `${drug.name} (${drug.group}): ${drug.dv}`,
+      });
+    }
+    const hasUniqueDv = DRUGS.filter((item) => item.dv === drug.dv).length === 1;
+    if (modes.includes("prep") && hasUniqueDv) {
+      questions.push({
+        id: `prep-${drug.n}-${drugIndex}`,
+        type: "prep",
+        typeLabel: MODE_META.prep.label,
+        kind: "choice",
+        prompt: `Действующее вещество:\n«${drug.dv}»\n\nКакой препарат?`,
+        correct: drug.name,
+        wrong: wrongAnswers(drug, "name"),
+        explanation: `${drug.dv} → ${drug.name} (${drug.group})`,
+      });
+    }
+    if (modes.includes("cult") && isCropRegistration(drug)) {
+      questions.push({
+        id: `cult-${drug.n}-${drugIndex}`,
+        type: "cult",
+        typeLabel: MODE_META.cult.label,
+        kind: "choice",
+        prompt: `«${drug.name}»\n\nДля каких культур зарегистрирован?`,
+        correct: drug.cult,
+        wrong: wrongCultureAnswers(drug),
+        explanation: `${drug.name}: ${drug.cult}`,
+      });
+    }
+    if (modes.includes("group")) {
+      const preferredGroups = GROUP_DISTRACTOR_ORDER[drug.group] ?? groups.filter((group) => group !== drug.group);
+      const availableGroups = new Set<string>(groups);
+      const wrongGroups = shuffle(preferredGroups.filter((group) => availableGroups.has(group) && group !== drug.group)).slice(0, 3);
+      if (wrongGroups.length === 3) {
+        questions.push({
+          id: `group-${drug.n}-${drugIndex}`,
+          type: "group",
+          typeLabel: MODE_META.group.label,
+          kind: "choice",
+          prompt: `«${drug.name}»\n\nК какой группе относится?`,
+          correct: drug.group,
+          wrong: wrongGroups,
+          explanation: `${drug.name} — ${drug.group}. ДВ: ${drug.dv}`,
+        });
+      }
+    }
+    if (modes.includes("norma")) {
+      questions.push({
+        id: `norma-${drug.n}-${drugIndex}`,
+        type: "norma",
+        typeLabel: MODE_META.norma.label,
+        kind: "choice",
+        prompt: `«${drug.name}»\n\nНорма применения?`,
+        correct: drug.norma,
+        wrong: wrongAnswers(drug, "norma"),
+        explanation: `${drug.name}: норма ${drug.norma}. ДВ: ${drug.dv}`,
+      });
+    }
+  });
+
+  if (modes.includes("situation")) {
+    questions.push(...SITUATIONAL_QUESTIONS);
+  }
+
+  if (modes.includes("match")) {
+    const matchable = shuffle([...DRUGS]).slice(0, Math.min(DRUGS.length, 40));
+    for (let i = 0; i < matchable.length - 3; i += 4) {
+      const group = matchable.slice(i, i + 4);
+      questions.push({
+        id: `match-${i}`,
+        type: "match",
+        typeLabel: MODE_META.match.label,
+        kind: "match",
+        prompt: "Сопоставь каждый препарат с его действующим веществом",
+        items: group.map((drug) => ({ name: drug.name, dv: drug.dv })),
+        explanation: group.map((drug) => `${drug.name} → ${drug.dv}`).join("\n"),
+      });
+    }
+  }
+
+  return questions;
+}
+
+export function selectBalancedQuestions(questions: Question[], modes: Mode[], count: number): Question[] {
+  const poolModes = modes.filter((mode) => mode !== "match");
+  if (count >= 999) return shuffle(questions);
+  if (!poolModes.length) return shuffle(questions).slice(0, Math.min(count, questions.length));
+
+  const pools = new Map<Mode, Question[]>();
+  poolModes.forEach((mode) => pools.set(mode, shuffle(questions.filter((question) => question.type === mode))));
+  const target = Math.min(count, questions.length);
+  const baseQuota = Math.floor(target / poolModes.length);
+  let remainder = target % poolModes.length;
+  const selected: Question[] = [];
+
+  poolModes.forEach((mode) => {
+    const pool = pools.get(mode) ?? [];
+    const quota = baseQuota + (remainder > 0 ? 1 : 0);
+    if (remainder > 0) remainder -= 1;
+    selected.push(...pool.slice(0, quota));
+  });
+
+  if (selected.length < target) {
+    const selectedIds = new Set(selected.map((question) => question.id));
+    selected.push(...shuffle(questions.filter((question) => !selectedIds.has(question.id))).slice(0, target - selected.length));
+  }
+
+  return shuffle(selected).slice(0, target);
+}
+
+export function formatScore(score: number, total: number): number {
+  return total ? Math.round((score / total) * 100) : 0;
+}
