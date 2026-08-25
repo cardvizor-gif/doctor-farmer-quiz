@@ -14,6 +14,7 @@ const AgroHelper = lazy(() => import("./pages/AgroHelper"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
 const FarmWorkspace = lazy(() => import("./pages/FarmWorkspace"));
 const ProposalBuilder = lazy(() => import("./pages/ProposalBuilder"));
+const ReferenceVariant = lazy(() => import("./pages/ReferenceVariant"));
 
 function RouteFallback() {
   return (
@@ -45,6 +46,7 @@ function Router() {
       <Route path={"/knowledge-base"} component={CabinetKnowledgeBase} />
       <Route path={"/farms"} component={CabinetFarmWorkspace} />
       <Route path={"/proposals/new"} component={CabinetProposalBuilder} />
+      <Route path={"/visual-variant"} component={ReferenceVariant} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
