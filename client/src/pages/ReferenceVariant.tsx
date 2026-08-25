@@ -3,8 +3,10 @@ import {
   BookOpen,
   Building2,
   ChartNoAxesColumnIncreasing,
+  CheckCircle2,
   ChevronDown,
   CircleGauge,
+  Clock3,
   FileText,
   GraduationCap,
   LayoutDashboard,
@@ -15,6 +17,7 @@ import {
   Settings,
   Sparkles,
   Sprout,
+  UsersRound,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -40,26 +43,26 @@ const highlightCards = [
   {
     tone: "mint",
     icon: Leaf,
-    kicker: "Рабочий модуль",
+    kicker: "АгроПомощник",
     title: "АгроПомощник",
-    body: "Подбор схемы защиты по культуре, технологии и площади.",
-    action: "Открыть схему",
+    body: "Подбор схемы защиты по культуре, технологии и площади",
+    metrics: [["Схемы", "29"], ["Реестр", "144"], ["КП", "14"]],
   },
   {
     tone: "blush",
     icon: Building2,
-    kicker: "Рабочий модуль",
+    kicker: "Рабочий фокус",
     title: "Хозяйства",
-    body: "Карточки клиентов, культуры, площади и следующие действия.",
-    action: "Открыть реестр",
+    body: "Соберите культуру, площадь и контакт в одну карточку хозяйства.",
+    metrics: [],
   },
   {
     tone: "sand",
     icon: FileText,
-    kicker: "Рабочий модуль",
+    kicker: "Генератор КП",
     title: "Генератор КП",
     body: "Прозрачный расчёт схемы, фасовок и коммерческого предложения.",
-    action: "Создать КП",
+    metrics: [],
   },
 ];
 
@@ -134,8 +137,8 @@ export default function ReferenceVariant() {
               <Menu size={20} />
             </button>
             <div>
-              <p>Демонстрационный вариант · Doctor Farmer</p>
-              <h1>{activeNavigation.label}</h1>
+              <p>Добрый вечер, Шамиль!</p>
+              <h1>{activeNavigation.label === "Обзор" ? "Рабочая панель" : activeNavigation.label}</h1>
             </div>
           </div>
 
@@ -186,48 +189,69 @@ export default function ReferenceVariant() {
                       <span className="reference-highlight-icon"><Icon size={18} /></span>
                       <button type="button" aria-label={`Меню ${card.title}`}><MoreHorizontal size={18} /></button>
                     </div>
-                    <div className="reference-highlight-copy">
-                      <p>{card.kicker}</p>
-                      <h3>{card.title}</h3>
-                      <span>{card.body}</span>
-                    </div>
-                    <button type="button" className="reference-text-action" onClick={() => setActiveItem(resolveReferenceTarget(card.title))}>
-                      {card.action}
-                    </button>
+                    {card.tone === "mint" ? (
+                      <>
+                        <div className="reference-highlight-copy">
+                          <p>{card.kicker}</p>
+                          <h3>{card.title}</h3>
+                          <span>{card.body}</span>
+                        </div>
+                        <div className="reference-card-metrics">
+                          {card.metrics.map(([label, value]) => <span key={label}><small>{label}</small><strong>{value}</strong></span>)}
+                        </div>
+                      </>
+                    ) : card.tone === "blush" ? (
+                      <div className="reference-focus-layout">
+                        <span className="reference-focus-moon"><Clock3 size={15} /></span>
+                        <div className="reference-highlight-copy"><p>{card.kicker}</p><h3>Карточка<br />хозяйства</h3><span>{card.body}</span></div>
+                        <div className="reference-focus-foot"><i>Сегодня</i><span>Открыть →</span></div>
+                      </div>
+                    ) : (
+                      <div className="reference-kpi-layout">
+                        <div className="reference-highlight-copy"><p>{card.kicker}</p><strong className="reference-kpi-number">36</strong><span>новых расчётов в этом сезоне</span></div>
+                        <div className="reference-kpi-foot"><i>▲ 3,4%</i><span>к прошлому месяцу</span></div>
+                      </div>
+                    )}
                   </article>
                 );
               })}
             </section>
 
             <section className="reference-lower-grid">
-              <article className="reference-work-card">
+              <article className="reference-standup-card">
                 <div className="reference-card-heading compact">
                   <div>
-                    <p className="reference-label">Рабочий стол</p>
-                    <h2>Быстрые действия</h2>
+                    <p className="reference-label">Понедельник</p>
+                    <h2>Планёрка</h2>
                   </div>
                   <button type="button" aria-label="Дополнительные действия"><MoreHorizontal size={18} /></button>
                 </div>
-                <div className="reference-work-list">
-                  {workItems.map((item) => (
-                    <button type="button" className="reference-work-row" key={item.label}>
-                      <span className="reference-work-check"><Sparkles size={14} /></span>
-                      <span className="reference-work-copy"><strong>{item.label}</strong><small>{item.detail}</small></span>
-                      <em>{item.state}</em>
+                <div className="reference-people-row"><span>Ш</span><span>А</span><span>М</span><span>Т</span><button type="button" aria-label="Пригласить участника">+</button></div>
+                <div className="reference-meeting-line"><Clock3 size={16} /><div><span>Еженедельная планёрка</span><strong>09:00 – 10:00</strong></div><button type="button" aria-label="Открыть планёрку">↗</button></div>
+                <button type="button" className="reference-invite-action"><UsersRound size={15} /> Пригласить участника</button>
+              </article>
+
+              <article className="reference-progress-card">
+                <div className="reference-card-heading compact"><div><p className="reference-label">В работе</p><h2>Текущие задачи</h2></div><span className="reference-count">2</span></div>
+                <div className="reference-progress-list">
+                  {workItems.slice(0, 2).map((item, index) => (
+                    <button type="button" className="reference-progress-row" key={item.label}>
+                      <span><strong>{item.label}</strong><small>{item.detail}</small></span><em>{index === 0 ? "81%" : "68%"}</em><i><b style={{ width: index === 0 ? "81%" : "68%" }} /></i>
                     </button>
                   ))}
                 </div>
               </article>
 
-              <article className="reference-mini-summary">
+              <article className="reference-quick-card">
                 <div className="reference-card-heading compact">
-                  <div><p className="reference-label">Навигация</p><h2>Ключевые разделы</h2></div>
+                  <div><p className="reference-label">Сводка</p><h2>Ключевые цифры</h2></div>
                   <CircleGauge size={19} />
                 </div>
-                <div className="reference-summary-grid">
-                  <button type="button" onClick={() => setActiveItem("knowledge")}><BookOpen size={18} /><strong>База знаний</strong><span>Регламенты</span></button>
-                  <button type="button" onClick={() => setActiveItem("quiz")}><GraduationCap size={18} /><strong>Тестирование</strong><span>Команда</span></button>
+                <div className="reference-quick-tiles">
+                  <button type="button" onClick={() => setActiveItem("knowledge")}><BookOpen size={18} /><strong>19</strong><span>регламентов</span></button>
+                  <button type="button" onClick={() => setActiveItem("quiz")}><CheckCircle2 size={18} /><strong>14</strong><span>тестов</span></button>
                 </div>
+                <div className="reference-project-strip"><span className="reference-project-orb" /><div><strong>22 проекта</strong><p>Защита культур в работе</p></div><span>Подробнее →</span></div>
               </article>
             </section>
           </section>
