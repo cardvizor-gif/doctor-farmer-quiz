@@ -230,16 +230,16 @@ export default function ProposalBuilder() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
-        <section className="proposal-workspace-hero mb-7 overflow-hidden rounded-3xl border border-[#f0e6df] bg-[#fff3d9] p-6 text-[#292945] shadow-[0_18px_60px_rgba(48,47,74,0.06)] lg:flex lg:items-end lg:justify-between lg:p-8">
+        <section className="proposal-workspace-hero mb-7 overflow-hidden rounded-3xl border border-[#dce8dc] bg-[#173f30] p-6 text-white shadow-[0_18px_60px_rgba(19,53,42,0.16)] lg:flex lg:items-end lg:justify-between lg:p-8">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#f0e2d1] bg-white/75 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-[#858394]"><FileText className="h-3.5 w-3.5" />Рабочее КП</div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-emerald-100"><FileText className="h-3.5 w-3.5" />Рабочее КП</div>
             <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Коммерческое предложение из схемы</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#737182]">Стоимость рассчитывается автоматически по актуальному прайсу, нормам из схемы и площади. Ручного ввода бюджета нет.</p>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-emerald-50/80">Стоимость рассчитывается автоматически по актуальному прайсу, нормам из схемы и площади. Ручного ввода бюджета нет.</p>
           </div>
-          <div className="mt-5 rounded-2xl border border-[#f0e2d1] bg-white/75 p-4 lg:mt-0">
-            <span className="text-[10px] font-bold uppercase tracking-wide text-[#858394]">Бюджет по КП</span>
+          <div className="mt-5 rounded-2xl border border-white/10 bg-white/10 p-4 lg:mt-0">
+            <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Бюджет по КП</span>
             <strong className="mt-1 block text-2xl">{pricing ? formatMoneyRange(pricing.minTotal, pricing.maxTotal) : "—"}</strong>
-            <span className="text-xs text-[#858394]">{numericArea || 0} га · {pricing ? formatMoneyRange(pricing.minPerHectare, pricing.maxPerHectare) : "—"}/га</span>
+            <span className="text-xs text-emerald-100/75">{numericArea || 0} га · {pricing ? formatMoneyRange(pricing.minPerHectare, pricing.maxPerHectare) : "—"}/га</span>
           </div>
         </section>
 
