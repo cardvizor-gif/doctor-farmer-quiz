@@ -1,5 +1,6 @@
 import { COOKIE_NAME } from "@shared/const";
 import { farmInputSchema, proposalInputSchema, proposalStatuses } from "@shared/farm";
+import { FARM_IMPORT_MAX_ROWS } from "@shared/farmImport";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
@@ -31,6 +32,9 @@ export const appRouter = router({
       const farm = await db.createFarm(input);
       if (!farm) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Не удалось создать карточку хозяйства" });
       return farm;
+    }),
+    bulkCreate: publicProcedure.input(z.object({ farms: z.array(farmInputSchema).min(1).max(FARM_IMPORT_MAX_ROWS) })).mutation(async ({ input }) => {
+      return db.createFarms(input.farms);
     }),
     update: publicProcedure.input(farmInputSchema.extend({ id: z.number().int().positive() })).mutation(async ({ input }) => {
       const { id, ...farmInput } = input;

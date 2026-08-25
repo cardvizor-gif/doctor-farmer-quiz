@@ -14,8 +14,10 @@ import {
 import { PAYMENT_TERMS, SPK_URAL_PRICE_SOURCE, type PaymentTerm } from "@/data/spkUralPrice";
 import { addProductToScheme, buildProposalTitle, calculateSchemePricing, getSchemeForProposal, parseProposalContext } from "@/lib/proposal";
 import { trpc } from "@/lib/trpc";
+import { downloadProposalWorkbook, printProposalAsPdf, type ProposalSource } from "@/lib/workspaceTransfer";
 import { ArrowLeft, CheckCircle2, CircleDollarSign, FileDown, FileText, Layers3, Plus, Printer, Save, Sprout } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 
@@ -44,6 +46,7 @@ export default function ProposalBuilder() {
   const [productByStep, setProductByStep] = useState<Record<number, number>>({});
   const [notes, setNotes] = useState("");
   const [savedProposalId, setSavedProposalId] = useState<number | null>(null);
+  const [printNotice, setPrintNotice] = useState("");
 
   const selectedFarm = farms.find((farm) => farm.id === selectedFarmId) ?? null;
   const selectedCrop = CROP_OPTIONS.find((crop) => crop.id === cropId) ?? CROP_OPTIONS[0];
@@ -170,6 +173,50 @@ export default function ProposalBuilder() {
     });
   };
 
+  const buildCurrentExportProposal = (): ProposalSource | null => {
+    if (!editableScheme || !pricing || numericArea <= 0) return null;
+    return {
+      id: savedProposalId ?? 0,
+      title: buildProposalTitle(editableScheme, selectedFarm?.name ?? "Предварительный расчёт"),
+      crop: selectedCrop.name,
+      technology,
+      area: String(numericArea),
+      costPerHectare: String(pricing.maxPerHectare),
+      totalCost: String(pricing.maxTotal),
+      status: "draft",
+      schemeJson: JSON.stringify({
+        scheme: editableScheme,
+        selectedCrop,
+        area: numericArea,
+        paymentTerm,
+        discountPercent,
+        excludedLineKeys,
+        addedProductsByStep,
+        pricing,
+        priceSource: SPK_URAL_PRICE_SOURCE,
+      }),
+      notes: notes || null,
+    };
+  };
+
+  const exportCurrentProposal = () => {
+    const proposal = buildCurrentExportProposal();
+    if (!proposal) return toast.error("Выберите схему и укажите площадь для выгрузки КП");
+    void downloadProposalWorkbook(proposal, selectedFarm).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Не удалось сформировать Excel-файл"));
+  };
+
+  const printCurrentProposal = () => {
+    const proposal = buildCurrentExportProposal();
+    if (!proposal) return toast.error("Выберите схему и укажите площадь для выгрузки КП");
+    try {
+      flushSync(() => setPrintNotice("Печатный макет открыт. В системном окне выберите «Сохранить как PDF»."));
+      printProposalAsPdf(proposal, selectedFarm);
+      toast.success("Печатный макет открыт. В системном окне выберите «Сохранить как PDF».");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Не удалось подготовить печатный макет");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f4f7f1] text-[#15211c]">
       <header className="sticky top-0 z-30 border-b border-[#dde5dc] bg-white/95 backdrop-blur-md">
@@ -228,7 +275,8 @@ export default function ProposalBuilder() {
 
           <section className="overflow-hidden rounded-2xl border border-[#dde5dc] bg-white shadow-sm">
             <div className="border-b border-[#e7eee5] p-5 sm:p-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#2e7d52]"><Layers3 className="h-4 w-4" />Рабочая схема</div><h2 className="text-2xl font-extrabold tracking-tight text-[#12352a]">{editableScheme?.title ?? "Схема не найдена"}</h2><p className="mt-1 text-sm text-[#6f7a73]">{selectedFarm?.name ?? "Выберите хозяйство"} · {selectedCrop.name} · {technology}</p></div><Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="mr-1.5 h-4 w-4" />PDF / печать</Button></div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#2e7d52]"><Layers3 className="h-4 w-4" />Рабочая схема</div><h2 className="text-2xl font-extrabold tracking-tight text-[#12352a]">{editableScheme?.title ?? "Схема не найдена"}</h2><p className="mt-1 text-sm text-[#6f7a73]">{selectedFarm?.name ?? "Выберите хозяйство"} · {selectedCrop.name} · {technology}</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" className="border-[#2e7d52] text-[#194f38]" onClick={exportCurrentProposal}><FileDown className="mr-1.5 h-4 w-4" />Excel</Button><Button variant="outline" size="sm" onClick={printCurrentProposal}><Printer className="mr-1.5 h-4 w-4" />PDF / печать</Button></div></div>
+              {printNotice && <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">{printNotice}</p>}
               {editableScheme && <p className="mt-4 rounded-xl bg-[#f5f8f4] p-3 text-sm leading-relaxed text-[#486656]">{editableScheme.description}</p>}
             </div>
             {!editableScheme && <div className="p-10 text-center"><Sprout className="mx-auto mb-3 h-10 w-10 text-[#8cac91]" /><p className="font-semibold text-[#194f38]">Для этой комбинации пока нет готовой схемы</p><p className="mt-1 text-sm text-[#6f7a73]">Выберите другую культуру или дополните схемы в АгроПомощнике.</p></div>}
@@ -273,7 +321,7 @@ export default function ProposalBuilder() {
           </section>
         </div>
 
-        {selectedFarmId && proposalsQuery.data && proposalsQuery.data.length > 0 && <section className="mt-6 rounded-2xl border border-[#dde5dc] bg-white p-5 shadow-sm sm:p-6"><div className="mb-4 flex items-center gap-2"><FileDown className="h-5 w-5 text-[#2e7d52]" /><h2 className="font-bold text-[#12352a]">Сохранённые КП по хозяйству</h2></div><div className="grid gap-3 md:grid-cols-2">{proposalsQuery.data.map((proposal) => <div key={proposal.id} className="rounded-xl border border-[#e0eadf] p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-[#12352a]">{proposal.title}</p><p className="mt-1 text-xs text-[#6f7a73]">{proposal.crop} · {proposal.area} га · {formatMoney(Number(proposal.totalCost))}</p></div><span className="rounded-full bg-[#e8efe5] px-2.5 py-1 text-[10px] font-bold text-[#194f38]">{proposal.status === "draft" ? "Черновик" : proposal.status}</span></div></div>)}</div></section>}
+        {selectedFarmId && proposalsQuery.data && proposalsQuery.data.length > 0 && <section className="mt-6 rounded-2xl border border-[#dde5dc] bg-white p-5 shadow-sm sm:p-6"><div className="mb-4 flex items-center gap-2"><FileDown className="h-5 w-5 text-[#2e7d52]" /><h2 className="font-bold text-[#12352a]">Сохранённые КП по хозяйству</h2></div><div className="grid gap-3 md:grid-cols-2">{proposalsQuery.data.map((proposal) => <div key={proposal.id} className="rounded-xl border border-[#e0eadf] p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-[#12352a]">{proposal.title}</p><p className="mt-1 text-xs text-[#6f7a73]">{proposal.crop} · {proposal.area} га · {formatMoney(Number(proposal.totalCost))}</p></div><span className="rounded-full bg-[#e8efe5] px-2.5 py-1 text-[10px] font-bold text-[#194f38]">{proposal.status === "draft" ? "Черновик" : proposal.status}</span></div><div className="mt-4 flex flex-wrap gap-2"><Button type="button" size="sm" variant="outline" className="border-[#2e7d52] text-[#194f38]" onClick={() => void downloadProposalWorkbook(proposal, selectedFarm).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Не удалось сформировать Excel-фাইল"))}><FileDown className="mr-1.5 h-4 w-4" />Excel</Button><Button type="button" size="sm" variant="outline" onClick={() => { try { flushSync(() => setPrintNotice("Печатный макет открыт. В системном окне выберите «Сохранить как PDF».")); printProposalAsPdf(proposal, selectedFarm); toast.success("Печатный макет открыт. В системном окне выберите «Сохранить как PDF»."); } catch (error) { toast.error(error instanceof Error ? error.message : "Не удалось подготовить печатный макет"); } }}><Printer className="mr-1.5 h-4 w-4" />PDF</Button></div></div>)}</div></section>}
       </main>
     </div>
   );

@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
 import { buildAgroHelperContextQuery, buildProposalContextQuery } from "@/lib/proposal";
+import { downloadFarmImportTemplate, downloadFarmsWorkbook, readFarmImportFile, type ImportFilePreview } from "@/lib/workspaceTransfer";
 import type { Farm } from "../../../drizzle/schema";
-import { Building2, ChevronRight, CircleDollarSign, ClipboardList, FileText, MapPin, Phone, Plus, Save, Search, Sprout, UsersRound } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { AlertCircle, Building2, ChevronRight, CircleDollarSign, Download, FileSpreadsheet, FileText, MapPin, Plus, Save, Search, Sprout, Upload, UsersRound } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 
@@ -172,6 +173,10 @@ export default function FarmWorkspace() {
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
   const [draft, setDraft] = useState<FarmDraft>(blankDraft());
   const [createDraft, setCreateDraft] = useState<FarmDraft>(blankDraft());
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isReadingImport, setIsReadingImport] = useState(false);
+  const [importPreview, setImportPreview] = useState<ImportFilePreview | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const farmsQuery = trpc.farms.list.useQuery();
   const farms = farmsQuery.data ?? [];
   const selectedFarm = farms.find(farm => farm.id === selectedFarmId) ?? null;
@@ -208,6 +213,16 @@ export default function FarmWorkspace() {
     onError: error => toast.error(error.message),
   });
 
+  const importFarms = trpc.farms.bulkCreate.useMutation({
+    onSuccess: async result => {
+      await utils.farms.list.invalidate();
+      setImportPreview(null);
+      setIsImportOpen(false);
+      toast.success(`Добавлено карточек хозяйств: ${result.created}`);
+    },
+    onError: error => toast.error(error.message),
+  });
+
   const filteredFarms = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("ru-RU");
     if (!term) return farms;
@@ -219,6 +234,27 @@ export default function FarmWorkspace() {
   const nextActions = farms.filter(farm => farm.nextAction?.trim()).length;
   const changeDraft = (key: keyof FarmDraft, value: string) => setDraft(current => ({ ...current, [key]: value } as FarmDraft));
   const changeCreateDraft = (key: keyof FarmDraft, value: string) => setCreateDraft(current => ({ ...current, [key]: value } as FarmDraft));
+  const importErrors = importPreview?.rows.flatMap((row) => row.errors.map((error) => `Строка ${row.rowNumber}: ${error}`)) ?? [];
+  const importableFarms = importPreview?.rows.flatMap((row) => row.farm ? [row.farm] : []) ?? [];
+
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setIsReadingImport(true);
+    setImportPreview(null);
+    try {
+      const preview = await readFarmImportFile(file);
+      setImportPreview(preview);
+      if (preview.headerErrors.length > 0) toast.error("Файл не соответствует шаблону");
+      else if (preview.rows.some((row) => row.errors.length > 0)) toast.warning("Исправьте ошибки в файле: сохранение заблокировано");
+      else toast.success(`Файл проверен: ${preview.rows.length} строк готовы к импорту`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Не удалось прочитать файл");
+    } finally {
+      setIsReadingImport(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f4f7f1] text-[#15211c]">
@@ -242,7 +278,7 @@ export default function FarmWorkspace() {
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-emerald-100"><Building2 className="h-3.5 w-3.5" />Клиентская база</div>
             <h1 className="max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">Хозяйства и возможности продаж</h1>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-emerald-50/80">Соберите агрономический и коммерческий контекст хозяйства, зафиксируйте следующий шаг и подготовьте основу для персонального коммерческого предложения.</p>
-            <Button variant="outline" size="sm" className="mt-5 border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setLocation("/proposals/new")}><FileText className="mr-1.5 h-4 w-4" />Открыть генератор КП</Button>
+            <div className="mt-5 flex flex-wrap gap-2"><Button variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setLocation("/proposals/new")}><FileText className="mr-1.5 h-4 w-4" />Открыть генератор КП</Button><Button variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setIsImportOpen(true)}><Upload className="mr-1.5 h-4 w-4" />Импорт Excel</Button><Button variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => void downloadFarmsWorkbook(farms)}><Download className="mr-1.5 h-4 w-4" />Экспорт реестра</Button></div>
           </div>
           <div className="grid grid-cols-3 gap-2 self-end">
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Хозяйств</span><strong className="mt-1 block text-2xl">{farms.length}</strong></div>
@@ -254,7 +290,7 @@ export default function FarmWorkspace() {
         <div className="grid gap-6 xl:grid-cols-[0.85fr_1.45fr]">
           <section className="overflow-hidden rounded-2xl border border-[#dde5dc] bg-white shadow-sm">
             <div className="border-b border-[#e7eee5] p-4">
-              <div className="mb-3 flex items-center justify-between"><h2 className="font-bold text-[#12352a]">Реестр хозяйств</h2><span className="rounded-full bg-[#e8efe5] px-2.5 py-1 text-xs font-bold text-[#194f38]">{filteredFarms.length}</span></div>
+              <div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-bold text-[#12352a]">Реестр хозяйств</h2><div className="flex items-center gap-2"><Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs text-[#194f38]" onClick={() => void downloadFarmImportTemplate()}><FileSpreadsheet className="mr-1 h-3.5 w-3.5" />Шаблон</Button><span className="rounded-full bg-[#e8efe5] px-2.5 py-1 text-xs font-bold text-[#194f38]">{filteredFarms.length}</span></div></div>
               <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#72917d]" /><Input value={search} onChange={event => setSearch(event.target.value)} className="pl-9" placeholder="Поиск по хозяйству, району, культуре" /></div>
             </div>
             <div className="max-h-[620px] overflow-y-auto p-2">
@@ -288,7 +324,9 @@ export default function FarmWorkspace() {
         {totalPotential > 0 && <p className="mt-5 flex items-center gap-2 text-xs text-[#6f7a73]"><CircleDollarSign className="h-4 w-4 text-[#2e7d52]" />Совокупный зафиксированный потенциал: <strong className="text-[#194f38]">{displayNumber(totalPotential)} ₽</strong></p>}
       </main>
 
-      {isCreating && <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#12352a]/45 p-0 sm:items-center sm:p-4"><div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7"><div className="mb-6 flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wide text-[#2e7d52]">Новая карточка</p><h2 className="mt-1 text-2xl font-extrabold text-[#12352a]">Добавить хозяйство</h2><p className="mt-1 text-sm text-[#6f7a73]">Заполните только известные данные — карточку можно дополнить позже.</p></div><Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>Закрыть</Button></div><form onSubmit={event => { event.preventDefault(); createFarm.mutate(makePayload(createDraft)); }}><FarmFields draft={createDraft} onChange={changeCreateDraft} showNotes={false} /><div className="mt-6 flex justify-end gap-3"><Button type="button" variant="outline" onClick={() => setIsCreating(false)}>Отмена</Button><Button type="submit" disabled={createFarm.isPending} className="bg-[#194f38] hover:bg-[#12352a]"><Plus className="mr-1.5 h-4 w-4" />Создать карточку</Button></div></form></div></div>}
+        {isCreating && <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#12352a]/45 p-0 sm:items-center sm:p-4"><div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7"><div className="mb-6 flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wide text-[#2e7d52]">Новая карточка</p><h2 className="mt-1 text-2xl font-extrabold text-[#12352a]">Добавить хозяйство</h2><p className="mt-1 text-sm text-[#6f7a73]">Заполните только известные данные — карточку можно дополнить позже.</p></div><Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>Закрыть</Button></div><form onSubmit={event => { event.preventDefault(); createFarm.mutate(makePayload(createDraft)); }}><FarmFields draft={createDraft} onChange={changeCreateDraft} showNotes={false} /><div className="mt-6 flex justify-end gap-3"><Button type="button" variant="outline" onClick={() => setIsCreating(false)}>Отмена</Button><Button type="submit" disabled={createFarm.isPending} className="bg-[#194f38] hover:bg-[#12352a]"><Plus className="mr-1.5 h-4 w-4" />Создать карточку</Button></div></form></div></div>}
+        <input ref={importInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFile} />
+        {isImportOpen && <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#12352a]/45 p-0 sm:items-center sm:p-4"><div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7"><div className="mb-5 flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wide text-[#2e7d52]">Импорт реестра</p><h2 className="mt-1 text-2xl font-extrabold text-[#12352a]">Загрузить хозяйства из Excel</h2><p className="mt-1 max-w-xl text-sm leading-relaxed text-[#6f7a73]">Сначала кабинет проверит все строки. В базу попадут только данные из файла без ошибок после вашего подтверждения.</p></div><Button type="button" variant="ghost" onClick={() => { setImportPreview(null); setIsImportOpen(false); }}>Закрыть</Button></div><div className="grid gap-3 rounded-2xl border border-[#dce8dc] bg-[#f5f8f4] p-4 sm:grid-cols-[1fr_auto]"><div><p className="font-bold text-[#194f38]">1. Скачайте и заполните шаблон</p><p className="mt-1 text-xs leading-relaxed text-[#66766b]">Обязательна только колонка «Название хозяйства *». Поддерживаются Excel (.xlsx, .xls) и CSV до 5 МБ.</p></div><Button type="button" variant="outline" className="border-[#2e7d52] text-[#194f38]" onClick={() => void downloadFarmImportTemplate()}><FileSpreadsheet className="mr-1.5 h-4 w-4" />Скачать шаблон</Button></div><div className="mt-4 flex flex-col gap-3 rounded-2xl border border-dashed border-[#9eb9a0] p-5 text-center"><Upload className="mx-auto h-7 w-7 text-[#2e7d52]" /><div><p className="font-bold text-[#194f38]">2. Выберите заполненный файл</p><p className="mt-1 text-xs text-[#6f7a73]">Строки не сохраняются автоматически.</p></div><Button type="button" disabled={isReadingImport} className="mx-auto bg-[#194f38] text-white hover:bg-[#12352a]" onClick={() => importInputRef.current?.click()}>{isReadingImport ? "Проверяем файл…" : "Выбрать Excel или CSV"}</Button><Input type="file" accept=".xlsx,.xls,.csv" disabled={isReadingImport} className="mx-auto max-w-sm cursor-pointer text-xs file:mr-3 file:rounded-md file:border-0 file:bg-[#e8f1e7] file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-[#194f38]" onChange={handleImportFile} /></div>{importPreview && <div className="mt-5 rounded-2xl border border-[#dce8dc]"><div className="flex flex-col gap-2 border-b border-[#e7eee5] p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-bold text-[#12352a]">Предпросмотр: {importPreview.fileName}</p><p className="mt-1 text-xs text-[#6f7a73]">Строк: {importPreview.rows.length} · Готово: {importableFarms.length} · Ошибок: {importErrors.length + importPreview.headerErrors.length}</p></div>{importPreview.headerErrors.length === 0 && importErrors.length === 0 && <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">Можно сохранить</span>}</div>{(importPreview.headerErrors.length > 0 || importErrors.length > 0) && <div className="m-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><div className="flex gap-2"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><div><strong>Импорт заблокирован до исправления ошибок.</strong><ul className="mt-1 list-disc space-y-1 pl-4 text-xs">{[...importPreview.headerErrors, ...importErrors].slice(0, 8).map((error) => <li key={error}>{error}</li>)}</ul>{importErrors.length + importPreview.headerErrors.length > 8 && <p className="mt-2 text-xs">Показаны первые 8 ошибок.</p>}</div></div></div>} {importPreview.headerErrors.length === 0 && <div className="max-h-52 overflow-auto p-4"><table className="w-full min-w-[420px] text-left text-xs"><thead className="text-[#527060]"><tr><th className="pb-2">Строка</th><th className="pb-2">Хозяйство</th><th className="pb-2">Площадь</th><th className="pb-2">Результат</th></tr></thead><tbody className="divide-y divide-[#edf2eb]">{importPreview.rows.slice(0, 50).map((row) => <tr key={row.rowNumber}><td className="py-2 text-[#6f7a73]">{row.rowNumber}</td><td className="py-2 font-semibold text-[#194f38]">{row.name}</td><td className="py-2">{displayNumber(row.totalArea)} га</td><td className={`py-2 font-semibold ${row.errors.length ? "text-amber-800" : "text-emerald-700"}`}>{row.errors.length ? row.errors[0] : "Готово"}</td></tr>)}</tbody></table>{importPreview.rows.length > 50 && <p className="mt-3 text-xs text-[#6f7a73]">В предпросмотре показаны первые 50 строк.</p>}</div>}</div>}<div className="mt-6 flex flex-col-reverse gap-3 border-t border-[#e7eee5] pt-5 sm:flex-row sm:items-center sm:justify-between"><Button type="button" variant="outline" onClick={() => { setImportPreview(null); importInputRef.current?.click(); }}>Выбрать другой файл</Button><Button type="button" disabled={!importPreview || importPreview.headerErrors.length > 0 || importErrors.length > 0 || importFarms.isPending} className="bg-[#194f38] text-white hover:bg-[#12352a]" onClick={() => importFarms.mutate({ farms: importableFarms })}>{importFarms.isPending ? "Сохраняем…" : `Подтвердить импорт (${importableFarms.length})`}</Button></div></div></div>}
     </div>
   );
 }

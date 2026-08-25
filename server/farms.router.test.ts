@@ -5,6 +5,7 @@ vi.mock("./db", () => ({
   listFarms: vi.fn(),
   getFarmById: vi.fn(),
   createFarm: vi.fn(),
+  createFarms: vi.fn(),
   updateFarm: vi.fn(),
   removeFarm: vi.fn(),
   listProposals: vi.fn(),
@@ -103,6 +104,23 @@ describe("farms and proposals router", () => {
     expect(db.createProposal).toHaveBeenCalledWith(expect.objectContaining({ farmId: farm.id, status: "draft", schemeJson: editedSchemeJson }));
     expect(JSON.parse(vi.mocked(db.createProposal).mock.calls[0]?.[0].schemeJson ?? "{}").scheme.steps[0].products[0]).toEqual({ name: "Тайсон, КС", note: "Добавлено менеджером" });
     expect(result.id).toBe(proposal.id);
+  });
+
+  it("creates only the user-confirmed validated batch of imported farms", async () => {
+    vi.mocked(db.createFarms).mockResolvedValue({ created: 2 });
+    const caller = appRouter.createCaller(createPublicContext());
+    const importedFarms = [
+      { name: "Импорт 1", totalArea: 100, salesStage: "lead" as const },
+      { name: "Импорт 2", totalArea: 250, salesStage: "proposal" as const },
+    ];
+
+    const result = await caller.farms.bulkCreate({ farms: importedFarms });
+
+    expect(db.createFarms).toHaveBeenCalledWith([
+      expect.objectContaining({ name: "Импорт 1", totalArea: 100, salesStage: "lead", potentialValue: 0 }),
+      expect.objectContaining({ name: "Импорт 2", totalArea: 250, salesStage: "proposal", potentialValue: 0 }),
+    ]);
+    expect(result).toEqual({ created: 2 });
   });
 
   it("returns a farm proposal history and an individual saved proposal", async () => {

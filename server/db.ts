@@ -155,6 +155,14 @@ export async function createFarm(input: FarmInput) {
   return getFarmById(Number(result[0].insertId));
 }
 
+export async function createFarms(inputs: FarmInput[]) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  if (inputs.length === 0) return { created: 0 };
+  await db.insert(farms).values(inputs.map(toFarmValues));
+  return { created: inputs.length };
+}
+
 export async function updateFarm(id: number, input: FarmInput) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
