@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAgroHelperContextQuery, buildProposalContextQuery, buildProposalTitle, calculateProductRequirement, calculateProposalTotal, getSchemeForProposal, parseProposalContext } from "./proposal";
+import { buildAgroHelperContextQuery, buildProposalContextQuery, buildProposalTitle, calculateProductRequirement, calculateProposalTotal, calculateSchemePricing, getSchemeForProposal, parseProposalContext } from "./proposal";
 
 describe("proposal helpers", () => {
   it("calculates the total only from positive values", () => {
@@ -26,5 +26,34 @@ describe("proposal helpers", () => {
 
     expect(proposalContext).toEqual({ farmId: 7, cropId: "wheat_winter", technology: "Классическая", area: 125 });
     expect(buildAgroHelperContextQuery({ farmId: 7, area: 125 })).toBe("farmId=7&area=125");
+  });
+
+  it("calculates a confirmed price from the SPK Ural payment condition", () => {
+    const scheme = { cropId: "wheat", technology: "Классическая", title: "Тест", description: "", steps: [{ stage: "Кущение", task: "Тест", products: [{ name: "КлопЭфир Интенсив", rate: "14 га", dv: "", group: "Гербицид" }] }] };
+    const pricing = calculateSchemePricing(scheme, 100, "deferred");
+
+    expect(pricing.complete).toBe(true);
+    expect(pricing.minTotal).toBe(33600);
+    expect(pricing.maxPerHectare).toBe(336);
+  });
+
+  it("marks Agronika as temporarily excluded without blocking the confirmed part of a calculation", () => {
+    const scheme = { cropId: "test", technology: "Классическая", title: "Тест", description: "", steps: [{ stage: "Тест", task: "Тест", products: [{ name: "Агроника, КС", rate: "0,4 л/га", dv: "", group: "Фунгицид" }] }] };
+
+    const pricing = calculateSchemePricing(scheme, 100, "deferred");
+    expect(pricing.complete).toBe(true);
+    expect(pricing.excludedProducts).toEqual(["Агроника, КС"]);
+  });
+
+  it("rounds a confirmed product to packaging and applies a capped commercial discount", () => {
+    const scheme = { cropId: "test", technology: "Классическая", title: "Тест", description: "", steps: [{ stage: "Тест", task: "Тест", products: [{ name: "Контур Антистресс, ВР", rate: "0,2 л/га", dv: "", group: "Удобрение" }] }] };
+    const pricing = calculateSchemePricing(scheme, 380, "deferred", 3);
+
+    expect(pricing.lines[0]?.minPackages).toBe(8);
+    expect(pricing.lines[0]?.minPurchaseQuantity).toBe(80);
+    expect(pricing.maxPallets).toBe(1);
+    expect(pricing.grossMaxTotal).toBe(62400);
+    expect(pricing.maxDiscount).toBe(1872);
+    expect(pricing.maxTotal).toBe(60528);
   });
 });
