@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, count, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, proposals, users } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
@@ -98,6 +98,30 @@ export async function updateUserDisplayName(openId: string, displayName: string)
 
   await db.update(users).set({ displayName }).where(eq(users.openId, openId));
   return getUserByOpenId(openId);
+}
+
+export async function listTeamMembers() {
+  const db = await getDb();
+  if (!db) return [];
+  const [members, farmCounts, proposalCounts] = await Promise.all([
+    db.select().from(users).orderBy(desc(users.lastSignedIn)),
+    db.select({ ownerOpenId: farms.ownerOpenId, count: count(farms.id) }).from(farms).where(isNotNull(farms.ownerOpenId)).groupBy(farms.ownerOpenId),
+    db.select({ ownerOpenId: farms.ownerOpenId, count: count(proposals.id) }).from(proposals).innerJoin(farms, eq(proposals.farmId, farms.id)).where(isNotNull(farms.ownerOpenId)).groupBy(farms.ownerOpenId),
+  ]);
+  const farmsByOwner = new Map(farmCounts.flatMap((item) => item.ownerOpenId ? [[item.ownerOpenId, Number(item.count)] as const] : []));
+  const proposalsByOwner = new Map(proposalCounts.flatMap((item) => item.ownerOpenId ? [[item.ownerOpenId, Number(item.count)] as const] : []));
+  return members.map((member) => ({
+    ...member,
+    farmCount: farmsByOwner.get(member.openId) ?? 0,
+    proposalCount: proposalsByOwner.get(member.openId) ?? 0,
+  }));
+}
+
+export async function getTeamMemberWorkspace(openId: string) {
+  const member = await getUserByOpenId(openId);
+  if (!member) return undefined;
+  const [memberFarms, memberProposals] = await Promise.all([listFarms(openId), listProposals(openId)]);
+  return { member, farms: memberFarms, proposals: memberProposals };
 }
 
 function toNullable(value: string | null | undefined) {

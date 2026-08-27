@@ -6,7 +6,7 @@ import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { countPendingAccessRequests } from "@/lib/accessRequests";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, Building2, ChevronDown, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, X } from "lucide-react";
+import { BookOpen, Building2, ChevronDown, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 
@@ -145,6 +145,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
             </div>
             <div className="cabinet-topbar-actions">
               <button type="button" className="cabinet-search-hint" onClick={() => setIsSearchOpen(true)} aria-label="Открыть поиск по кабинету"><Search className="h-4 w-4" /><span>Поиск по кабинету</span><kbd>⌘ K</kbd></button>
+              {user?.role === "admin" && <Link href="/admin" className="cabinet-admin-panel-link" aria-label="Открыть панель администратора"><UsersRound className="h-4 w-4" aria-hidden="true" /><span>Команда</span></Link>}
               {user?.role === "admin" && <Link href="/access-requests" className="cabinet-access-requests-link" aria-label={pendingAccessRequests > 0 ? `Заявки доступа: ${pendingAccessRequests} новых` : "Заявки доступа: новых нет"}>
                 <ShieldCheck className="h-4 w-4" aria-hidden="true" /><span>Заявки</span>{pendingAccessRequests > 0 && <strong aria-hidden="true">{pendingAccessRequests}</strong>}
               </Link>}

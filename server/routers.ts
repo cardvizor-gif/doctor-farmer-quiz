@@ -68,6 +68,14 @@ export const appRouter = router({
       return user;
     }),
   }),
+  admin: router({
+    team: adminProcedure.query(() => db.listTeamMembers()),
+    memberWorkspace: adminProcedure.input(z.object({ openId: z.string().trim().min(1).max(64) })).query(async ({ input }) => {
+      const workspace = await db.getTeamMemberWorkspace(input.openId);
+      if (!workspace) throw new TRPCError({ code: "NOT_FOUND", message: "Сотрудник не найден" });
+      return workspace;
+    }),
+  }),
   farms: router({
     list: protectedProcedure.query(({ ctx }) => db.listFarms(ctx.user.openId)),
     byId: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {

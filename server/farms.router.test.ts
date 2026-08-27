@@ -13,6 +13,8 @@ vi.mock("./db", () => ({
   getProposalById: vi.fn(),
   createProposal: vi.fn(),
   updateProposalStatus: vi.fn(),
+  listTeamMembers: vi.fn(),
+  getTeamMemberWorkspace: vi.fn(),
 }));
 
 import * as db from "./db";
@@ -174,5 +176,19 @@ describe("farms and proposals privacy", () => {
     await expect(userCaller.farms.claimLegacy()).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(adminCaller.farms.claimLegacy()).resolves.toEqual({ claimed: 1 });
     expect(db.claimLegacyFarms).toHaveBeenCalledWith(ownerOpenId);
+  });
+
+  it("limits team members and employee workspaces to the administrator without changing owner-scoped routes", async () => {
+    const teamMember = { id: 2, openId: otherOpenId, name: "Сотрудник", displayName: "Сотрудник", email: "employee@example.com", loginMethod: "invite", role: "user" as const, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date(), farmCount: 1, proposalCount: 1 };
+    vi.mocked(db.listTeamMembers).mockResolvedValue([teamMember]);
+    vi.mocked(db.getTeamMemberWorkspace).mockResolvedValue({ member: teamMember, farms: [farm], proposals: [proposal] });
+    const adminCaller = appRouter.createCaller(createContext(ownerOpenId, "admin"));
+    const employeeCaller = appRouter.createCaller(createContext(otherOpenId));
+
+    await expect(employeeCaller.admin.team()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(employeeCaller.admin.memberWorkspace({ openId: ownerOpenId })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(adminCaller.admin.team()).resolves.toEqual([teamMember]);
+    await expect(adminCaller.admin.memberWorkspace({ openId: otherOpenId })).resolves.toMatchObject({ member: teamMember, farms: [farm], proposals: [proposal] });
+    expect(db.getTeamMemberWorkspace).toHaveBeenCalledWith(otherOpenId);
   });
 });
