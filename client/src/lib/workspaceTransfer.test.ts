@@ -23,7 +23,8 @@ describe("proposal PDF print document", () => {
       schemeJson: JSON.stringify({
         paymentTerm: "deferred",
         discountPercent: 2,
-        seedTonsPerHectare: 0.22,
+        seedTons: 110,
+        manualRateOverrides: { "0-0": "0,4 л/га" },
         scheme: { steps: [{ stage: "1 обработка", task: "Защита", products: [{ name: "Тайсон, КС", rate: "0,3 л/га" }] }] },
         pricing: { lines: [{ key: "0-0", requirement: { label: "30 л" }, isManualPrice: true, maxTotal: 126000 }] },
       }),
@@ -35,7 +36,8 @@ describe("proposal PDF print document", () => {
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Ручная"));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Ручные цены"));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Семена для протравливания"));
-    expect(write).toHaveBeenCalledWith(expect.stringContaining("22 т"));
+    expect(write).toHaveBeenCalledWith(expect.stringContaining("110 т"));
+    expect(write).toHaveBeenCalledWith(expect.stringContaining("Изменена вручную"));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Тестовое КП &lt;проверка&gt;"));
     expect(close).toHaveBeenCalledOnce();
   });

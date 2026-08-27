@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addProductToScheme, buildAgroHelperContextQuery, buildProposalContextQuery, buildProposalTitle, calculateProductRequirement, calculateProposalTotal, calculateSchemePricing, getSchemeForProposal, parseProposalContext } from "./proposal";
+import { addProductToScheme, applyRateOverrides, buildAgroHelperContextQuery, buildProposalContextQuery, buildProposalTitle, calculateProductRequirement, calculateProposalTotal, calculateSchemePricing, getSchemeForProposal, parseProposalContext } from "./proposal";
 
 describe("proposal helpers", () => {
   it("calculates the total only from positive values", () => {
@@ -17,9 +17,18 @@ describe("proposal helpers", () => {
 
   it("calculates products for hectare, seed and package-cover norms", () => {
     expect(calculateProductRequirement("0,4-0,5 л/га", 100).label).toBe("40–50 л");
-    expect(calculateProductRequirement("0,4-0,5 л/т", 100, "Протравливание — 0,22 т/га").label).toBe("8,8–11 л");
-    expect(calculateProductRequirement("0,4-0,5 л/т", 100, "Протравливание — 0,22 т/га", 0.25).label).toBe("10–12,5 л");
+    expect(calculateProductRequirement("0,4-0,5 л/т", 100, 22).label).toBe("8,8–11 л");
+    expect(calculateProductRequirement("0,4-0,5 л/т", 500, 110).label).toBe("44–55 л");
     expect(calculateProductRequirement("10-12 га", 100).label).toBe("9–10 уп.");
+  });
+
+  it("applies a manual application rate only to the current commercial proposal", () => {
+    const scheme = { cropId: "test", technology: "Классическая", title: "Тест", description: "", steps: [{ stage: "Фунгицидная обработка", task: "Защита", products: [{ name: "ПроТэб, КМЭ", rate: "0,4 л/га", dv: "", group: "Фунгицид" }] }] };
+    const edited = applyRateOverrides(scheme, { "0-0": "0,6 л/га" });
+
+    expect(edited.steps[0]?.products[0]?.rate).toBe("0,6 л/га");
+    expect(scheme.steps[0]?.products[0]?.rate).toBe("0,4 л/га");
+    expect(calculateProductRequirement(edited.steps[0]?.products[0]?.rate ?? "", 100).label).toBe("60 л");
   });
 
   it("preserves a farm, scheme and area in the cross-module context", () => {
@@ -122,7 +131,7 @@ describe("proposal helpers", () => {
       { stepIndex: 3, product: { name: "Тайсон, КС", rate: "0,3 л/га", dv: "", group: "Инсектицид" } },
     ];
     const edited = edits.reduce((current, edit) => addProductToScheme(current, edit.stepIndex, edit.product), scheme);
-    const pricing = calculateSchemePricing(edited, 100, "deferred");
+    const pricing = calculateSchemePricing(edited, 100, "deferred", 0, [], {}, 20);
 
     expect(edited.steps.map((step) => step.products[0]?.name)).toEqual(["Меклонил, МЭ", "Клегал, МКЭ", "ПроТэб, КМЭ", "Тайсон, КС"]);
     expect(pricing.complete).toBe(true);

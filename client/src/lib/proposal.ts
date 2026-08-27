@@ -9,6 +9,8 @@ export type AddedSchemeProduct = {
   group: string;
 };
 
+export type ManualRateOverrides = Record<string, string>;
+
 export function addProductToScheme(scheme: CropProtectionScheme, stepIndex: number, product: AddedSchemeProduct): CropProtectionScheme {
   const step = scheme.steps[stepIndex];
   if (!step || step.products.some((item) => item.name === product.name)) return scheme;
@@ -18,6 +20,19 @@ export function addProductToScheme(scheme: CropProtectionScheme, stepIndex: numb
       ...currentStep,
       products: [...currentStep.products, { ...product, note: "Добавлено менеджером" }],
     } : currentStep),
+  };
+}
+
+export function applyRateOverrides(scheme: CropProtectionScheme, overrides: ManualRateOverrides): CropProtectionScheme {
+  return {
+    ...scheme,
+    steps: scheme.steps.map((step, stepIndex) => ({
+      ...step,
+      products: step.products.map((product, productIndex) => {
+        const override = overrides[`${stepIndex}-${productIndex}`]?.trim();
+        return override ? { ...product, rate: override } : product;
+      }),
+    })),
   };
 }
 
@@ -86,15 +101,7 @@ const formatRange = (min: number, max: number, unit: string) => min === max
   ? `${formatNumber(min)} ${unit}`
   : `${formatNumber(min)}–${formatNumber(max)} ${unit}`;
 
-function getSeedTonsPerHectare(stage: string, seedTonsPerHectare?: number) {
-  if (typeof seedTonsPerHectare === "number" && Number.isFinite(seedTonsPerHectare) && seedTonsPerHectare > 0) return seedTonsPerHectare;
-  const tonMatch = stage.match(/(\d+(?:[,.]\d+)?)\s*т\s*\/\s*га/i);
-  if (tonMatch) return Number(tonMatch[1].replace(",", "."));
-  const kiloMatch = stage.match(/(\d+(?:[,.]\d+)?)\s*кг\s*\/\s*га/i);
-  return kiloMatch ? Number(kiloMatch[1].replace(",", ".")) / 1000 : null;
-}
-
-export function calculateProductRequirement(rate: string, area: number, stage = "", seedTonsPerHectare?: number): ProductRequirement {
+export function calculateProductRequirement(rate: string, area: number, seedTons?: number): ProductRequirement {
   if (!Number.isFinite(area) || area <= 0) return { label: "Укажите площадь", basis: "unknown", minQuantity: null, maxQuantity: null, unit: null };
   const normalizedRate = rate.replace(/,/g, ".").replace(/–/g, "-").trim();
   const perUnitMatch = normalizedRate.match(/(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*(л|кг)\s*\/\s*(га|т)/i);
@@ -105,9 +112,7 @@ export function calculateProductRequirement(rate: string, area: number, stage = 
     const unit = perUnitMatch[3].toLowerCase();
     const denominator = perUnitMatch[4].toLowerCase();
     if (denominator === "га") return { label: formatRange(first * area, second * area, unit), basis: "area", minQuantity: first * area, maxQuantity: second * area, unit };
-    const normalizedSeedTonsPerHectare = getSeedTonsPerHectare(stage, seedTonsPerHectare);
-    if (!normalizedSeedTonsPerHectare) return { label: "Требуется норма высева, т/га", basis: "seed", minQuantity: null, maxQuantity: null, unit };
-    const seedTons = normalizedSeedTonsPerHectare * area;
+    if (typeof seedTons !== "number" || !Number.isFinite(seedTons) || seedTons <= 0) return { label: "Укажите тоннаж семян", basis: "seed", minQuantity: null, maxQuantity: null, unit };
     return { label: formatRange(first * seedTons, second * seedTons, unit), basis: "seed", minQuantity: first * seedTons, maxQuantity: second * seedTons, unit };
   }
 
@@ -192,7 +197,7 @@ export function calculateSchemePricing(
   discountPercent = 0,
   excludedLineKeys: string[] = [],
   manualPriceOverrides: ManualPriceOverrides = {},
-  seedTonsPerHectare?: number,
+  seedTons?: number,
 ): SchemePricing {
   const lines: SchemePriceLine[] = [];
   const missingProducts: string[] = [];
@@ -208,7 +213,7 @@ export function calculateSchemePricing(
   scheme.steps.forEach((step, stageIndex) => {
     step.products.forEach((product, productIndex) => {
       const key = `${stageIndex}-${productIndex}`;
-      const requirement = calculateProductRequirement(product.rate, area, step.stage, seedTonsPerHectare);
+      const requirement = calculateProductRequirement(product.rate, area, seedTons);
       const price = findSpkUralPrice(product.name);
       const logistics = findSpkUralLogistics(product.name);
       const catalogPricePerUnit = price ? price[paymentTerm] : null;

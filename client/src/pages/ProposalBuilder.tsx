@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CROP_OPTIONS } from "@/data/agropom";
 import { PROTECTION_SCHEMES } from "@/data/protectionSchemes";
-import { getSeedingRate } from "@/data/seedingRates";
 import {
   categoriesForStep,
   productsForCategory,
@@ -13,7 +12,7 @@ import {
   type TreatmentCategory,
 } from "@/data/schemeProductCatalog";
 import { PAYMENT_TERMS, SPK_URAL_PRICE_SOURCE, type PaymentTerm } from "@/data/spkUralPrice";
-import { addProductToScheme, buildProposalTitle, calculateSchemePricing, getSchemeForProposal, parseProposalContext } from "@/lib/proposal";
+import { addProductToScheme, applyRateOverrides, buildProposalTitle, calculateSchemePricing, getSchemeForProposal, parseProposalContext, type ManualRateOverrides } from "@/lib/proposal";
 import { trpc } from "@/lib/trpc";
 import { downloadProposalWorkbook, printProposalAsPdf, type ProposalSource } from "@/lib/workspaceTransfer";
 import { ArrowLeft, CheckCircle2, CircleDollarSign, FileDown, FileText, Layers3, Plus, Printer, Save, Sprout } from "lucide-react";
@@ -41,9 +40,10 @@ export default function ProposalBuilder() {
   const [area, setArea] = useState(initialContext.area ? String(initialContext.area) : "");
   const [paymentTerm, setPaymentTerm] = useState<PaymentTerm>("deferred");
   const [discountPercent, setDiscountPercent] = useState(0);
-  const [seedTonsPerHectare, setSeedTonsPerHectare] = useState(() => String(getSeedingRate(initialCrop.id)?.tonsPerHectare ?? ""));
+  const [seedTons, setSeedTons] = useState("");
   const [excludedLineKeys, setExcludedLineKeys] = useState<string[]>([]);
   const [manualPriceOverrides, setManualPriceOverrides] = useState<Record<string, number>>({});
+  const [manualRateOverrides, setManualRateOverrides] = useState<ManualRateOverrides>({});
   const [addedProductsByStep, setAddedProductsByStep] = useState<Record<number, CatalogProduct[]>>({});
   const [categoryByStep, setCategoryByStep] = useState<Record<number, TreatmentCategory>>({});
   const [productByStep, setProductByStep] = useState<Record<number, number>>({});
@@ -56,20 +56,19 @@ export default function ProposalBuilder() {
   const baseScheme = useMemo(() => getSchemeForProposal(PROTECTION_SCHEMES, cropId, technology), [cropId, technology]);
   const editableScheme = useMemo(() => {
     if (!baseScheme) return null;
-    return Object.entries(addedProductsByStep).reduce((currentScheme, [stepIndex, products]) => (
+    const schemeWithAddedProducts = Object.entries(addedProductsByStep).reduce((currentScheme, [stepIndex, products]) => (
       products.reduce((nextScheme, product) => addProductToScheme(nextScheme, Number(stepIndex), product), currentScheme)
     ), baseScheme);
-  }, [baseScheme, addedProductsByStep]);
+    return applyRateOverrides(schemeWithAddedProducts, manualRateOverrides);
+  }, [baseScheme, addedProductsByStep, manualRateOverrides]);
 
   const numericArea = Number(area || 0);
   const hasSeedTreatment = Boolean(editableScheme?.steps.some((step) => step.products.some((product) => /(л|кг)\s*\/\s*т/i.test(product.rate))));
-  const numericSeedTonsPerHectare = Number(seedTonsPerHectare);
-  const validSeedRate = !hasSeedTreatment || (Number.isFinite(numericSeedTonsPerHectare) && numericSeedTonsPerHectare > 0);
-  const seedMassTons = hasSeedTreatment && validSeedRate && numericArea > 0 ? numericArea * numericSeedTonsPerHectare : null;
-  const seedRateReference = getSeedingRate(cropId);
+  const numericSeedTons = Number(seedTons);
+  const validSeedTonnage = !hasSeedTreatment || (Number.isFinite(numericSeedTons) && numericSeedTons > 0);
   const pricing = useMemo(
-    () => editableScheme ? calculateSchemePricing(editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides, hasSeedTreatment && validSeedRate ? numericSeedTonsPerHectare : undefined) : null,
-    [editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides, hasSeedTreatment, validSeedRate, numericSeedTonsPerHectare],
+    () => editableScheme ? calculateSchemePricing(editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides, hasSeedTreatment && validSeedTonnage ? numericSeedTons : undefined) : null,
+    [editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides, hasSeedTreatment, validSeedTonnage, numericSeedTons],
   );
   const proposalsQuery = trpc.proposals.list.useQuery(selectedFarmId ? { farmId: selectedFarmId } : undefined);
 
@@ -94,13 +93,13 @@ export default function ProposalBuilder() {
     onError: (error) => toast.error(error.message),
   });
 
-  const canSaveProposal = Boolean(editableScheme && selectedFarm && pricing?.complete && validSeedRate && !createProposal.isPending);
+  const canSaveProposal = Boolean(editableScheme && selectedFarm && pricing?.complete && validSeedTonnage && !createProposal.isPending);
   const saveButtonLabel = createProposal.isPending
     ? "Сохраняем КП…"
     : !selectedFarm
       ? "Выберите хозяйство для сохранения КП"
-      : !validSeedRate
-        ? "Укажите норму высева для протравливания"
+      : !validSeedTonnage
+        ? "Укажите тоннаж семян для протравливания"
       : !pricing?.complete
         ? "Не все позиции имеют цену"
         : pricing.lines.some((line) => line.isManualPrice)
@@ -110,6 +109,7 @@ export default function ProposalBuilder() {
   const resetSchemeEdits = () => {
     setExcludedLineKeys([]);
     setManualPriceOverrides({});
+    setManualRateOverrides({});
     setAddedProductsByStep({});
     setCategoryByStep({});
     setProductByStep({});
@@ -127,7 +127,7 @@ export default function ProposalBuilder() {
     const crop = CROP_OPTIONS.find((item) => item.id === newCropId) ?? CROP_OPTIONS[0];
     setCropId(crop.id);
     setTechnology(crop.technologies[0]);
-    setSeedTonsPerHectare(String(getSeedingRate(crop.id)?.tonsPerHectare ?? ""));
+    setSeedTons("");
     resetSchemeEdits();
   };
 
@@ -154,6 +154,26 @@ export default function ProposalBuilder() {
 
   const resetManualPrice = (key: string) => {
     setManualPriceOverrides((current) => {
+      const { [key]: _removed, ...remaining } = current;
+      return remaining;
+    });
+    setSavedProposalId(null);
+  };
+
+  const setManualRate = (key: string, rawValue: string) => {
+    const normalized = rawValue.trim().replace(",", ".");
+    setManualRateOverrides((current) => {
+      if (!normalized) {
+        const { [key]: _removed, ...remaining } = current;
+        return remaining;
+      }
+      return { ...current, [key]: rawValue };
+    });
+    setSavedProposalId(null);
+  };
+
+  const resetManualRate = (key: string) => {
+    setManualRateOverrides((current) => {
       const { [key]: _removed, ...remaining } = current;
       return remaining;
     });
@@ -187,7 +207,7 @@ export default function ProposalBuilder() {
     if (!selectedFarm) return toast.error("Сначала выберите хозяйство");
     if (!editableScheme) return toast.error("Для выбранной культуры нет готовой схемы");
     if (numericArea <= 0) return toast.error("Укажите площадь обработки больше нуля");
-    if (!validSeedRate) return toast.error("Укажите норму высева для расчёта протравителей");
+    if (!validSeedTonnage) return toast.error("Укажите фактический тоннаж семян для расчёта протравителей");
     if (!pricing?.complete) return toast.error("В схеме есть позиции без подтверждённой цены из актуального прайса");
     createProposal.mutate({
       farmId: selectedFarm.id,
@@ -201,11 +221,12 @@ export default function ProposalBuilder() {
         scheme: editableScheme,
         selectedCrop,
         area: numericArea,
-        seedTonsPerHectare: hasSeedTreatment && validSeedRate ? numericSeedTonsPerHectare : null,
+        seedTons: hasSeedTreatment && validSeedTonnage ? numericSeedTons : null,
         paymentTerm,
         discountPercent,
         excludedLineKeys,
         manualPriceOverrides,
+        manualRateOverrides,
         addedProductsByStep,
         pricing,
         priceSource: pricing.lines.some((line) => line.isManualPrice) ? { ...SPK_URAL_PRICE_SOURCE, hasManualOverrides: true } : SPK_URAL_PRICE_SOURCE,
@@ -229,11 +250,12 @@ export default function ProposalBuilder() {
         scheme: editableScheme,
         selectedCrop,
         area: numericArea,
-        seedTonsPerHectare: hasSeedTreatment && validSeedRate ? numericSeedTonsPerHectare : null,
+        seedTons: hasSeedTreatment && validSeedTonnage ? numericSeedTons : null,
         paymentTerm,
         discountPercent,
         excludedLineKeys,
         manualPriceOverrides,
+        manualRateOverrides,
         addedProductsByStep,
         pricing,
         priceSource: pricing.lines.some((line) => line.isManualPrice) ? { ...SPK_URAL_PRICE_SOURCE, hasManualOverrides: true } : SPK_URAL_PRICE_SOURCE,
@@ -299,8 +321,8 @@ export default function ProposalBuilder() {
               <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Условие оплаты</span><select value={paymentTerm} onChange={(event) => { setPaymentTerm(event.target.value as PaymentTerm); setSavedProposalId(null); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{Object.entries(PAYMENT_TERMS).map(([value, term]) => <option key={value} value={value}>{term.label}</option>)}</select></label>
               <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Скидка менеджера</span><select value={discountPercent} onChange={(event) => { setDiscountPercent(Number(event.target.value)); setSavedProposalId(null); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]"><option value={0}>Без скидки</option><option value={1}>1%</option><option value={2}>2%</option><option value={3}>3%</option></select></label>
             </div>
-            {hasSeedTreatment && <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3"><label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Норма высева для протравливания, т/га *</span><Input type="number" min="0.001" max="1" step="0.001" value={seedTonsPerHectare} onChange={(event) => { setSeedTonsPerHectare(event.target.value); setSavedProposalId(null); }} aria-describedby="seed-rate-help" /></label><p id="seed-rate-help" className="mt-2 text-xs leading-relaxed text-[#285238]">Рабочий ориентир для {selectedCrop.name}: {seedRateReference?.rangeLabel ?? "уточните по хозяйству"}. {seedMassTons !== null ? <>К протравливанию: <strong>{new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(seedMassTons)} т семян.</strong></> : "Укажите норму, чтобы рассчитать протравители в л/т или кг/т."}</p></div>}
-            <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>{hasSeedTreatment ? "Протравители: площадь × норма высева × л/т или кг/т." : "Расчёт по норме, фасовке и площади."}</strong> {PAYMENT_TERMS[paymentTerm].description}. Для каждой позиции можно задать ручную цену; скидка ограничена 3%.</div>
+            {hasSeedTreatment && <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3"><label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Фактический тоннаж семян для протравливания, т *</span><Input type="number" min="0.01" step="0.01" value={seedTons} onChange={(event) => { setSeedTons(event.target.value); setSavedProposalId(null); }} aria-describedby="seed-tonnage-help" placeholder="Например, 110" /></label><p id="seed-tonnage-help" className="mt-2 text-xs leading-relaxed text-[#285238]">Запросите значение у хозяйства. Оно умножается на норму применения каждого протравителя в л/т или кг/т.</p></div>}
+            <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>{hasSeedTreatment ? "Протравители: тоннаж семян × л/т или кг/т." : "Расчёт по норме, фасовке и площади."}</strong> {PAYMENT_TERMS[paymentTerm].description}. Для каждой позиции можно задать ручную цену и норму применения; скидка ограничена 3%.</div>
             <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Примечание для КП</span><Textarea value={notes} onChange={(event) => { setNotes(event.target.value); setSavedProposalId(null); }} rows={4} placeholder="Условия, договорённости, срок действия предложения" /></label>
             <div className="rounded-xl bg-[#f5f8f4] p-4">
               <div className="flex items-center gap-2 text-[#194f38]"><CircleDollarSign className="h-5 w-5 text-[#2e7d52]" /><span className="text-xs font-bold uppercase tracking-wide">Итог по КП</span></div>
@@ -340,10 +362,10 @@ export default function ProposalBuilder() {
                       const isManagerExcluded = priceLine?.excludedByManager;
                       const isManagerAdded = product.note === MANAGER_ADDED_NOTE;
                       const packageSummary = priceLine && priceLine.minPackages !== null && priceLine.maxPackages !== null ? `${priceLine.minPackages === priceLine.maxPackages ? priceLine.maxPackages : `${priceLine.minPackages}–${priceLine.maxPackages}`} уп.${priceLine.logistics?.unitsPerPallet ? ` · до ${priceLine.maxPallets} палл.` : ""}` : null;
-                      return <div key={`${step.stage}-${product.name}-${productIndex}`} className={`grid gap-2 px-4 py-3 sm:grid-cols-[minmax(9rem,1.15fr)_minmax(4rem,0.5fr)_minmax(3.75rem,0.6fr)_minmax(6rem,0.9fr)_minmax(8rem,1fr)] ${isManagerExcluded ? "bg-stone-50 opacity-75" : ""}`}>
+                      return <div key={`${step.stage}-${product.name}-${productIndex}`} className={`grid gap-2 px-4 py-3 sm:grid-cols-[minmax(9rem,1.15fr)_minmax(4rem,0.5fr)_minmax(6.5rem,0.75fr)_minmax(6rem,0.9fr)_minmax(8rem,1fr)] ${isManagerExcluded ? "bg-stone-50 opacity-75" : ""}`}>
                         <div><p className="font-bold text-[#12352a]">{product.name} {isManagerAdded && <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-800">добавлено</span>}</p><p className="mt-0.5 text-xs leading-relaxed text-[#6f7a73]">{product.dv}</p></div>
                         <p className="text-xs font-medium text-[#486656]">{product.group}</p>
-                        <p className="text-sm font-bold text-[#194f38]">{product.rate}</p>
+                        <div><label className="block text-[10px] font-bold uppercase tracking-wide text-[#567260]">Норма применения</label><Input type="text" value={manualRateOverrides[`${stepIndex}-${productIndex}`] ?? product.rate} onChange={(event) => setManualRate(`${stepIndex}-${productIndex}`, event.target.value)} className="mt-1 h-8 border-[#b8cfb8] bg-white px-1.5 text-xs font-bold text-[#194f38]" aria-label={`Норма применения ${product.name}`} />{manualRateOverrides[`${stepIndex}-${productIndex}`] ? <button type="button" className="mt-1 text-[10px] font-bold text-[#194f38] underline underline-offset-2" onClick={() => resetManualRate(`${stepIndex}-${productIndex}`)}>Вернуть базовую</button> : <span className="mt-1 block text-[10px] font-medium text-[#6f7a73]">Расчётная норма</span>}</div>
                         <div className="rounded-lg bg-[#e8f1e7] px-2 py-1 text-xs font-bold text-[#194f38]"><span className="block">{priceLine?.requirement.label ?? "Укажите площадь"}</span>{packageSummary && !isManagerExcluded && <span className="mt-0.5 block font-medium">К отгрузке: {packageSummary}</span>}{priceLine?.price && !priceLine.logistics && !isManagerExcluded && <span className="mt-0.5 block font-medium text-amber-700">Фасовка не подтверждена</span>}<Button type="button" variant="outline" size="sm" className="mt-2 h-7 w-full bg-white text-[11px]" onClick={() => priceLine && toggleLine(priceLine.key)}>{isManagerExcluded ? "Вернуть в КП" : "Исключить из КП"}</Button></div>
                         <div className={`rounded-lg px-2 py-1 text-xs font-bold ${priceLine?.pricePerUnit !== null && !isManagerExcluded ? "bg-[#eef7ee] text-[#194f38]" : "bg-amber-50 text-amber-800"}`}>{isManagerExcluded ? "Исключено менеджером" : <><label className="block text-[10px] uppercase tracking-wide text-[#567260]">Цена за {priceLine?.logistics?.unit ?? priceLine?.requirement.unit ?? "ед."}</label><Input type="number" min="0" step="0.01" value={priceLine?.isManualPrice ? String(priceLine.pricePerUnit ?? "") : ""} placeholder={priceLine?.catalogPricePerUnit !== null && priceLine?.catalogPricePerUnit !== undefined ? String(priceLine.catalogPricePerUnit) : "Укажите цену"} disabled={!priceLine} onChange={(event) => priceLine && setManualPrice(priceLine.key, event.target.value)} className="mt-1 h-7 border-[#b8cfb8] bg-white px-1.5 text-xs font-bold text-[#194f38]" aria-label={`Ручная цена ${product.name}`} />{priceLine?.isManualPrice ? <button type="button" className="mt-1 text-[10px] font-bold underline underline-offset-2" onClick={() => resetManualPrice(priceLine?.key ?? "")}>Вернуть расчётную цену</button> : <span className="mt-1 block text-[10px] font-medium">{priceLine?.catalogPricePerUnit !== null && priceLine?.catalogPricePerUnit !== undefined ? "Расчётная цена" : "Укажите цену вручную"}</span>}<span className="mt-1 block">{priceLine && priceLine.minTotal !== null && priceLine.maxTotal !== null ? formatMoneyRange(priceLine.minTotal, priceLine.maxTotal) : "Укажите площадь"}</span>{isCatalogExcluded && !priceLine?.isManualPrice && <span className="mt-1 block text-[10px] font-medium text-amber-800">Требуется ручная цена</span>}</>}</div>
                       </div>;
