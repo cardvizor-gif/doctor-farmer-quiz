@@ -4,6 +4,7 @@ import { PROTECTION_SCHEMES, CropProtectionScheme } from '../data/protectionSche
 import { getCropRecommendation } from '../data/cropRecommendations';
 import { PRICE_CATALOG, PriceItem } from "@/data/priceCatalog";
 import { isRegisteredSeedTreatment } from "@/data/seedTreatments";
+import { isAvailableAlternative, isForCrop } from "@/data/productAlternatives";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,43 +85,27 @@ export default function AgroHelper() {
     }).filter(step => step.products.length > 0);
   }, [currentScheme, selectedProblemCategory]);
 
-  const cropAliases: Record<string, string[]> = {
-    wheat_winter: ['пшениц'], wheat_spring: ['пшениц'], barley: ['ячмен'], oats: ['овес', 'овёс'],
-    peas: ['горох'], lentil_green: ['чечевиц'], lentil_red: ['чечевиц'], flax_classic: ['лен', 'лён'],
-    sunflower_express: ['подсолнеч'], sunflower_clearfield: ['подсолнеч'], rapeseed: ['рапс'], corn: ['кукуруз'], fallow: []
-  };
-
-  function isItemForSelectedCrop(item: PriceItem) {
-    const aliases = cropAliases[selectedCrop?.id ?? ''] ?? [];
-    if (aliases.length === 0) return true;
-    return item.cultures.some(culture => {
-      const normalized = culture.toLowerCase();
-      return aliases.some(alias => normalized.includes(alias));
-    });
-  }
-
   // Список доступных альтернатив по группе и выбранной культуре.
   function getRegisteredAlternatives(group: string, currentProductName: string): PriceItem[] {
     const lower = group.toLowerCase();
+    const cropId = selectedCrop?.id ?? '';
     const isBinaryBilingualGroup = lower.includes('гербицид') && (currentProductName.includes('КлопЭфир') || currentProductName.includes('Триатлон') || currentProductName.includes('Биогем') || currentProductName.includes('Магнум') || currentProductName.includes('Интенсив'));
 
     return PRICE_CATALOG.filter(item => {
-      const itemGroup = item.group.toLowerCase();
       const itemName = item.name.toLowerCase();
 
       if (isBinaryBilingualGroup) {
         // Оставляем только заводские бинарные упаковки, применимые для выбранной культуры.
         const isBinary = itemName.includes('клопэфир') || itemName.includes('триатлон') || itemName.includes('биогем') || itemName.includes('магнум твин');
-        return isBinary && isItemForSelectedCrop(item);
+        return isBinary && !item.name.includes('*') && isForCrop(item, cropId);
       }
 
-      if (lower.includes('протрав') || lower.includes('протравка')) {
-        return isRegisteredSeedTreatment(item) && isItemForSelectedCrop(item);
-      }
-      if (lower.includes('гербицид') && itemGroup.includes('гербицид')) return isItemForSelectedCrop(item);
-      if (lower.includes('фунгицид') && itemGroup.includes('фунгицид')) return isItemForSelectedCrop(item);
-      if (lower.includes('инсектицид') && itemGroup.includes('инсектицид')) return isItemForSelectedCrop(item);
-      return itemGroup === lower && isItemForSelectedCrop(item);
+      if (lower.includes('протрав')) return isAvailableAlternative(item, cropId, 'seed');
+      if (lower.includes('фунгицид')) return isAvailableAlternative(item, cropId, 'fungicide');
+      if (lower.includes('удобрен') || lower.includes('питани') || lower.includes('биостимулятор')) return isAvailableAlternative(item, cropId, 'fertilizer');
+      if (lower.includes('гербицид')) return isAvailableAlternative(item, cropId, 'herbicide');
+      if (lower.includes('инсектицид')) return isAvailableAlternative(item, cropId, 'insecticide');
+      return false;
     });
   }
 
