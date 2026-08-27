@@ -20,10 +20,15 @@ export function resolveOAuthNonce(cookieHeader: string, mintNonce: () => string)
   return readCookieValue(cookieHeader, OAUTH_STATE_COOKIE) ?? mintNonce();
 }
 
+export function hasOAuthLoginConfiguration(oauthPortalUrl?: string, appId?: string) {
+  return Boolean(oauthPortalUrl?.trim() && appId?.trim());
+}
+
 // Generate login URL at runtime so redirect URI reflects the current origin.
 export const getLoginUrl = () => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
+  if (!hasOAuthLoginConfiguration(oauthPortalUrl, appId) || !oauthPortalUrl || !appId) return null;
   const redirectUri = `${window.location.origin}/api/oauth/callback`;
   const existingNonce = readCookieValue(document.cookie, OAUTH_STATE_COOKIE);
   const nonce = resolveOAuthNonce(document.cookie, () => crypto.randomUUID());
@@ -47,7 +52,10 @@ export const getLoginUrl = () => {
 };
 
 export const startLogin = () => {
-  if (loginNavigationStarted) return;
+  if (loginNavigationStarted) return true;
+  const loginUrl = getLoginUrl();
+  if (!loginUrl) return false;
   loginNavigationStarted = true;
-  window.location.assign(getLoginUrl());
+  window.location.assign(loginUrl);
+  return true;
 };

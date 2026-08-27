@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { OAUTH_NONCE_COOKIE_ATTRIBUTES, readCookieValue, resolveOAuthNonce } from "./const";
+import { hasOAuthLoginConfiguration, OAUTH_NONCE_COOKIE_ATTRIBUTES, readCookieValue, resolveOAuthNonce } from "./const";
 
 describe("OAuth login nonce", () => {
   it("reuses an active host-only nonce instead of overwriting an in-flight login", () => {
@@ -24,5 +24,11 @@ describe("OAuth login nonce", () => {
     expect(OAUTH_NONCE_COOKIE_ATTRIBUTES).toContain("SameSite=Lax");
     expect(OAUTH_NONCE_COOKIE_ATTRIBUTES).toContain("Secure");
     expect(OAUTH_NONCE_COOKIE_ATTRIBUTES).not.toContain("SameSite=None");
+  });
+
+  it("requires both OAuth values before starting an owner login", () => {
+    expect(hasOAuthLoginConfiguration("https://oauth.example.com", "project-id")).toBe(true);
+    expect(hasOAuthLoginConfiguration("https://oauth.example.com", undefined)).toBe(false);
+    expect(hasOAuthLoginConfiguration(undefined, "project-id")).toBe(false);
   });
 });
