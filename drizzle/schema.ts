@@ -78,6 +78,79 @@ export const proposals = mysqlTable(
   table => [index("proposals_farm_idx").on(table.farmId), index("proposals_status_idx").on(table.status)],
 );
 
+export const orderRequests = mysqlTable(
+  "orderRequests",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    farmId: int("farmId").notNull().references(() => farms.id, { onDelete: "cascade" }),
+    ownerOpenId: varchar("ownerOpenId", { length: 64 }).notNull(),
+    requestDate: timestamp("requestDate").notNull(),
+    buyerName: varchar("buyerName", { length: 255 }).notNull(),
+    managerName: varchar("managerName", { length: 120 }).notNull(),
+    managerEmail: varchar("managerEmail", { length: 320 }),
+    segment: mysqlEnum("segment", ["agroholding", "dealer", "large", "medium", "small"]).notNull().default("medium"),
+    paymentTerms: varchar("paymentTerms", { length: 32 }).notNull().default("100%"),
+    paymentDueDate: timestamp("paymentDueDate"),
+    supplyDocuments: text("supplyDocuments"),
+    deliveryDueDate: timestamp("deliveryDueDate"),
+    edoStatus: mysqlEnum("edoStatus", ["yes", "no"]).notNull().default("no"),
+    edoProvider: varchar("edoProvider", { length: 120 }),
+    status: mysqlEnum("status", ["draft", "submitted", "partial", "shipped", "cancelled"]).notNull().default("draft"),
+    totalAmount: decimal("totalAmount", { precision: 16, scale: 2 }).notNull().default("0"),
+    notes: text("notes"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [
+    index("order_requests_owner_updated_idx").on(table.ownerOpenId, table.updatedAt),
+    index("order_requests_farm_idx").on(table.farmId),
+    index("order_requests_status_idx").on(table.status),
+  ],
+);
+
+export const orderRequestItems = mysqlTable(
+  "orderRequestItems",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    requestId: int("requestId").notNull().references(() => orderRequests.id, { onDelete: "cascade" }),
+    productName: varchar("productName", { length: 255 }).notNull(),
+    unit: varchar("unit", { length: 24 }).notNull().default("шт."),
+    quantity: decimal("quantity", { precision: 14, scale: 3 }).notNull(),
+    unitPrice: decimal("unitPrice", { precision: 16, scale: 2 }).notNull().default("0"),
+    lineTotal: decimal("lineTotal", { precision: 16, scale: 2 }).notNull().default("0"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("order_request_items_request_idx").on(table.requestId)],
+);
+
+export const shipments = mysqlTable(
+  "shipments",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    requestId: int("requestId").notNull().references(() => orderRequests.id, { onDelete: "cascade" }),
+    shipmentDate: timestamp("shipmentDate").notNull(),
+    documentNumber: varchar("documentNumber", { length: 120 }),
+    notes: text("notes"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("shipments_request_date_idx").on(table.requestId, table.shipmentDate)],
+);
+
+export const shipmentItems = mysqlTable(
+  "shipmentItems",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    shipmentId: int("shipmentId").notNull().references(() => shipments.id, { onDelete: "cascade" }),
+    requestItemId: int("requestItemId").notNull().references(() => orderRequestItems.id, { onDelete: "restrict" }),
+    productName: varchar("productName", { length: 255 }).notNull(),
+    unit: varchar("unit", { length: 24 }).notNull().default("шт."),
+    quantity: decimal("quantity", { precision: 14, scale: 3 }).notNull(),
+    unitPrice: decimal("unitPrice", { precision: 16, scale: 2 }).notNull().default("0"),
+    lineTotal: decimal("lineTotal", { precision: 16, scale: 2 }).notNull().default("0"),
+  },
+  table => [index("shipment_items_shipment_idx").on(table.shipmentId), index("shipment_items_request_item_idx").on(table.requestItemId)],
+);
+
 export const accessRequests = mysqlTable(
   "accessRequests",
   {
@@ -104,5 +177,13 @@ export type Farm = typeof farms.$inferSelect;
 export type InsertFarm = typeof farms.$inferInsert;
 export type Proposal = typeof proposals.$inferSelect;
 export type InsertProposal = typeof proposals.$inferInsert;
+export type OrderRequest = typeof orderRequests.$inferSelect;
+export type InsertOrderRequest = typeof orderRequests.$inferInsert;
+export type OrderRequestItem = typeof orderRequestItems.$inferSelect;
+export type InsertOrderRequestItem = typeof orderRequestItems.$inferInsert;
+export type Shipment = typeof shipments.$inferSelect;
+export type InsertShipment = typeof shipments.$inferInsert;
+export type ShipmentItem = typeof shipmentItems.$inferSelect;
+export type InsertShipmentItem = typeof shipmentItems.$inferInsert;
 export type AccessRequest = typeof accessRequests.$inferSelect;
 export type InsertAccessRequest = typeof accessRequests.$inferInsert;

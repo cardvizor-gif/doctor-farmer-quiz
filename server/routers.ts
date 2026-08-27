@@ -10,6 +10,50 @@ import { systemRouter } from "./_core/systemRouter";
 import { sdk } from "./_core/sdk";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
+const orderItemSchema = z.object({
+  productName: z.string().trim().min(1, "Укажите товар").max(255),
+  unit: z.string().trim().min(1, "Укажите единицу измерения").max(24),
+  quantity: z.number().positive("Количество должно быть больше нуля").max(10_000_000),
+  unitPrice: z.number().min(0, "Цена не может быть отрицательной").max(1_000_000_000),
+});
+
+const orderRequestInputSchema = z.object({
+  farmId: z.number().int().positive(),
+  requestDate: z.date(),
+  buyerName: z.string().trim().min(1, "Укажите покупателя").max(255),
+  segment: z.enum(["agroholding", "dealer", "large", "medium", "small"]),
+  paymentTerms: z.string().trim().min(1, "Укажите условия оплаты").max(32),
+  paymentDueDate: z.date().nullable().optional(),
+  supplyDocuments: z.string().trim().max(2_000).nullable().optional(),
+  deliveryDueDate: z.date().nullable().optional(),
+  edoStatus: z.enum(["yes", "no"]),
+  edoProvider: z.string().trim().max(120).nullable().optional(),
+  notes: z.string().trim().max(10_000).nullable().optional(),
+  status: z.enum(["draft", "submitted"]),
+  items: z.array(orderItemSchema).min(1, "Добавьте хотя бы одну позицию").max(33),
+}).superRefine((input, ctx) => {
+  if (input.edoStatus === "yes" && !input.edoProvider?.trim()) ctx.addIssue({ code: "custom", path: ["edoProvider"], message: "Укажите оператора ЭДО" });
+});
+
+const shipmentInputSchema = z.object({
+  requestId: z.number().int().positive(),
+  shipmentDate: z.date(),
+  documentNumber: z.string().trim().max(120).nullable().optional(),
+  notes: z.string().trim().max(10_000).nullable().optional(),
+  items: z.array(z.object({
+    requestItemId: z.number().int().positive(),
+    quantity: z.number().positive("Количество должно быть больше нуля").max(10_000_000),
+    unitPrice: z.number().min(0, "Цена не может быть отрицательной").max(1_000_000_000),
+  })).min(1, "Добавьте хотя бы одну отгружаемую позицию").max(33),
+});
+
+function managerIdentity(user: { displayName?: string | null; name?: string | null; email?: string | null }) {
+  return {
+    name: user.displayName?.trim() || user.name?.trim() || user.email?.split("@")[0] || "Менеджер",
+    email: user.email,
+  };
+}
+
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
@@ -119,6 +163,31 @@ export const appRouter = router({
       const proposal = await db.updateProposalStatus(input.id, input.status, ctx.user.openId);
       if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено" });
       return proposal;
+    }),
+  }),
+  orderRequests: router({
+    list: protectedProcedure.query(({ ctx }) => db.listOrderRequests(ctx.user.openId)),
+    byId: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
+      const request = await db.getOrderRequestById(input.id, ctx.user.openId);
+      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка не найдена" });
+      return request;
+    }),
+    create: protectedProcedure.input(orderRequestInputSchema).mutation(async ({ input, ctx }) => {
+      const request = await db.createOrderRequest(input, ctx.user.openId, managerIdentity(ctx.user));
+      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Выберите существующее хозяйство" });
+      return request;
+    }),
+    update: protectedProcedure.input(orderRequestInputSchema.safeExtend({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+      const { id, ...payload } = input;
+      const request = await db.updateOrderRequest(id, payload, ctx.user.openId, managerIdentity(ctx.user));
+      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Черновик заявки не найден или уже передан в бухгалтерию" });
+      return request;
+    }),
+    createShipment: protectedProcedure.input(shipmentInputSchema).mutation(async ({ input, ctx }) => {
+      const { requestId, ...payload } = input;
+      const request = await db.createShipment(requestId, payload, ctx.user.openId);
+      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка недоступна, не передана в бухгалтерию или количество превышает остаток" });
+      return request;
     }),
   }),
 });

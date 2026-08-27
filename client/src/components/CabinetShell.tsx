@@ -6,7 +6,7 @@ import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { countPendingAccessRequests } from "@/lib/accessRequests";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, Building2, ChevronDown, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
+import { BookOpen, Building2, ChevronDown, ClipboardList, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 
@@ -15,6 +15,7 @@ export const cabinetNavigation = [
   { href: "/agro-helper", label: "АгроПомощник", icon: Sprout },
   { href: "/farms", label: "Хозяйства", icon: Building2 },
   { href: "/proposals/new", label: "Генератор КП", icon: FilePlus2 },
+  { href: "/order-requests", label: "Заявки", icon: ClipboardList },
   { href: "/knowledge-base", label: "База знаний", icon: BookOpen },
   { href: "/quiz", label: "Тестирование", icon: Trophy },
 ] as const;
@@ -28,6 +29,7 @@ function cabinetTheme(pathname: string) {
   if (pathname.startsWith("/agro-helper")) return "agro";
   if (pathname.startsWith("/farms")) return "farms";
   if (pathname.startsWith("/proposals")) return "proposal";
+  if (pathname.startsWith("/order-requests")) return "proposal";
   if (pathname.startsWith("/knowledge-base")) return "knowledge";
   if (pathname.startsWith("/quiz")) return "quiz";
   return "overview";

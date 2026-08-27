@@ -14,6 +14,7 @@ const AgroHelper = lazy(() => import("./pages/AgroHelper"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
 const FarmWorkspace = lazy(() => import("./pages/FarmWorkspace"));
 const ProposalBuilder = lazy(() => import("./pages/ProposalBuilder"));
+const OrderRequests = lazy(() => import("./pages/OrderRequests"));
 const AccessRequests = lazy(() => import("./pages/AccessRequests"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const ReferenceVariant = lazy(() => import("./pages/ReferenceVariant"));
@@ -39,6 +40,7 @@ function Router() {
   );
   const CabinetFarmWorkspace = privateCabinetPage(FarmWorkspace);
   const CabinetProposalBuilder = privateCabinetPage(ProposalBuilder);
+  const CabinetOrderRequests = privateCabinetPage(OrderRequests);
   const CabinetAccessRequests = cabinetPage(AccessRequests);
   const CabinetAdminPanel = cabinetPage(AdminPanel);
 
@@ -50,6 +52,7 @@ function Router() {
       <Route path={"/knowledge-base"} component={CabinetKnowledgeBase} />
       <Route path={"/farms"} component={CabinetFarmWorkspace} />
       <Route path={"/proposals/new"} component={CabinetProposalBuilder} />
+      <Route path={"/order-requests"} component={CabinetOrderRequests} />
       <Route path={"/access-requests"} component={CabinetAccessRequests} />
       <Route path={"/admin"} component={CabinetAdminPanel} />
       <Route path={"/visual-variant"} component={ReferenceVariant} />
