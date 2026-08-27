@@ -3,10 +3,27 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { LockKeyhole, ShieldCheck, Sprout } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { useLocation } from "wouter";
+
+export function privateWorkspaceGateCopy(pathname: string) {
+  if (pathname.startsWith("/quiz")) {
+    return {
+      title: "Тестирование доступно после входа",
+      description: "Зарегистрируйтесь или войдите в рабочий кабинет, чтобы проходить тесты и фиксировать результаты за своим аккаунтом.",
+    };
+  }
+
+  return {
+    title: "Рабочий раздел доступен после входа",
+    description: "Карточки хозяйств, коммерческие предложения и другие рабочие данные изолированы по аккаунтам. Запросите доступ или активируйте выданное приглашение.",
+  };
+}
 
 export default function PrivateWorkspaceGate({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
+  const [location] = useLocation();
   const [isAccessOpen, setIsAccessOpen] = useState(false);
+  const copy = privateWorkspaceGateCopy(location);
 
   if (loading) {
     return (
@@ -27,9 +44,9 @@ export default function PrivateWorkspaceGate({ children }: { children: ReactNode
             <LockKeyhole className="h-7 w-7" />
           </div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6a8b3b]">Защищённый рабочий раздел</p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#1f4b2c]">Ваши хозяйства доступны только вам</h2>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#1f4b2c]">{copy.title}</h2>
           <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[#5f6f5e]">
-            Карточки хозяйств, контакты и коммерческие предложения изолированы по аккаунтам. Запросите доступ или активируйте выданное приглашение.
+            {copy.description}
           </p>
           <Button onClick={() => setIsAccessOpen(true)} className="mt-7 h-11 rounded-xl bg-[#315d1e] px-6 font-bold text-white hover:bg-[#244816]">
             <ShieldCheck className="mr-2 h-4 w-4" />

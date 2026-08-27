@@ -31,7 +31,6 @@ function RouteFallback() {
 function Router() {
   const cabinetPage = (Page: React.ComponentType) => () => <CabinetShell><Page /></CabinetShell>;
   const CabinetDashboard = cabinetPage(Dashboard);
-  const CabinetHome = cabinetPage(Home);
   const CabinetAgroHelper = cabinetPage(AgroHelper);
   const CabinetKnowledgeBase = cabinetPage(KnowledgeBase);
   const privateCabinetPage = (Page: React.ComponentType) => () => (
@@ -39,6 +38,7 @@ function Router() {
       <PrivateWorkspaceGate><Page /></PrivateWorkspaceGate>
     </CabinetShell>
   );
+  const CabinetHome = privateCabinetPage(Home);
   const CabinetFarmWorkspace = privateCabinetPage(FarmWorkspace);
   const CabinetProposalBuilder = privateCabinetPage(ProposalBuilder);
   const CabinetOrderRequests = privateCabinetPage(OrderRequests);
