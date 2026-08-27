@@ -37,12 +37,34 @@ describe("proposal helpers", () => {
     expect(pricing.maxPerHectare).toBe(336);
   });
 
+  it("uses a manager manual price for a line, recalculates totals and preserves the catalog price separately", () => {
+    const scheme = { cropId: "wheat", technology: "Классическая", title: "Тест", description: "", steps: [{ stage: "Кущение", task: "Тест", products: [{ name: "КлопЭфир Интенсив", rate: "14 га", dv: "", group: "Гербицид" }] }] };
+    const baseline = calculateSchemePricing(scheme, 100, "deferred");
+    const manual = calculateSchemePricing(scheme, 100, "deferred", 0, [], { "0-0": 1500 });
+
+    expect(manual.lines[0]?.isManualPrice).toBe(true);
+    expect(manual.lines[0]?.pricePerUnit).toBe(1500);
+    expect(manual.lines[0]?.catalogPricePerUnit).toBe(baseline.lines[0]?.pricePerUnit);
+    expect(manual.maxTotal).not.toBe(baseline.maxTotal);
+    expect(manual.complete).toBe(true);
+  });
+
   it("marks Agronika as temporarily excluded without blocking the confirmed part of a calculation", () => {
     const scheme = { cropId: "test", technology: "Классическая", title: "Тест", description: "", steps: [{ stage: "Тест", task: "Тест", products: [{ name: "Агроника, КС", rate: "0,4 л/га", dv: "", group: "Фунгицид" }] }] };
 
     const pricing = calculateSchemePricing(scheme, 100, "deferred");
     expect(pricing.complete).toBe(true);
     expect(pricing.excludedProducts).toEqual(["Агроника, КС"]);
+  });
+
+  it("includes a previously excluded line after a manager enters a manual price", () => {
+    const scheme = { cropId: "test", technology: "Классическая", title: "Тест", description: "", steps: [{ stage: "Тест", task: "Тест", products: [{ name: "Агроника, КС", rate: "0,4 л/га", dv: "", group: "Фунгицид" }] }] };
+    const pricing = calculateSchemePricing(scheme, 100, "deferred", 0, [], { "0-0": 800 });
+
+    expect(pricing.complete).toBe(true);
+    expect(pricing.lines[0]?.isManualPrice).toBe(true);
+    expect(pricing.excludedProducts).toEqual([]);
+    expect(pricing.maxTotal).toBe(32000);
   });
 
   it("rounds a confirmed product to packaging and applies a capped commercial discount", () => {

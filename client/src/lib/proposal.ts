@@ -128,8 +128,10 @@ export type SchemePriceLine = {
   excludedByManager: boolean;
   requirement: ProductRequirement;
   price: PriceRecord | null;
+  catalogPricePerUnit: number | null;
   logistics: ProductLogistics | null;
   pricePerUnit: number | null;
+  isManualPrice: boolean;
   minPurchaseQuantity: number | null;
   maxPurchaseQuantity: number | null;
   minPackages: number | null;
@@ -180,7 +182,16 @@ function roundForLogistics(requirement: ProductRequirement, logistics: ProductLo
   };
 }
 
-export function calculateSchemePricing(scheme: CropProtectionScheme, area: number, paymentTerm: PaymentTerm, discountPercent = 0, excludedLineKeys: string[] = []): SchemePricing {
+export type ManualPriceOverrides = Record<string, number>;
+
+export function calculateSchemePricing(
+  scheme: CropProtectionScheme,
+  area: number,
+  paymentTerm: PaymentTerm,
+  discountPercent = 0,
+  excludedLineKeys: string[] = [],
+  manualPriceOverrides: ManualPriceOverrides = {},
+): SchemePricing {
   const lines: SchemePriceLine[] = [];
   const missingProducts: string[] = [];
   const excludedProducts: string[] = [];
@@ -198,25 +209,30 @@ export function calculateSchemePricing(scheme: CropProtectionScheme, area: numbe
       const requirement = calculateProductRequirement(product.rate, area, step.stage);
       const price = findSpkUralPrice(product.name);
       const logistics = findSpkUralLogistics(product.name);
-      const pricePerUnit = price ? price[paymentTerm] : null;
+      const catalogPricePerUnit = price ? price[paymentTerm] : null;
+      const manualPrice = manualPriceOverrides[key];
+      const isManualPrice = typeof manualPrice === "number" && Number.isFinite(manualPrice) && manualPrice >= 0;
+      const pricePerUnit = isManualPrice ? manualPrice : catalogPricePerUnit;
       const rounded = roundForLogistics(requirement, logistics);
       const excluded = EXCLUDED_FROM_AUTO_PRICING.includes(product.name as typeof EXCLUDED_FROM_AUTO_PRICING[number]);
       const excludedByManager = excludedLineKeys.includes(key);
-      const canPrice = Boolean(price && pricePerUnit !== null && rounded.minPurchaseQuantity !== null && rounded.maxPurchaseQuantity !== null);
+      const canPrice = Boolean(pricePerUnit !== null && rounded.minPurchaseQuantity !== null && rounded.maxPurchaseQuantity !== null);
       const line: SchemePriceLine = {
         key,
         productName: product.name,
         excludedByManager,
         requirement,
         price,
+        catalogPricePerUnit,
         logistics,
         pricePerUnit,
+        isManualPrice,
         ...rounded,
         minTotal: canPrice && !excludedByManager ? rounded.minPurchaseQuantity! * pricePerUnit! : null,
         maxTotal: canPrice && !excludedByManager ? rounded.maxPurchaseQuantity! * pricePerUnit! : null,
       };
       if (excludedByManager) managerExcludedProducts.push(product.name);
-      else if (excluded) excludedProducts.push(product.name);
+      else if (excluded && !isManualPrice) excludedProducts.push(product.name);
       else if (!canPrice) missingProducts.push(product.name);
       else {
         grossMinTotal += line.minTotal!;

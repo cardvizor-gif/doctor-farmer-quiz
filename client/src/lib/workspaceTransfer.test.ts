@@ -24,13 +24,15 @@ describe("proposal PDF print document", () => {
         paymentTerm: "deferred",
         discountPercent: 2,
         scheme: { steps: [{ stage: "1 обработка", task: "Защита", products: [{ name: "Тайсон, КС", rate: "0,3 л/га" }] }] },
-        pricing: { lines: [{ key: "0-0", requirement: { label: "30 л" }, maxTotal: 126000 }] },
+        pricing: { lines: [{ key: "0-0", requirement: { label: "30 л" }, isManualPrice: true, maxTotal: 126000 }] },
       }),
     });
 
     expect(open).toHaveBeenCalledWith("", "_blank");
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Doctor Farmer · коммерческое предложение"));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Тайсон, КС"));
+    expect(write).toHaveBeenCalledWith(expect.stringContaining("Ручная"));
+    expect(write).toHaveBeenCalledWith(expect.stringContaining("Ручные цены"));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Тестовое КП &lt;проверка&gt;"));
     expect(close).toHaveBeenCalledOnce();
   });

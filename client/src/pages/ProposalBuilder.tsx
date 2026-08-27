@@ -41,6 +41,7 @@ export default function ProposalBuilder() {
   const [paymentTerm, setPaymentTerm] = useState<PaymentTerm>("deferred");
   const [discountPercent, setDiscountPercent] = useState(0);
   const [excludedLineKeys, setExcludedLineKeys] = useState<string[]>([]);
+  const [manualPriceOverrides, setManualPriceOverrides] = useState<Record<string, number>>({});
   const [addedProductsByStep, setAddedProductsByStep] = useState<Record<number, CatalogProduct[]>>({});
   const [categoryByStep, setCategoryByStep] = useState<Record<number, TreatmentCategory>>({});
   const [productByStep, setProductByStep] = useState<Record<number, number>>({});
@@ -60,8 +61,8 @@ export default function ProposalBuilder() {
 
   const numericArea = Number(area || 0);
   const pricing = useMemo(
-    () => editableScheme ? calculateSchemePricing(editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys) : null,
-    [editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys],
+    () => editableScheme ? calculateSchemePricing(editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides) : null,
+    [editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides],
   );
   const proposalsQuery = trpc.proposals.list.useQuery(selectedFarmId ? { farmId: selectedFarmId } : undefined);
 
@@ -93,10 +94,13 @@ export default function ProposalBuilder() {
       ? "Выберите хозяйство для сохранения КП"
       : !pricing?.complete
         ? "Не все позиции имеют цену"
-        : "Сохранить КП по прайсу";
+        : pricing.lines.some((line) => line.isManualPrice)
+          ? "Сохранить КП с ручными ценами"
+          : "Сохранить КП";
 
   const resetSchemeEdits = () => {
     setExcludedLineKeys([]);
+    setManualPriceOverrides({});
     setAddedProductsByStep({});
     setCategoryByStep({});
     setProductByStep({});
@@ -119,6 +123,30 @@ export default function ProposalBuilder() {
 
   const toggleLine = (key: string) => {
     setExcludedLineKeys((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key]);
+    setSavedProposalId(null);
+  };
+
+  const setManualPrice = (key: string, rawValue: string) => {
+    const normalized = rawValue.trim().replace(",", ".");
+    if (!normalized) {
+      setManualPriceOverrides((current) => {
+        const { [key]: _removed, ...remaining } = current;
+        return remaining;
+      });
+      setSavedProposalId(null);
+      return;
+    }
+    const value = Number(normalized);
+    if (!Number.isFinite(value) || value < 0) return;
+    setManualPriceOverrides((current) => ({ ...current, [key]: value }));
+    setSavedProposalId(null);
+  };
+
+  const resetManualPrice = (key: string) => {
+    setManualPriceOverrides((current) => {
+      const { [key]: _removed, ...remaining } = current;
+      return remaining;
+    });
     setSavedProposalId(null);
   };
 
@@ -165,9 +193,10 @@ export default function ProposalBuilder() {
         paymentTerm,
         discountPercent,
         excludedLineKeys,
+        manualPriceOverrides,
         addedProductsByStep,
         pricing,
-        priceSource: SPK_URAL_PRICE_SOURCE,
+        priceSource: pricing.lines.some((line) => line.isManualPrice) ? { ...SPK_URAL_PRICE_SOURCE, hasManualOverrides: true } : SPK_URAL_PRICE_SOURCE,
       }),
       notes: notes || null,
     });
@@ -191,9 +220,10 @@ export default function ProposalBuilder() {
         paymentTerm,
         discountPercent,
         excludedLineKeys,
+        manualPriceOverrides,
         addedProductsByStep,
         pricing,
-        priceSource: SPK_URAL_PRICE_SOURCE,
+        priceSource: pricing.lines.some((line) => line.isManualPrice) ? { ...SPK_URAL_PRICE_SOURCE, hasManualOverrides: true } : SPK_URAL_PRICE_SOURCE,
       }),
       notes: notes || null,
     };
@@ -234,7 +264,7 @@ export default function ProposalBuilder() {
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-emerald-100"><FileText className="h-3.5 w-3.5" />Рабочее КП</div>
             <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Коммерческое предложение из схемы</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-emerald-50/80">Стоимость рассчитывается автоматически по актуальному прайсу, нормам из схемы и площади. Ручного ввода бюджета нет.</p>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-emerald-50/80">Стоимость рассчитывается по нормам из схемы и площади. Цену каждой позиции можно скорректировать вручную с прозрачной отметкой в расчёте.</p>
           </div>
           <div className="mt-5 rounded-2xl border border-white/10 bg-white/10 p-4 lg:mt-0">
             <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Бюджет по КП</span>
@@ -256,10 +286,10 @@ export default function ProposalBuilder() {
               <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Условие оплаты</span><select value={paymentTerm} onChange={(event) => { setPaymentTerm(event.target.value as PaymentTerm); setSavedProposalId(null); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{Object.entries(PAYMENT_TERMS).map(([value, term]) => <option key={value} value={value}>{term.label}</option>)}</select></label>
               <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Скидка менеджера</span><select value={discountPercent} onChange={(event) => { setDiscountPercent(Number(event.target.value)); setSavedProposalId(null); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]"><option value={0}>Без скидки</option><option value={1}>1%</option><option value={2}>2%</option><option value={3}>3%</option></select></label>
             </div>
-            <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>Основание цены: {SPK_URAL_PRICE_SOURCE.title}.</strong> {PAYMENT_TERMS[paymentTerm].description}. Стоимость считается по норме, фасовке и площади; скидка ограничена 3%.</div>
+            <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>Расчёт по норме, фасовке и площади.</strong> {PAYMENT_TERMS[paymentTerm].description}. Для каждой позиции можно задать ручную цену; скидка ограничена 3%.</div>
             <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Примечание для КП</span><Textarea value={notes} onChange={(event) => { setNotes(event.target.value); setSavedProposalId(null); }} rows={4} placeholder="Условия, договорённости, срок действия предложения" /></label>
             <div className="rounded-xl bg-[#f5f8f4] p-4">
-              <div className="flex items-center gap-2 text-[#194f38]"><CircleDollarSign className="h-5 w-5 text-[#2e7d52]" /><span className="text-xs font-bold uppercase tracking-wide">Итог по актуальному прайсу</span></div>
+              <div className="flex items-center gap-2 text-[#194f38]"><CircleDollarSign className="h-5 w-5 text-[#2e7d52]" /><span className="text-xs font-bold uppercase tracking-wide">Итог по КП</span></div>
               <strong className="mt-2 block text-3xl text-[#12352a]">{pricing ? formatMoneyRange(pricing.minTotal, pricing.maxTotal) : "—"}</strong>
               <p className="mt-1 text-xs text-[#6f7a73]">{pricing ? `${formatMoneyRange(pricing.minPerHectare, pricing.maxPerHectare)} на гектар · ${PAYMENT_TERMS[paymentTerm].label}` : "Укажите площадь для расчёта"}</p>
               {pricing && pricing.managerExcludedProducts.length > 0 && <p className="mt-2 text-xs font-semibold text-amber-700">Менеджер исключил из КП: {pricing.managerExcludedProducts.join(", ")}.</p>}
@@ -296,12 +326,12 @@ export default function ProposalBuilder() {
                       const isManagerExcluded = priceLine?.excludedByManager;
                       const isManagerAdded = product.note === MANAGER_ADDED_NOTE;
                       const packageSummary = priceLine && priceLine.minPackages !== null && priceLine.maxPackages !== null ? `${priceLine.minPackages === priceLine.maxPackages ? priceLine.maxPackages : `${priceLine.minPackages}–${priceLine.maxPackages}`} уп.${priceLine.logistics?.unitsPerPallet ? ` · до ${priceLine.maxPallets} палл.` : ""}` : null;
-                      return <div key={`${step.stage}-${product.name}-${productIndex}`} className={`grid gap-2 px-4 py-3 sm:grid-cols-[1.15fr_0.5fr_0.6fr_0.9fr_1fr] ${isManagerExcluded ? "bg-stone-50 opacity-75" : ""}`}>
+                      return <div key={`${step.stage}-${product.name}-${productIndex}`} className={`grid gap-2 px-4 py-3 sm:grid-cols-[minmax(9rem,1.15fr)_minmax(4rem,0.5fr)_minmax(3.75rem,0.6fr)_minmax(6rem,0.9fr)_minmax(8rem,1fr)] ${isManagerExcluded ? "bg-stone-50 opacity-75" : ""}`}>
                         <div><p className="font-bold text-[#12352a]">{product.name} {isManagerAdded && <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-800">добавлено</span>}</p><p className="mt-0.5 text-xs leading-relaxed text-[#6f7a73]">{product.dv}</p></div>
                         <p className="text-xs font-medium text-[#486656]">{product.group}</p>
                         <p className="text-sm font-bold text-[#194f38]">{product.rate}</p>
                         <div className="rounded-lg bg-[#e8f1e7] px-2 py-1 text-xs font-bold text-[#194f38]"><span className="block">{priceLine?.requirement.label ?? "Укажите площадь"}</span>{packageSummary && !isManagerExcluded && <span className="mt-0.5 block font-medium">К отгрузке: {packageSummary}</span>}{priceLine?.price && !priceLine.logistics && !isManagerExcluded && <span className="mt-0.5 block font-medium text-amber-700">Фасовка не подтверждена</span>}<Button type="button" variant="outline" size="sm" className="mt-2 h-7 w-full bg-white text-[11px]" onClick={() => priceLine && toggleLine(priceLine.key)}>{isManagerExcluded ? "Вернуть в КП" : "Исключить из КП"}</Button></div>
-                        <div className={`rounded-lg px-2 py-1 text-xs font-bold ${priceLine?.price && !isCatalogExcluded && !isManagerExcluded ? "bg-[#eef7ee] text-[#194f38]" : "bg-amber-50 text-amber-800"}`}>{isManagerExcluded ? "Исключено менеджером" : isCatalogExcluded ? "Исключено до получения цены" : priceLine?.price ? <><span className="block">{formatMoney(priceLine.pricePerUnit ?? 0)} / {priceLine.logistics?.unit ?? priceLine.requirement.unit ?? "ед."}</span><span className="block font-medium">{priceLine.minTotal !== null && priceLine.maxTotal !== null ? formatMoneyRange(priceLine.minTotal, priceLine.maxTotal) : "Укажите площадь"}</span></> : "Нет цены в актуальном прайсе"}</div>
+                        <div className={`rounded-lg px-2 py-1 text-xs font-bold ${priceLine?.pricePerUnit !== null && !isManagerExcluded ? "bg-[#eef7ee] text-[#194f38]" : "bg-amber-50 text-amber-800"}`}>{isManagerExcluded ? "Исключено менеджером" : <><label className="block text-[10px] uppercase tracking-wide text-[#567260]">Цена за {priceLine?.logistics?.unit ?? priceLine?.requirement.unit ?? "ед."}</label><Input type="number" min="0" step="0.01" value={priceLine?.isManualPrice ? String(priceLine.pricePerUnit ?? "") : ""} placeholder={priceLine?.catalogPricePerUnit !== null && priceLine?.catalogPricePerUnit !== undefined ? String(priceLine.catalogPricePerUnit) : "Укажите цену"} disabled={!priceLine} onChange={(event) => priceLine && setManualPrice(priceLine.key, event.target.value)} className="mt-1 h-7 border-[#b8cfb8] bg-white px-1.5 text-xs font-bold text-[#194f38]" aria-label={`Ручная цена ${product.name}`} />{priceLine?.isManualPrice ? <button type="button" className="mt-1 text-[10px] font-bold underline underline-offset-2" onClick={() => resetManualPrice(priceLine?.key ?? "")}>Вернуть расчётную цену</button> : <span className="mt-1 block text-[10px] font-medium">{priceLine?.catalogPricePerUnit !== null && priceLine?.catalogPricePerUnit !== undefined ? "Расчётная цена" : "Укажите цену вручную"}</span>}<span className="mt-1 block">{priceLine && priceLine.minTotal !== null && priceLine.maxTotal !== null ? formatMoneyRange(priceLine.minTotal, priceLine.maxTotal) : "Укажите площадь"}</span>{isCatalogExcluded && !priceLine?.isManualPrice && <span className="mt-1 block text-[10px] font-medium text-amber-800">Требуется ручная цена</span>}</>}</div>
                       </div>;
                     })}
                   </div>
@@ -312,7 +342,7 @@ export default function ProposalBuilder() {
                       <select value={selectedProductId ?? ""} onChange={(event) => setProductByStep((current) => ({ ...current, [stepIndex]: Number(event.target.value) }))} className="h-9 rounded-md border border-[#c8d6c8] bg-white px-2 text-xs text-[#194f38]">{categoryProducts.map((product) => <option key={product.id} value={product.id}>{product.name} · {product.rate}</option>)}</select>
                       <Button type="button" size="sm" className="bg-[#194f38] text-white hover:bg-[#12352a]" onClick={() => addProductToStep(stepIndex)}><Plus className="mr-1 h-3.5 w-3.5" />Добавить</Button>
                     </div>
-                    <p className="mt-2 text-[11px] leading-relaxed text-[#66766b]">Для добавленной позиции без цены в актуальном прайсе будет показано предупреждение, а сохранение КП останется недоступным до уточнения цены.</p>
+                    <p className="mt-2 text-[11px] leading-relaxed text-[#66766b]">Для добавленной позиции без расчётной цены укажите ручную цену в строке схемы — итог КП пересчитается автоматически.</p>
                   </div>}
                 </article>;
               })}

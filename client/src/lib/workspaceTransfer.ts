@@ -25,6 +25,7 @@ type StoredScheme = {
     lines?: Array<{
       key?: string;
       pricePerUnit?: number | null;
+      isManualPrice?: boolean;
       minTotal?: number | null;
       maxTotal?: number | null;
       minPackages?: number | null;
@@ -173,6 +174,7 @@ function proposalRows(proposal: ProposalSource) {
       "К отгрузке": packages,
       "Паллеты": line?.maxPallets ?? "",
       "Цена за единицу, ₽": line?.pricePerUnit ?? "",
+      "Тип цены": line?.isManualPrice ? "Ручная" : "Расчётная",
       "Сумма, ₽": line?.maxTotal ?? "",
       "Статус": line?.excludedByManager ? "Исключено менеджером" : "В расчёте",
     };
@@ -194,6 +196,7 @@ export async function downloadProposalWorkbook(proposal: ProposalSource, farm?: 
     ["Стоимость на гектар, ₽", Number(proposal.costPerHectare)],
     ["Итоговая стоимость, ₽", Number(proposal.totalCost)],
     ["Основание цены", stored.priceSource?.title ?? "Актуальный прайс Doctor Farmer"],
+    ["Ручные цены", stored.pricing?.lines?.some((line) => line.isManualPrice) ? "Есть" : "Нет"],
     ["Примечание", proposal.notes ?? ""],
     ["Логистика требует уточнения", stored.pricing?.unconfirmedLogisticsProducts?.join(", ") ?? ""],
     ["Временно не включено", stored.pricing?.excludedProducts?.join(", ") ?? ""],
@@ -201,7 +204,7 @@ export async function downloadProposalWorkbook(proposal: ProposalSource, farm?: 
   overview["!cols"] = [{ wch: 32 }, { wch: 72 }];
   const productRows = proposalRows(proposal);
   const products = XLSX.utils.json_to_sheet(productRows.length ? productRows : [{ "Этап": "Состав схемы не сохранён" }]);
-  setSheetLayout(products, [28, 28, 24, 20, 28, 14, 20, 16, 12, 18, 18, 24]);
+  setSheetLayout(products, [28, 28, 24, 20, 28, 14, 20, 16, 12, 18, 16, 18, 24]);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, overview, "КП");
   XLSX.utils.book_append_sheet(workbook, products, "Состав и расчёт");
@@ -218,9 +221,10 @@ export function printProposalAsPdf(proposal: ProposalSource, farm?: Farm | null)
   const printWindow = window.open("", "_blank");
   if (!printWindow) throw new Error("Браузер заблокировал окно печати. Разрешите всплывающие окна для этого сайта.");
   const productTable = rows.length
-    ? rows.map((row) => `<tr><td>${escapeHtml(row["Этап"])}</td><td>${escapeHtml(row["Препарат"])}</td><td>${escapeHtml(row["Норма"])}</td><td>${escapeHtml(row["Потребность"])}</td><td>${escapeHtml(row["К отгрузке"])}</td><td>${escapeHtml(row["Сумма, ₽"] ? `${money(row["Сумма, ₽"])} ₽` : "")}</td></tr>`).join("")
-    : "<tr><td colspan=6>Состав схемы не сохранён</td></tr>";
-  printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"/><title>${escapeHtml(proposal.title)}</title><style>body{font-family:Arial,sans-serif;color:#15211c;margin:28px;font-size:12px}h1{color:#194f38;font-size:24px;margin:0 0 8px}.label{color:#527060;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:bold}.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:18px 0}.item{background:#f4f8f3;border:1px solid #dce8dc;border-radius:8px;padding:9px}.value{font-weight:bold;font-size:14px;margin-top:3px}table{width:100%;border-collapse:collapse;margin-top:14px}th{background:#194f38;color:white;text-align:left;font-size:10px;padding:8px}td{border-bottom:1px solid #dce8dc;padding:8px;vertical-align:top}.note{margin-top:18px;padding:10px;background:#f5f8f4;white-space:pre-line}@media print{body{margin:12mm}.no-print{display:none}}</style></head><body><p class="label">Doctor Farmer · коммерческое предложение</p><h1>${escapeHtml(proposal.title)}</h1><div class="summary"><div class="item"><span class="label">Хозяйство</span><div class="value">${escapeHtml(farm?.name ?? "Не указано")}</div></div><div class="item"><span class="label">Культура и технология</span><div class="value">${escapeHtml(`${proposal.crop} · ${proposal.technology ?? "—"}`)}</div></div><div class="item"><span class="label">Площадь</span><div class="value">${escapeHtml(proposal.area)} га</div></div><div class="item"><span class="label">Итог по актуальному прайсу</span><div class="value">${money(proposal.totalCost)} ₽</div></div><div class="item"><span class="label">Условие оплаты</span><div class="value">${escapeHtml(stored.paymentTerm ?? "Не указано")}</div></div><div class="item"><span class="label">Скидка</span><div class="value">${escapeHtml(stored.discountPercent ?? 0)}%</div></div></div><h2>Состав схемы и расчёт</h2><table><thead><tr><th>Этап</th><th>Препарат</th><th>Норма</th><th>Потребность</th><th>К отгрузке</th><th>Сумма</th></tr></thead><tbody>${productTable}</tbody></table>${proposal.notes ? `<div class="note"><strong>Примечание</strong><br/>${escapeHtml(proposal.notes)}</div>` : ""}<p class="no-print" style="margin-top:24px;color:#527060">В диалоге печати выберите «Сохранить как PDF».</p><script>window.onload=()=>window.print()</script></body></html>`);
+    ? rows.map((row) => `<tr><td>${escapeHtml(row["Этап"])}</td><td>${escapeHtml(row["Препарат"])}</td><td>${escapeHtml(row["Норма"])}</td><td>${escapeHtml(row["Потребность"])}</td><td>${escapeHtml(row["К отгрузке"])}</td><td>${escapeHtml(row["Тип цены"])}</td><td>${escapeHtml(row["Сумма, ₽"] ? `${money(row["Сумма, ₽"])} ₽` : "")}</td></tr>`).join("")
+    : "<tr><td colspan=7>Состав схемы не сохранён</td></tr>";
+  const hasManualPrices = stored.pricing?.lines?.some((line) => line.isManualPrice) ?? false;
+  printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"/><title>${escapeHtml(proposal.title)}</title><style>body{font-family:Arial,sans-serif;color:#15211c;margin:28px;font-size:12px}h1{color:#194f38;font-size:24px;margin:0 0 8px}.label{color:#527060;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:bold}.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:18px 0}.item{background:#f4f8f3;border:1px solid #dce8dc;border-radius:8px;padding:9px}.value{font-weight:bold;font-size:14px;margin-top:3px}table{width:100%;border-collapse:collapse;margin-top:14px}th{background:#194f38;color:white;text-align:left;font-size:10px;padding:8px}td{border-bottom:1px solid #dce8dc;padding:8px;vertical-align:top}.note{margin-top:18px;padding:10px;background:#f5f8f4;white-space:pre-line}@media print{body{margin:12mm}.no-print{display:none}}</style></head><body><p class="label">Doctor Farmer · коммерческое предложение</p><h1>${escapeHtml(proposal.title)}</h1><div class="summary"><div class="item"><span class="label">Хозяйство</span><div class="value">${escapeHtml(farm?.name ?? "Не указано")}</div></div><div class="item"><span class="label">Культура и технология</span><div class="value">${escapeHtml(`${proposal.crop} · ${proposal.technology ?? "—"}`)}</div></div><div class="item"><span class="label">Площадь</span><div class="value">${escapeHtml(proposal.area)} га</div></div><div class="item"><span class="label">Итог по КП</span><div class="value">${money(proposal.totalCost)} ₽</div></div><div class="item"><span class="label">Условие оплаты</span><div class="value">${escapeHtml(stored.paymentTerm ?? "Не указано")}</div></div><div class="item"><span class="label">Ручные цены</span><div class="value">${hasManualPrices ? "Есть" : "Нет"}</div></div></div><h2>Состав схемы и расчёт</h2><table><thead><tr><th>Этап</th><th>Препарат</th><th>Норма</th><th>Потребность</th><th>К отгрузке</th><th>Тип цены</th><th>Сумма</th></tr></thead><tbody>${productTable}</tbody></table>${proposal.notes ? `<div class="note"><strong>Примечание</strong><br/>${escapeHtml(proposal.notes)}</div>` : ""}<p class="no-print" style="margin-top:24px;color:#527060">В диалоге печати выберите «Сохранить как PDF».</p><script>window.onload=()=>window.print()</script></body></html>`);
   printWindow.document.close();
 }
 
