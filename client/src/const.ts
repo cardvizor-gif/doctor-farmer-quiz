@@ -3,6 +3,7 @@ import { encodeOAuthState, OAUTH_STATE_COOKIE } from "@shared/const";
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
 let loginNavigationStarted = false;
+export const OAUTH_NONCE_COOKIE_ATTRIBUTES = "Path=/; Max-Age=600; SameSite=Lax; Secure";
 
 export function readCookieValue(cookieHeader: string, name: string) {
   const prefix = `${name}=`;
@@ -32,7 +33,7 @@ export const getLoginUrl = () => {
   // double-click or a second app-open from an email does not desynchronise an
   // in-flight callback; mint a fresh host-only cookie only when none exists.
   if (!existingNonce) {
-    document.cookie = `${OAUTH_STATE_COOKIE}=${encodeURIComponent(nonce)}; Path=/; Max-Age=600; SameSite=None; Secure`;
+    document.cookie = `${OAUTH_STATE_COOKIE}=${encodeURIComponent(nonce)}; ${OAUTH_NONCE_COOKIE_ATTRIBUTES}`;
   }
   const state = encodeOAuthState({ redirectUri, nonce });
 

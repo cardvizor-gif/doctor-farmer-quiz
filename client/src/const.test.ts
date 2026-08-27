@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { readCookieValue, resolveOAuthNonce } from "./const";
+import { OAUTH_NONCE_COOKIE_ATTRIBUTES, readCookieValue, resolveOAuthNonce } from "./const";
 
 describe("OAuth login nonce", () => {
   it("reuses an active host-only nonce instead of overwriting an in-flight login", () => {
@@ -18,5 +18,11 @@ describe("OAuth login nonce", () => {
 
   it("decodes an encoded cookie value safely", () => {
     expect(readCookieValue("__Host-oauth_state=nonce%2Fwith%3Dsymbols", "__Host-oauth_state")).toBe("nonce/with=symbols");
+  });
+
+  it("uses a secure Lax cookie for the top-level OAuth callback", () => {
+    expect(OAUTH_NONCE_COOKIE_ATTRIBUTES).toContain("SameSite=Lax");
+    expect(OAUTH_NONCE_COOKIE_ATTRIBUTES).toContain("Secure");
+    expect(OAUTH_NONCE_COOKIE_ATTRIBUTES).not.toContain("SameSite=None");
   });
 });
