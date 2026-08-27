@@ -22,6 +22,13 @@
       "when": 1787656790950,
       "tag": "0002_fast_thunderbird",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1787809346624,
+      "tag": "0003_massive_nekra",
+      "breakpoints": true
     }
   ]
 }

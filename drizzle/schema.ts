@@ -1,4 +1,4 @@
-import { decimal, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { decimal, index, int, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -78,7 +78,31 @@ export const proposals = mysqlTable(
   table => [index("proposals_farm_idx").on(table.farmId), index("proposals_status_idx").on(table.status)],
 );
 
+export const accessRequests = mysqlTable(
+  "accessRequests",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    email: varchar("email", { length: 320 }).notNull(),
+    requestedName: varchar("requestedName", { length: 120 }).notNull(),
+    status: mysqlEnum("status", ["pending", "approved", "rejected", "activated"]).notNull().default("pending"),
+    reviewedByOpenId: varchar("reviewedByOpenId", { length: 64 }),
+    reviewedAt: timestamp("reviewedAt"),
+    inviteCodeHash: varchar("inviteCodeHash", { length: 128 }),
+    inviteCodeExpiresAt: timestamp("inviteCodeExpiresAt"),
+    inviteCodeUsedAt: timestamp("inviteCodeUsedAt"),
+    localOpenId: varchar("localOpenId", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [
+    uniqueIndex("access_requests_email_unique").on(table.email),
+    index("access_requests_status_created_idx").on(table.status, table.createdAt),
+  ],
+);
+
 export type Farm = typeof farms.$inferSelect;
 export type InsertFarm = typeof farms.$inferInsert;
 export type Proposal = typeof proposals.$inferSelect;
 export type InsertProposal = typeof proposals.$inferInsert;
+export type AccessRequest = typeof accessRequests.$inferSelect;
+export type InsertAccessRequest = typeof accessRequests.$inferInsert;

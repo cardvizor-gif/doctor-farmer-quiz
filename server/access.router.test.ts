@@ -1,0 +1,64 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { TrpcContext } from "./_core/context";
+
+vi.mock("./db", () => ({
+  requestAccess: vi.fn(), listAccessRequests: vi.fn(), approveAccessRequest: vi.fn(), rejectAccessRequest: vi.fn(),
+  findActiveInvite: vi.fn(), consumeInvite: vi.fn(), upsertUser: vi.fn(), getUserByOpenId: vi.fn(),
+}));
+vi.mock("./_core/sdk", () => ({ sdk: { createSessionToken: vi.fn().mockResolvedValue("local-session") } }));
+
+import * as db from "./db";
+import { appRouter } from "./routers";
+
+const request = { id: 7, email: "colleague@example.com", requestedName: "Коллега", status: "pending" as const, reviewedByOpenId: null, reviewedAt: null, inviteCodeHash: null, inviteCodeExpiresAt: null, inviteCodeUsedAt: null, localOpenId: null, createdAt: new Date(), updatedAt: new Date() };
+const user = { id: 4, openId: "invite_test", name: "Коллега", displayName: "Коллега", email: request.email, loginMethod: "invite", role: "user" as const, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() };
+function context(role: "admin" | "user" | null): TrpcContext & { res: { cookie: ReturnType<typeof vi.fn> } } {
+  return { user: role ? { ...user, openId: role === "admin" ? "owner" : "other", role } : null, req: { protocol: "https", headers: {} } as TrpcContext["req"], res: { cookie: vi.fn(), clearCookie: vi.fn() } as unknown as TrpcContext["res"] } as TrpcContext & { res: { cookie: ReturnType<typeof vi.fn> } };
+}
+
+describe("access invitations", () => {
+  beforeEach(() => vi.clearAllMocks());
+  it("accepts a public access request without disclosing request data", async () => {
+    const caller = appRouter.createCaller(context(null));
+    await expect(caller.access.request({ requestedName: "Коллега", email: request.email })).resolves.toEqual({ accepted: true });
+    expect(db.requestAccess).toHaveBeenCalledWith({ requestedName: "Коллега", email: request.email });
+  });
+  it("limits request review and invitation codes to the administrator", async () => {
+    vi.mocked(db.approveAccessRequest).mockResolvedValue({ ...request, status: "approved" });
+    const guest = appRouter.createCaller(context("user"));
+    const admin = appRouter.createCaller(context("admin"));
+    await expect(guest.access.list()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(guest.access.approve({ id: request.id })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(admin.access.approve({ id: request.id })).resolves.toMatchObject({ request: expect.objectContaining({ id: request.id }), code: expect.stringMatching(/^[A-Z2-9]{10}$/) });
+  });
+  it("activates a valid one-time invitation into a new isolated user session", async () => {
+    const code = "ABCDEFGHJK";
+    const hash = (await import("crypto")).createHash("sha256").update(code).digest("hex");
+    vi.mocked(db.findActiveInvite).mockResolvedValue({ ...request, status: "approved", inviteCodeHash: hash, inviteCodeExpiresAt: new Date(Date.now() + 60000) });
+    vi.mocked(db.consumeInvite).mockResolvedValue(true);
+    vi.mocked(db.getUserByOpenId).mockResolvedValue(user);
+    const ctx = context(null);
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.access.activate({ email: request.email, code })).resolves.toEqual(user);
+    expect(db.consumeInvite).toHaveBeenCalledWith(request.id, hash, expect.stringMatching(/^invite_/));
+    expect(ctx.res.cookie).toHaveBeenCalledWith(expect.any(String), "local-session", expect.objectContaining({ httpOnly: true, maxAge: 2592000000 }));
+  });
+
+  it("allows only the administrator to reject a pending request", async () => {
+    vi.mocked(db.rejectAccessRequest).mockResolvedValue({ ...request, status: "rejected" });
+    const guest = appRouter.createCaller(context("user"));
+    const admin = appRouter.createCaller(context("admin"));
+    await expect(guest.access.reject({ id: request.id })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(admin.access.reject({ id: request.id })).resolves.toMatchObject({ status: "rejected" });
+    expect(db.rejectAccessRequest).toHaveBeenCalledWith(request.id, "owner");
+  });
+
+  it("does not create a session for an unknown, expired, or already used invitation", async () => {
+    vi.mocked(db.findActiveInvite).mockResolvedValue(undefined);
+    const ctx = context(null);
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.access.activate({ email: request.email, code: "ABCDEFGHJK" })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    expect(db.consumeInvite).not.toHaveBeenCalled();
+    expect(ctx.res.cookie).not.toHaveBeenCalled();
+  });
+});

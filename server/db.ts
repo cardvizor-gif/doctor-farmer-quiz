@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { farms, InsertFarm, InsertProposal, InsertUser, proposals, users } from "../drizzle/schema";
+import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, proposals, users } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
 import { ENV } from './_core/env';
 
@@ -237,4 +237,100 @@ export async function claimLegacyFarms(ownerOpenId: string) {
   if (!db) throw new Error("База данных недоступна");
   const result = await db.update(farms).set({ ownerOpenId }).where(isNull(farms.ownerOpenId));
   return { claimed: Number(result[0].affectedRows ?? 0) };
+}
+
+type AccessRequestInput = { requestedName: string; email: string };
+
+const normalizeAccessEmail = (email: string) => email.trim().toLowerCase();
+
+export async function requestAccess(input: AccessRequestInput) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const email = normalizeAccessEmail(input.email);
+  const requestedName = input.requestedName.trim();
+  const existing = await db.select().from(accessRequests).where(eq(accessRequests.email, email)).limit(1);
+
+  if (existing[0]?.status === "pending" || existing[0]?.status === "activated") return existing[0];
+  if (existing[0]) {
+    await db.update(accessRequests).set({
+      requestedName,
+      status: "pending",
+      reviewedByOpenId: null,
+      reviewedAt: null,
+      inviteCodeHash: null,
+      inviteCodeExpiresAt: null,
+      inviteCodeUsedAt: null,
+      localOpenId: null,
+    }).where(eq(accessRequests.id, existing[0].id));
+    const refreshed = await db.select().from(accessRequests).where(eq(accessRequests.id, existing[0].id)).limit(1);
+    return refreshed[0];
+  }
+
+  const result = await db.insert(accessRequests).values({ email, requestedName, status: "pending" });
+  const created = await db.select().from(accessRequests).where(eq(accessRequests.id, Number(result[0].insertId))).limit(1);
+  return created[0];
+}
+
+export async function listAccessRequests() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(accessRequests).orderBy(desc(accessRequests.createdAt));
+}
+
+export async function getAccessRequestById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(accessRequests).where(eq(accessRequests.id, id)).limit(1);
+  return result[0];
+}
+
+export async function approveAccessRequest(id: number, reviewerOpenId: string, inviteCodeHash: string, expiresAt: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const request = await getAccessRequestById(id);
+  if (!request || request.status !== "pending") return undefined;
+  await db.update(accessRequests).set({
+    status: "approved",
+    reviewedByOpenId: reviewerOpenId,
+    reviewedAt: new Date(),
+    inviteCodeHash,
+    inviteCodeExpiresAt: expiresAt,
+    inviteCodeUsedAt: null,
+  }).where(eq(accessRequests.id, id));
+  return getAccessRequestById(id);
+}
+
+export async function rejectAccessRequest(id: number, reviewerOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const request = await getAccessRequestById(id);
+  if (!request || request.status !== "pending") return undefined;
+  await db.update(accessRequests).set({
+    status: "rejected",
+    reviewedByOpenId: reviewerOpenId,
+    reviewedAt: new Date(),
+    inviteCodeHash: null,
+    inviteCodeExpiresAt: null,
+  }).where(eq(accessRequests.id, id));
+  return getAccessRequestById(id);
+}
+
+export async function findActiveInvite(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(accessRequests).where(eq(accessRequests.email, normalizeAccessEmail(email))).limit(1);
+  const request = result[0];
+  if (!request || request.status !== "approved" || !request.inviteCodeHash || !request.inviteCodeExpiresAt || request.inviteCodeExpiresAt.getTime() <= Date.now()) return undefined;
+  return request;
+}
+
+export async function consumeInvite(id: number, inviteCodeHash: string, localOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const result = await db.update(accessRequests).set({
+    status: "activated",
+    inviteCodeUsedAt: new Date(),
+    localOpenId,
+  }).where(and(eq(accessRequests.id, id), eq(accessRequests.status, "approved"), eq(accessRequests.inviteCodeHash, inviteCodeHash), isNull(accessRequests.inviteCodeUsedAt)));
+  return Number(result[0].affectedRows ?? 0) === 1;
 }

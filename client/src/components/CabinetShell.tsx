@@ -1,10 +1,11 @@
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import CabinetSearchDialog from "@/components/CabinetSearchDialog";
 import CabinetSupportDialog from "@/components/CabinetSupportDialog";
+import AccessPortalDialog from "@/components/AccessPortalDialog";
 import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Bell, BookOpen, Building2, ChevronDown, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, PencilLine, Save, Search, Sprout, Trophy, X } from "lucide-react";
+import { Bell, BookOpen, Building2, ChevronDown, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 
@@ -48,6 +49,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isAccessOpen, setIsAccessOpen] = useState(false);
   const [displayNameDraft, setDisplayNameDraft] = useState("");
   const { user, loading: isAuthLoading, logout } = useAuth();
   const utils = trpc.useUtils();
@@ -146,10 +148,11 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
                 </button>
                 {isAccountMenuOpen && <div className="cabinet-account-menu" role="menu" aria-label="Меню аккаунта">
                   <div className="cabinet-account-menu-identity"><span className="cabinet-account-avatar is-large" aria-hidden="true">{account.initials}</span><div><strong>{account.name}</strong><span>{account.email}</span></div></div>
+                  {user.role === "admin" && <Link href="/access-requests" role="menuitem" className="cabinet-account-edit-trigger" onClick={() => setIsAccountMenuOpen(false)}><ShieldCheck className="h-4 w-4" />Заявки доступа</Link>}
                   {isEditingProfile ? <div className="cabinet-account-edit"><label htmlFor="cabinet-display-name">Отображаемое имя</label><input id="cabinet-display-name" value={displayNameDraft} onChange={(event) => setDisplayNameDraft(event.target.value)} maxLength={120} autoFocus /><div><button type="button" onClick={() => setIsEditingProfile(false)}>Отмена</button><button type="button" onClick={saveProfileName} disabled={displayNameDraft.trim().length < 2 || updateProfile.isPending}><Save className="h-3.5 w-3.5" />{updateProfile.isPending ? "Сохраняем…" : "Сохранить"}</button></div>{updateProfile.error && <p role="alert">Не удалось сохранить имя. Повторите ещё раз.</p>}</div> : <button type="button" role="menuitem" className="cabinet-account-edit-trigger" onClick={startProfileEdit}><PencilLine className="h-4 w-4" />Изменить отображаемое имя</button>}
                   <button type="button" role="menuitem" className="cabinet-account-logout" onClick={() => void handleLogout()} disabled={isLoggingOut}><LogOut className="h-4 w-4" />{isLoggingOut ? "Выходим…" : "Выйти из аккаунта"}</button>
                 </div>}
-              </div> : <button type="button" className="cabinet-login-button" onClick={startLogin}>Войти</button>)}
+              </div> : <button type="button" className="cabinet-login-button" onClick={() => setIsAccessOpen(true)}>Войти</button>)}
               <Link href="/proposals/new" className="cabinet-new-proposal">Новое КП</Link>
             </div>
           </header>
@@ -158,6 +161,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
       </div>
       <CabinetSearchDialog open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <CabinetSupportDialog open={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
+      <AccessPortalDialog open={isAccessOpen} onClose={() => setIsAccessOpen(false)} />
     </div>
   );
 }

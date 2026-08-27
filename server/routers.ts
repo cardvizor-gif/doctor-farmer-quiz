@@ -2,10 +2,12 @@ import { COOKIE_NAME } from "@shared/const";
 import { farmInputSchema, proposalInputSchema, proposalStatuses } from "@shared/farm";
 import { FARM_IMPORT_MAX_ROWS } from "@shared/farmImport";
 import { TRPCError } from "@trpc/server";
+import { createHash, randomBytes, timingSafeEqual } from "crypto";
 import { z } from "zod";
 import * as db from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
+import { sdk } from "./_core/sdk";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
 export const appRouter = router({
@@ -24,6 +26,46 @@ export const appRouter = router({
       return {
         success: true,
       } as const;
+    }),
+  }),
+  access: router({
+    request: publicProcedure.input(z.object({
+      requestedName: z.string().trim().min(2, "Укажите имя").max(120),
+      email: z.string().trim().email("Укажите рабочий e-mail").max(320),
+    })).mutation(async ({ input }) => {
+      await db.requestAccess(input);
+      return { accepted: true } as const;
+    }),
+    list: adminProcedure.query(() => db.listAccessRequests()),
+    approve: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+      const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const code = Array.from(randomBytes(10), byte => alphabet[byte % alphabet.length]).join("");
+      const codeHash = createHash("sha256").update(code).digest("hex");
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const request = await db.approveAccessRequest(input.id, ctx.user.openId, codeHash, expiresAt);
+      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка не найдена или уже обработана" });
+      return { request, code, expiresAt };
+    }),
+    reject: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+      const request = await db.rejectAccessRequest(input.id, ctx.user.openId);
+      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка не найдена или уже обработана" });
+      return request;
+    }),
+    activate: publicProcedure.input(z.object({ email: z.string().trim().email().max(320), code: z.string().trim().length(10, "Код должен состоять из 10 символов") })).mutation(async ({ input, ctx }) => {
+      const invite = await db.findActiveInvite(input.email);
+      const attemptedHash = createHash("sha256").update(input.code.toUpperCase()).digest("hex");
+      const hashesMatch = invite?.inviteCodeHash && timingSafeEqual(Buffer.from(invite.inviteCodeHash), Buffer.from(attemptedHash));
+      if (!invite || !hashesMatch) throw new TRPCError({ code: "UNAUTHORIZED", message: "Неверный или истёкший код приглашения" });
+
+      const openId = `invite_${randomBytes(16).toString("hex")}`;
+      const consumed = await db.consumeInvite(invite.id, attemptedHash, openId);
+      if (!consumed) throw new TRPCError({ code: "UNAUTHORIZED", message: "Код уже использован или истёк" });
+      await db.upsertUser({ openId, name: invite.requestedName, displayName: invite.requestedName, email: invite.email, loginMethod: "invite", lastSignedIn: new Date() });
+      const user = await db.getUserByOpenId(openId);
+      if (!user) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Не удалось активировать кабинет" });
+      const sessionToken = await sdk.createSessionToken(openId, { name: invite.requestedName, expiresInMs: 30 * 24 * 60 * 60 * 1000 });
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(ctx.req), maxAge: 30 * 24 * 60 * 60 * 1000 });
+      return user;
     }),
   }),
   farms: router({
