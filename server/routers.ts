@@ -70,6 +70,7 @@ export const appRouter = router({
   }),
   admin: router({
     team: adminProcedure.query(() => db.listTeamMembers()),
+    teamFarms: adminProcedure.query(() => db.listTeamFarms()),
     memberWorkspace: adminProcedure.input(z.object({ openId: z.string().trim().min(1).max(64) })).query(async ({ input }) => {
       const workspace = await db.getTeamMemberWorkspace(input.openId);
       if (!workspace) throw new TRPCError({ code: "NOT_FOUND", message: "Сотрудник не найден" });

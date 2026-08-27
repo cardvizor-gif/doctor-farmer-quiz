@@ -10,6 +10,7 @@ type ImportFilePreview = {
 };
 
 type ProposalSource = Pick<Proposal, "id" | "title" | "crop" | "technology" | "area" | "costPerHectare" | "totalCost" | "status" | "schemeJson" | "notes">;
+type TeamFarmExport = Farm & { managerName: string; managerEmail: string | null };
 
 type StoredScheme = {
   scheme?: {
@@ -115,6 +116,38 @@ export async function downloadFarmsWorkbook(farms: Farm[]) {
   downloadWorkbook(XLSX, workbook, "Doctor-Farmer-реестр-хозяйств.xlsx");
 }
 
+export function teamFarmExportRows(farms: TeamFarmExport[]) {
+  return farms.map((farm) => ({
+    "Менеджер": farm.managerName,
+    "E-mail менеджера": farm.managerEmail ?? "",
+    "Название хозяйства": farm.name,
+    "Район": farm.district ?? "",
+    "Населённый пункт": farm.settlement ?? "",
+    "Контактное лицо": farm.contactName ?? "",
+    "Должность": farm.contactRole ?? "",
+    "Телефон": farm.phone ?? "",
+    "E-mail хозяйства": farm.email ?? "",
+    "Площадь, га": Number(farm.totalArea),
+    "Культуры и площадь по ним": farm.crops ?? "",
+    "Технология": farm.technology ?? "",
+    "Статус работы": farm.salesStage,
+    "Потенциал, ₽": Number(farm.potentialValue),
+    "Следующее действие": farm.nextAction ?? "",
+    "Дата следующего действия": dateText(farm.nextActionAt),
+    "Рабочие заметки": farm.notes ?? "",
+  }));
+}
+
+export async function downloadTeamFarmsWorkbook(farms: TeamFarmExport[], fileName = "Doctor-Farmer-реестр-хозяйств-команды.xlsx") {
+  const XLSX = await loadXlsx();
+  const rows = teamFarmExportRows(farms);
+  const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ "Менеджер": "Нет сохранённых хозяйств" }]);
+  setSheetLayout(sheet, [22, 28, 32, 20, 20, 24, 20, 18, 28, 14, 42, 20, 18, 18, 34, 22, 48]);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, "Хозяйства команды");
+  downloadWorkbook(XLSX, workbook, fileName);
+}
+
 function parseStoredScheme(value: string): StoredScheme {
   try {
     const parsed = JSON.parse(value) as StoredScheme;
@@ -191,4 +224,4 @@ export function printProposalAsPdf(proposal: ProposalSource, farm?: Farm | null)
   printWindow.document.close();
 }
 
-export type { ImportFilePreview, ProposalSource };
+export type { ImportFilePreview, ProposalSource, TeamFarmExport };

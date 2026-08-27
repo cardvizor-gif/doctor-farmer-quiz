@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { printProposalAsPdf } from "./workspaceTransfer";
+import { printProposalAsPdf, teamFarmExportRows } from "./workspaceTransfer";
 
 describe("proposal PDF print document", () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -33,5 +33,41 @@ describe("proposal PDF print document", () => {
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Тайсон, КС"));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Тестовое КП &lt;проверка&gt;"));
     expect(close).toHaveBeenCalledOnce();
+  });
+});
+
+describe("team farm Excel rows", () => {
+  it("includes the owning manager together with farm fields in the administrative export", () => {
+    const rows = teamFarmExportRows([{
+      id: 1,
+      ownerOpenId: "employee-1",
+      managerName: "Светлана",
+      managerEmail: "svetlana@example.com",
+      name: "КФХ Север",
+      district: "Ишимбайский",
+      settlement: null,
+      contactName: "Иван Петров",
+      contactRole: null,
+      phone: null,
+      email: null,
+      totalArea: "420.0",
+      crops: "Ячмень",
+      technology: null,
+      salesStage: "proposal",
+      potentialValue: "120000.00",
+      nextAction: "Подготовить КП",
+      nextActionAt: null,
+      notes: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }]);
+
+    expect(rows).toEqual([expect.objectContaining({
+      "Менеджер": "Светлана",
+      "E-mail менеджера": "svetlana@example.com",
+      "Название хозяйства": "КФХ Север",
+      "Площадь, га": 420,
+      "Статус работы": "proposal",
+    })]);
   });
 });

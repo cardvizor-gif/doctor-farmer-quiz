@@ -124,6 +124,21 @@ export async function getTeamMemberWorkspace(openId: string) {
   return { member, farms: memberFarms, proposals: memberProposals };
 }
 
+export async function listTeamFarms() {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select({ farm: farms, owner: users })
+    .from(farms)
+    .innerJoin(users, eq(farms.ownerOpenId, users.openId))
+    .orderBy(desc(farms.updatedAt));
+  return rows.map(({ farm, owner }) => ({
+    ...farm,
+    managerName: owner.displayName?.trim() || owner.name?.trim() || owner.email?.split("@")[0] || "Сотрудник",
+    managerEmail: owner.email,
+  }));
+}
+
 function toNullable(value: string | null | undefined) {
   return value?.trim() ? value.trim() : null;
 }

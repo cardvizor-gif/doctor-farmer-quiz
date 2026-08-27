@@ -14,6 +14,7 @@ vi.mock("./db", () => ({
   createProposal: vi.fn(),
   updateProposalStatus: vi.fn(),
   listTeamMembers: vi.fn(),
+  listTeamFarms: vi.fn(),
   getTeamMemberWorkspace: vi.fn(),
 }));
 
@@ -190,5 +191,16 @@ describe("farms and proposals privacy", () => {
     await expect(adminCaller.admin.team()).resolves.toEqual([teamMember]);
     await expect(adminCaller.admin.memberWorkspace({ openId: otherOpenId })).resolves.toMatchObject({ member: teamMember, farms: [farm], proposals: [proposal] });
     expect(db.getTeamMemberWorkspace).toHaveBeenCalledWith(otherOpenId);
+  });
+
+  it("allows only the administrator to retrieve farm rows for the team export", async () => {
+    const teamFarm = { ...farm, managerName: "Сотрудник", managerEmail: "employee@example.com" };
+    vi.mocked(db.listTeamFarms).mockResolvedValue([teamFarm]);
+    const adminCaller = appRouter.createCaller(createContext(ownerOpenId, "admin"));
+    const employeeCaller = appRouter.createCaller(createContext(otherOpenId));
+
+    await expect(employeeCaller.admin.teamFarms()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(adminCaller.admin.teamFarms()).resolves.toEqual([teamFarm]);
+    expect(db.listTeamFarms).toHaveBeenCalledOnce();
   });
 });
