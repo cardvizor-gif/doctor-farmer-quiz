@@ -36,6 +36,13 @@
       "when": 1787814022597,
       "tag": "0004_naive_scrambler",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1787820473613,
+      "tag": "0005_wakeful_corsair",
+      "breakpoints": true
     }
   ]
 }

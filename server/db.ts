@@ -1,8 +1,9 @@
 import { and, count, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, orderRequestItems, orderRequests, proposals, shipmentItems, shipments, users } from "../drizzle/schema";
+import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, orderRequestItems, orderRequests, proposals, shipmentItems, shipments, supportAttachments, supportTickets, users } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
 import { ENV } from './_core/env';
+import { storagePut } from "./storage";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -209,6 +210,14 @@ export type ShipmentInput = {
   items: Array<{ requestItemId: number; quantity: number; unitPrice: number }>;
 };
 
+export type SupportAttachmentInput = { fileName: string; mimeType: string; dataBase64: string };
+export type SupportTicketInput = { subject?: string | null; message: string; pagePath: string; attachments?: SupportAttachmentInput[] };
+
+function safeAttachmentName(fileName: string) {
+  const normalized = fileName.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-+/g, "-").replace(/^[-.]+|[-.]+$/g, "");
+  return normalized.slice(0, 160) || "attachment";
+}
+
 function requestItemsValues(requestId: number, items: OrderItemInput[]) {
   return items.map((item) => ({
     requestId,
@@ -349,6 +358,72 @@ export async function createShipment(requestId: number, input: ShipmentInput, ow
     await tx.update(orderRequests).set({ status: allShipped ? "shipped" : "partial" }).where(and(eq(orderRequests.id, requestId), eq(orderRequests.ownerOpenId, ownerOpenId)));
   });
   return getOrderRequestById(requestId, ownerOpenId);
+}
+
+export async function listSupportTickets(ownerOpenId: string, includeAll = false) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select({ ticket: supportTickets, sender: users })
+    .from(supportTickets)
+    .leftJoin(users, eq(supportTickets.ownerOpenId, users.openId))
+    .where(includeAll ? undefined : eq(supportTickets.ownerOpenId, ownerOpenId))
+    .orderBy(desc(supportTickets.updatedAt));
+  return rows.map(({ ticket, sender }) => ({
+    ...ticket,
+    senderName: sender?.displayName?.trim() || sender?.name?.trim() || sender?.email?.split("@")[0] || "Сотрудник",
+    senderEmail: sender?.email ?? null,
+  }));
+}
+
+export async function getSupportTicketById(id: number, viewerOpenId: string, includeAll = false) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db
+    .select({ ticket: supportTickets, sender: users })
+    .from(supportTickets)
+    .leftJoin(users, eq(supportTickets.ownerOpenId, users.openId))
+    .where(includeAll ? eq(supportTickets.id, id) : and(eq(supportTickets.id, id), eq(supportTickets.ownerOpenId, viewerOpenId)))
+    .limit(1);
+  const entry = rows[0];
+  if (!entry) return undefined;
+  const attachments = await db.select().from(supportAttachments).where(eq(supportAttachments.ticketId, id)).orderBy(supportAttachments.id);
+  return {
+    ...entry.ticket,
+    senderName: entry.sender?.displayName?.trim() || entry.sender?.name?.trim() || entry.sender?.email?.split("@")[0] || "Сотрудник",
+    senderEmail: entry.sender?.email ?? null,
+    attachments: attachments.map((attachment) => ({ ...attachment, url: `/manus-storage/${attachment.storageKey}` })),
+  };
+}
+
+export async function createSupportTicket(input: SupportTicketInput, ownerOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const uploads = await Promise.all((input.attachments ?? []).map(async (attachment) => {
+    const data = Buffer.from(attachment.dataBase64, "base64");
+    const stored = await storagePut(`support/${ownerOpenId}/${Date.now()}-${safeAttachmentName(attachment.fileName)}`, data, attachment.mimeType);
+    return { fileName: attachment.fileName.trim(), storageKey: stored.key, mimeType: attachment.mimeType, sizeBytes: data.byteLength };
+  }));
+  const ticketId = await db.transaction(async (tx) => {
+    const created = await tx.insert(supportTickets).values({
+      ownerOpenId,
+      subject: input.subject?.trim() || "Обращение в поддержку",
+      message: input.message.trim(),
+      pagePath: input.pagePath.trim() || "/",
+    });
+    const id = Number(created[0].insertId);
+    if (uploads.length) await tx.insert(supportAttachments).values(uploads.map((attachment) => ({ ...attachment, ticketId: id })));
+    return id;
+  });
+  return getSupportTicketById(ticketId, ownerOpenId);
+}
+
+export async function updateSupportTicketStatus(id: number, status: "new" | "in_progress" | "resolved") {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  await db.update(supportTickets).set({ status }).where(eq(supportTickets.id, id));
+  const rows = await db.select().from(supportTickets).where(eq(supportTickets.id, id)).limit(1);
+  return rows[0];
 }
 
 export async function listFarms(ownerOpenId: string) {

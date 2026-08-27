@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountIdentity } from "./CabinetShell";
+import { accountIdentity, cabinetPageTitle } from "./CabinetShell";
 
 describe("accountIdentity", () => {
   it("uses the authenticated name and email in the account menu", () => {
@@ -23,5 +23,9 @@ describe("accountIdentity", () => {
       name: "Шамиль Вильданов",
       initials: "ШВ",
     });
+  });
+
+  it("uses a dedicated page title for the internal support ticket list", () => {
+    expect(cabinetPageTitle("/support")).toBe("Обращения");
   });
 });

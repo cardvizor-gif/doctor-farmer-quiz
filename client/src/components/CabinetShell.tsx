@@ -6,7 +6,7 @@ import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { countPendingAccessRequests } from "@/lib/accessRequests";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, Building2, ChevronDown, ClipboardList, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
+import { BookOpen, Building2, ChevronDown, ClipboardList, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 
@@ -21,6 +21,7 @@ export const cabinetNavigation = [
 ] as const;
 
 export function cabinetPageTitle(pathname: string) {
+  if (pathname.startsWith("/support")) return "Обращения";
   return cabinetNavigation.find((item) => item.href === pathname)?.label ?? "Рабочий кабинет";
 }
 
@@ -30,6 +31,7 @@ function cabinetTheme(pathname: string) {
   if (pathname.startsWith("/farms")) return "farms";
   if (pathname.startsWith("/proposals")) return "proposal";
   if (pathname.startsWith("/order-requests")) return "proposal";
+  if (pathname.startsWith("/support")) return "overview";
   if (pathname.startsWith("/knowledge-base")) return "knowledge";
   if (pathname.startsWith("/quiz")) return "quiz";
   return "overview";
@@ -60,6 +62,10 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
     enabled: user?.role === "admin",
     staleTime: 15_000,
   });
+  const { data: supportTickets } = trpc.support.list.useQuery(undefined, {
+    enabled: Boolean(user),
+    staleTime: 15_000,
+  });
   const updateProfile = trpc.auth.updateProfile.useMutation({
     onSuccess: (updatedUser) => {
       utils.auth.me.setData(undefined, updatedUser);
@@ -70,6 +76,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const pageTheme = cabinetTheme(location);
   const account = accountIdentity(user);
   const pendingAccessRequests = countPendingAccessRequests(accessRequests);
+  const newSupportTickets = (supportTickets ?? []).filter((ticket) => ticket.status === "new").length;
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -151,6 +158,9 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
               {user?.role === "admin" && <Link href="/access-requests" className="cabinet-access-requests-link" aria-label={pendingAccessRequests > 0 ? `Заявки доступа: ${pendingAccessRequests} новых` : "Заявки доступа: новых нет"}>
                 <ShieldCheck className="h-4 w-4" aria-hidden="true" /><span>Заявки</span>{pendingAccessRequests > 0 && <strong aria-hidden="true">{pendingAccessRequests}</strong>}
               </Link>}
+              {user && <Link href="/support" className="cabinet-access-requests-link" aria-label={newSupportTickets > 0 ? `Обращения: ${newSupportTickets} новых` : "Открыть обращения"}>
+                <MessageSquareText className="h-4 w-4" aria-hidden="true" /><span>Обращения</span>{newSupportTickets > 0 && <strong aria-hidden="true">{newSupportTickets}</strong>}
+              </Link>}
               {!isAuthLoading && (user ? <div className="cabinet-account-wrap">
                 <button type="button" className="cabinet-account-trigger" onClick={() => setIsAccountMenuOpen((open) => !open)} aria-expanded={isAccountMenuOpen} aria-haspopup="menu">
                   <span className="cabinet-account-avatar" aria-hidden="true">{account.initials}</span>
@@ -164,7 +174,6 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
                   <button type="button" role="menuitem" className="cabinet-account-logout" onClick={() => void handleLogout()} disabled={isLoggingOut}><LogOut className="h-4 w-4" />{isLoggingOut ? "Выходим…" : "Выйти из аккаунта"}</button>
                 </div>}
               </div> : <button type="button" className="cabinet-login-button" onClick={() => setIsAccessOpen(true)}>Войти</button>)}
-              <Link href="/proposals/new" className="cabinet-new-proposal">Новое КП</Link>
             </div>
           </header>
           <main className="cabinet-content">{children}</main>

@@ -47,6 +47,22 @@ const shipmentInputSchema = z.object({
   })).min(1, "Добавьте хотя бы одну отгружаемую позицию").max(33),
 });
 
+const supportAttachmentSchema = z.object({
+  fileName: z.string().trim().min(1, "Укажите имя файла").max(255),
+  mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "text/csv"]),
+  dataBase64: z.string().min(4, "Файл не удалось прочитать").max(7_000_000, "Размер вложения превышает 5 МБ"),
+}).superRefine((attachment, ctx) => {
+  const decodedSize = Buffer.from(attachment.dataBase64, "base64").byteLength;
+  if (!decodedSize || decodedSize > 5 * 1024 * 1024) ctx.addIssue({ code: "custom", path: ["dataBase64"], message: "Размер каждого вложения не должен превышать 5 МБ" });
+});
+
+const supportTicketInputSchema = z.object({
+  subject: z.string().trim().max(255).nullable().optional(),
+  message: z.string().trim().min(5, "Опишите вопрос подробнее").max(10_000),
+  pagePath: z.string().trim().min(1).max(255),
+  attachments: z.array(supportAttachmentSchema).max(3, "К обращению можно приложить не более трёх файлов").optional(),
+});
+
 function managerIdentity(user: { displayName?: string | null; name?: string | null; email?: string | null }) {
   return {
     name: user.displayName?.trim() || user.name?.trim() || user.email?.split("@")[0] || "Менеджер",
@@ -163,6 +179,20 @@ export const appRouter = router({
       const proposal = await db.updateProposalStatus(input.id, input.status, ctx.user.openId);
       if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено" });
       return proposal;
+    }),
+  }),
+  support: router({
+    list: protectedProcedure.query(({ ctx }) => db.listSupportTickets(ctx.user.openId, ctx.user.role === "admin")),
+    byId: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
+      const ticket = await db.getSupportTicketById(input.id, ctx.user.openId, ctx.user.role === "admin");
+      if (!ticket) throw new TRPCError({ code: "NOT_FOUND", message: "Обращение не найдено" });
+      return ticket;
+    }),
+    create: protectedProcedure.input(supportTicketInputSchema).mutation(({ input, ctx }) => db.createSupportTicket(input, ctx.user.openId)),
+    updateStatus: adminProcedure.input(z.object({ id: z.number().int().positive(), status: z.enum(["new", "in_progress", "resolved"]) })).mutation(async ({ input }) => {
+      const ticket = await db.updateSupportTicketStatus(input.id, input.status);
+      if (!ticket) throw new TRPCError({ code: "NOT_FOUND", message: "Обращение не найдено" });
+      return ticket;
     }),
   }),
   orderRequests: router({

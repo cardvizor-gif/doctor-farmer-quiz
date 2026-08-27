@@ -151,6 +151,38 @@ export const shipmentItems = mysqlTable(
   table => [index("shipment_items_shipment_idx").on(table.shipmentId), index("shipment_items_request_item_idx").on(table.requestItemId)],
 );
 
+export const supportTickets = mysqlTable(
+  "supportTickets",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    ownerOpenId: varchar("ownerOpenId", { length: 64 }).notNull(),
+    subject: varchar("subject", { length: 255 }).notNull(),
+    message: text("message").notNull(),
+    pagePath: varchar("pagePath", { length: 255 }).notNull().default("/"),
+    status: mysqlEnum("status", ["new", "in_progress", "resolved"]).notNull().default("new"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [
+    index("support_tickets_owner_updated_idx").on(table.ownerOpenId, table.updatedAt),
+    index("support_tickets_status_updated_idx").on(table.status, table.updatedAt),
+  ],
+);
+
+export const supportAttachments = mysqlTable(
+  "supportAttachments",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    ticketId: int("ticketId").notNull().references(() => supportTickets.id, { onDelete: "cascade" }),
+    fileName: varchar("fileName", { length: 255 }).notNull(),
+    storageKey: varchar("storageKey", { length: 512 }).notNull(),
+    mimeType: varchar("mimeType", { length: 160 }).notNull(),
+    sizeBytes: int("sizeBytes").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("support_attachments_ticket_idx").on(table.ticketId)],
+);
+
 export const accessRequests = mysqlTable(
   "accessRequests",
   {
@@ -185,5 +217,9 @@ export type Shipment = typeof shipments.$inferSelect;
 export type InsertShipment = typeof shipments.$inferInsert;
 export type ShipmentItem = typeof shipmentItems.$inferSelect;
 export type InsertShipmentItem = typeof shipmentItems.$inferInsert;
+export type SupportTicket = typeof supportTickets.$inferSelect;
+export type InsertSupportTicket = typeof supportTickets.$inferInsert;
+export type SupportAttachment = typeof supportAttachments.$inferSelect;
+export type InsertSupportAttachment = typeof supportAttachments.$inferInsert;
 export type AccessRequest = typeof accessRequests.$inferSelect;
 export type InsertAccessRequest = typeof accessRequests.$inferInsert;
