@@ -3,6 +3,7 @@ import { CROP_OPTIONS, CropOption } from "@/data/agropom";
 import { PROTECTION_SCHEMES, CropProtectionScheme } from '../data/protectionSchemes';
 import { getCropRecommendation } from '../data/cropRecommendations';
 import { PRICE_CATALOG, PriceItem } from "@/data/priceCatalog";
+import { isRegisteredSeedTreatment } from "@/data/seedTreatments";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,7 +76,7 @@ export default function AgroHelper() {
         if (selectedProblemCategory === "herbicide") return groupLower.includes('гербицид');
         if (selectedProblemCategory === "fungicide") return groupLower.includes('фунгицид');
         if (selectedProblemCategory === "insecticide") return groupLower.includes('инсектицид');
-        if (selectedProblemCategory === "seed") return groupLower.includes('протравитель') || groupLower.includes('протравка');
+        if (selectedProblemCategory === "seed") return groupLower.includes('протрав');
         if (selectedProblemCategory === "desiccant") return groupLower.includes('десикант') || groupLower.includes('адъювант');
         return true;
       });
@@ -83,7 +84,22 @@ export default function AgroHelper() {
     }).filter(step => step.products.length > 0);
   }, [currentScheme, selectedProblemCategory]);
 
-  // Список доступных альтернатив из прайса по группе (для зерновых против двудольных — только заводские бинарные упаковки)
+  const cropAliases: Record<string, string[]> = {
+    wheat_winter: ['пшениц'], wheat_spring: ['пшениц'], barley: ['ячмен'], oats: ['овес', 'овёс'],
+    peas: ['горох'], lentil_green: ['чечевиц'], lentil_red: ['чечевиц'], flax_classic: ['лен', 'лён'],
+    sunflower_express: ['подсолнеч'], sunflower_clearfield: ['подсолнеч'], rapeseed: ['рапс'], corn: ['кукуруз'], fallow: []
+  };
+
+  function isItemForSelectedCrop(item: PriceItem) {
+    const aliases = cropAliases[selectedCrop?.id ?? ''] ?? [];
+    if (aliases.length === 0) return true;
+    return item.cultures.some(culture => {
+      const normalized = culture.toLowerCase();
+      return aliases.some(alias => normalized.includes(alias));
+    });
+  }
+
+  // Список доступных альтернатив по группе и выбранной культуре.
   function getRegisteredAlternatives(group: string, currentProductName: string): PriceItem[] {
     const lower = group.toLowerCase();
     const isBinaryBilingualGroup = lower.includes('гербицид') && (currentProductName.includes('КлопЭфир') || currentProductName.includes('Триатлон') || currentProductName.includes('Биогем') || currentProductName.includes('Магнум') || currentProductName.includes('Интенсив'));
@@ -93,16 +109,18 @@ export default function AgroHelper() {
       const itemName = item.name.toLowerCase();
 
       if (isBinaryBilingualGroup) {
-        // Оставляем только заводские бинарные упаковки для зерновых из прайса
+        // Оставляем только заводские бинарные упаковки, применимые для выбранной культуры.
         const isBinary = itemName.includes('клопэфир') || itemName.includes('триатлон') || itemName.includes('биогем') || itemName.includes('магнум твин');
-        return isBinary && item.cultures.some(c => c.toLowerCase().includes('пшениц') || c.toLowerCase().includes('ячмен') || c.toLowerCase().includes('зернов'));
+        return isBinary && isItemForSelectedCrop(item);
       }
 
-      if (lower.includes('гербицид') && itemGroup.includes('гербицид')) return true;
-      if (lower.includes('фунгицид') && itemGroup.includes('фунгицид')) return true;
-      if (lower.includes('инсектицид') && itemGroup.includes('инсектицид')) return true;
-      if ((lower.includes('протравитель') || lower.includes('протравка')) && (itemGroup.includes('протравитель') || itemGroup.includes('протравка'))) return true;
-      return itemGroup === lower;
+      if (lower.includes('протрав') || lower.includes('протравка')) {
+        return isRegisteredSeedTreatment(item) && isItemForSelectedCrop(item);
+      }
+      if (lower.includes('гербицид') && itemGroup.includes('гербицид')) return isItemForSelectedCrop(item);
+      if (lower.includes('фунгицид') && itemGroup.includes('фунгицид')) return isItemForSelectedCrop(item);
+      if (lower.includes('инсектицид') && itemGroup.includes('инсектицид')) return isItemForSelectedCrop(item);
+      return itemGroup === lower && isItemForSelectedCrop(item);
     });
   }
 
@@ -471,7 +489,7 @@ export default function AgroHelper() {
                               <div className="pt-3 border-t border-[#dde5dc] flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
                                 <div className="text-xs text-[#6f7a73] flex items-center gap-1.5">
                                   <Droplet className="w-3.5 h-3.5 text-[#66a46c] flex-shrink-0" />
-                                  <span>Заменить препарат:</span>
+                                  <span>Выбрать вариант для культуры:</span>
                                 </div>
                                 <select
                                   value={activeProduct.name}

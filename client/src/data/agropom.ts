@@ -8,6 +8,8 @@ export interface CropOption {
 export const CROP_OPTIONS: CropOption[] = [
   { id: 'wheat_winter', name: 'Озимая пшеница', category: 'зерновые', technologies: ['Классическая'] },
   { id: 'wheat_spring', name: 'Яровая пшеница', category: 'зерновые', technologies: ['Классическая'] },
+  { id: 'barley', name: 'Ячмень', category: 'зерновые', technologies: ['Классическая'] },
+  { id: 'oats', name: 'Овёс', category: 'зерновые', technologies: ['Классическая'] },
   { id: 'peas', name: 'Горох', category: 'зернобобовые', technologies: ['Классическая'] },
   { id: 'lentil_green', name: 'Чечевица зелёная', category: 'зернобобовые', technologies: ['Классическая'] },
   { id: 'lentil_red', name: 'Чечевица красная', category: 'зернобобовые', technologies: ['Классическая'] },
