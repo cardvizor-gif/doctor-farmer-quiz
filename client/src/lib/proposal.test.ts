@@ -18,6 +18,7 @@ describe("proposal helpers", () => {
   it("calculates products for hectare, seed and package-cover norms", () => {
     expect(calculateProductRequirement("0,4-0,5 л/га", 100).label).toBe("40–50 л");
     expect(calculateProductRequirement("0,4-0,5 л/т", 100, "Протравливание — 0,22 т/га").label).toBe("8,8–11 л");
+    expect(calculateProductRequirement("0,4-0,5 л/т", 100, "Протравливание — 0,22 т/га", 0.25).label).toBe("10–12,5 л");
     expect(calculateProductRequirement("10-12 га", 100).label).toBe("9–10 уп.");
   });
 

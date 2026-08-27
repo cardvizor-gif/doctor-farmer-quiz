@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CROP_OPTIONS } from "@/data/agropom";
 import { PROTECTION_SCHEMES } from "@/data/protectionSchemes";
+import { getSeedingRate } from "@/data/seedingRates";
 import {
   categoriesForStep,
   productsForCategory,
@@ -40,6 +41,7 @@ export default function ProposalBuilder() {
   const [area, setArea] = useState(initialContext.area ? String(initialContext.area) : "");
   const [paymentTerm, setPaymentTerm] = useState<PaymentTerm>("deferred");
   const [discountPercent, setDiscountPercent] = useState(0);
+  const [seedTonsPerHectare, setSeedTonsPerHectare] = useState(() => String(getSeedingRate(initialCrop.id)?.tonsPerHectare ?? ""));
   const [excludedLineKeys, setExcludedLineKeys] = useState<string[]>([]);
   const [manualPriceOverrides, setManualPriceOverrides] = useState<Record<string, number>>({});
   const [addedProductsByStep, setAddedProductsByStep] = useState<Record<number, CatalogProduct[]>>({});
@@ -60,9 +62,14 @@ export default function ProposalBuilder() {
   }, [baseScheme, addedProductsByStep]);
 
   const numericArea = Number(area || 0);
+  const hasSeedTreatment = Boolean(editableScheme?.steps.some((step) => step.products.some((product) => /(л|кг)\s*\/\s*т/i.test(product.rate))));
+  const numericSeedTonsPerHectare = Number(seedTonsPerHectare);
+  const validSeedRate = !hasSeedTreatment || (Number.isFinite(numericSeedTonsPerHectare) && numericSeedTonsPerHectare > 0);
+  const seedMassTons = hasSeedTreatment && validSeedRate && numericArea > 0 ? numericArea * numericSeedTonsPerHectare : null;
+  const seedRateReference = getSeedingRate(cropId);
   const pricing = useMemo(
-    () => editableScheme ? calculateSchemePricing(editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides) : null,
-    [editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides],
+    () => editableScheme ? calculateSchemePricing(editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides, hasSeedTreatment && validSeedRate ? numericSeedTonsPerHectare : undefined) : null,
+    [editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides, hasSeedTreatment, validSeedRate, numericSeedTonsPerHectare],
   );
   const proposalsQuery = trpc.proposals.list.useQuery(selectedFarmId ? { farmId: selectedFarmId } : undefined);
 
@@ -87,11 +94,13 @@ export default function ProposalBuilder() {
     onError: (error) => toast.error(error.message),
   });
 
-  const canSaveProposal = Boolean(editableScheme && selectedFarm && pricing?.complete && !createProposal.isPending);
+  const canSaveProposal = Boolean(editableScheme && selectedFarm && pricing?.complete && validSeedRate && !createProposal.isPending);
   const saveButtonLabel = createProposal.isPending
     ? "Сохраняем КП…"
     : !selectedFarm
       ? "Выберите хозяйство для сохранения КП"
+      : !validSeedRate
+        ? "Укажите норму высева для протравливания"
       : !pricing?.complete
         ? "Не все позиции имеют цену"
         : pricing.lines.some((line) => line.isManualPrice)
@@ -118,6 +127,7 @@ export default function ProposalBuilder() {
     const crop = CROP_OPTIONS.find((item) => item.id === newCropId) ?? CROP_OPTIONS[0];
     setCropId(crop.id);
     setTechnology(crop.technologies[0]);
+    setSeedTonsPerHectare(String(getSeedingRate(crop.id)?.tonsPerHectare ?? ""));
     resetSchemeEdits();
   };
 
@@ -177,6 +187,7 @@ export default function ProposalBuilder() {
     if (!selectedFarm) return toast.error("Сначала выберите хозяйство");
     if (!editableScheme) return toast.error("Для выбранной культуры нет готовой схемы");
     if (numericArea <= 0) return toast.error("Укажите площадь обработки больше нуля");
+    if (!validSeedRate) return toast.error("Укажите норму высева для расчёта протравителей");
     if (!pricing?.complete) return toast.error("В схеме есть позиции без подтверждённой цены из актуального прайса");
     createProposal.mutate({
       farmId: selectedFarm.id,
@@ -190,6 +201,7 @@ export default function ProposalBuilder() {
         scheme: editableScheme,
         selectedCrop,
         area: numericArea,
+        seedTonsPerHectare: hasSeedTreatment && validSeedRate ? numericSeedTonsPerHectare : null,
         paymentTerm,
         discountPercent,
         excludedLineKeys,
@@ -217,6 +229,7 @@ export default function ProposalBuilder() {
         scheme: editableScheme,
         selectedCrop,
         area: numericArea,
+        seedTonsPerHectare: hasSeedTreatment && validSeedRate ? numericSeedTonsPerHectare : null,
         paymentTerm,
         discountPercent,
         excludedLineKeys,
@@ -286,7 +299,8 @@ export default function ProposalBuilder() {
               <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Условие оплаты</span><select value={paymentTerm} onChange={(event) => { setPaymentTerm(event.target.value as PaymentTerm); setSavedProposalId(null); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{Object.entries(PAYMENT_TERMS).map(([value, term]) => <option key={value} value={value}>{term.label}</option>)}</select></label>
               <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Скидка менеджера</span><select value={discountPercent} onChange={(event) => { setDiscountPercent(Number(event.target.value)); setSavedProposalId(null); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]"><option value={0}>Без скидки</option><option value={1}>1%</option><option value={2}>2%</option><option value={3}>3%</option></select></label>
             </div>
-            <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>Расчёт по норме, фасовке и площади.</strong> {PAYMENT_TERMS[paymentTerm].description}. Для каждой позиции можно задать ручную цену; скидка ограничена 3%.</div>
+            {hasSeedTreatment && <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3"><label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Норма высева для протравливания, т/га *</span><Input type="number" min="0.001" max="1" step="0.001" value={seedTonsPerHectare} onChange={(event) => { setSeedTonsPerHectare(event.target.value); setSavedProposalId(null); }} aria-describedby="seed-rate-help" /></label><p id="seed-rate-help" className="mt-2 text-xs leading-relaxed text-[#285238]">Рабочий ориентир для {selectedCrop.name}: {seedRateReference?.rangeLabel ?? "уточните по хозяйству"}. {seedMassTons !== null ? <>К протравливанию: <strong>{new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(seedMassTons)} т семян.</strong></> : "Укажите норму, чтобы рассчитать протравители в л/т или кг/т."}</p></div>}
+            <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>{hasSeedTreatment ? "Протравители: площадь × норма высева × л/т или кг/т." : "Расчёт по норме, фасовке и площади."}</strong> {PAYMENT_TERMS[paymentTerm].description}. Для каждой позиции можно задать ручную цену; скидка ограничена 3%.</div>
             <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Примечание для КП</span><Textarea value={notes} onChange={(event) => { setNotes(event.target.value); setSavedProposalId(null); }} rows={4} placeholder="Условия, договорённости, срок действия предложения" /></label>
             <div className="rounded-xl bg-[#f5f8f4] p-4">
               <div className="flex items-center gap-2 text-[#194f38]"><CircleDollarSign className="h-5 w-5 text-[#2e7d52]" /><span className="text-xs font-bold uppercase tracking-wide">Итог по КП</span></div>
