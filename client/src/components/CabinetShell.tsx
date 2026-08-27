@@ -4,8 +4,9 @@ import CabinetSupportDialog from "@/components/CabinetSupportDialog";
 import AccessPortalDialog from "@/components/AccessPortalDialog";
 import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { countPendingAccessRequests } from "@/lib/accessRequests";
 import { trpc } from "@/lib/trpc";
-import { Bell, BookOpen, Building2, ChevronDown, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, X } from "lucide-react";
+import { BookOpen, Building2, ChevronDown, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 
@@ -53,6 +54,10 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const [displayNameDraft, setDisplayNameDraft] = useState("");
   const { user, loading: isAuthLoading, logout } = useAuth();
   const utils = trpc.useUtils();
+  const { data: accessRequests } = trpc.access.list.useQuery(undefined, {
+    enabled: user?.role === "admin",
+    staleTime: 15_000,
+  });
   const updateProfile = trpc.auth.updateProfile.useMutation({
     onSuccess: (updatedUser) => {
       utils.auth.me.setData(undefined, updatedUser);
@@ -62,6 +67,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const pageTitle = cabinetPageTitle(location);
   const pageTheme = cabinetTheme(location);
   const account = accountIdentity(user);
+  const pendingAccessRequests = countPendingAccessRequests(accessRequests);
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -139,7 +145,9 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
             </div>
             <div className="cabinet-topbar-actions">
               <button type="button" className="cabinet-search-hint" onClick={() => setIsSearchOpen(true)} aria-label="Открыть поиск по кабинету"><Search className="h-4 w-4" /><span>Поиск по кабинету</span><kbd>⌘ K</kbd></button>
-              <button type="button" className="cabinet-notification" aria-label="Уведомления"><Bell className="h-4 w-4" /></button>
+              {user?.role === "admin" && <Link href="/access-requests" className="cabinet-access-requests-link" aria-label={pendingAccessRequests > 0 ? `Заявки доступа: ${pendingAccessRequests} новых` : "Заявки доступа: новых нет"}>
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" /><span>Заявки</span>{pendingAccessRequests > 0 && <strong aria-hidden="true">{pendingAccessRequests}</strong>}
+              </Link>}
               {!isAuthLoading && (user ? <div className="cabinet-account-wrap">
                 <button type="button" className="cabinet-account-trigger" onClick={() => setIsAccountMenuOpen((open) => !open)} aria-expanded={isAccountMenuOpen} aria-haspopup="menu">
                   <span className="cabinet-account-avatar" aria-hidden="true">{account.initials}</span>
