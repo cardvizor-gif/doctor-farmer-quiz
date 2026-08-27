@@ -63,7 +63,7 @@ export default function ProposalBuilder() {
   }, [baseScheme, addedProductsByStep, manualRateOverrides]);
 
   const numericArea = Number(area || 0);
-  const hasSeedTreatment = Boolean(editableScheme?.steps.some((step) => step.products.some((product) => /(л|кг)\s*\/\s*т/i.test(product.rate))));
+  const hasSeedTreatment = Boolean(editableScheme?.steps.some((step) => /(протрав|семян)/i.test(`${step.stage} ${step.task}`)));
   const numericSeedTons = Number(seedTons);
   const validSeedTonnage = !hasSeedTreatment || (Number.isFinite(numericSeedTons) && numericSeedTons > 0);
   const pricing = useMemo(
@@ -321,8 +321,7 @@ export default function ProposalBuilder() {
               <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Условие оплаты</span><select value={paymentTerm} onChange={(event) => { setPaymentTerm(event.target.value as PaymentTerm); setSavedProposalId(null); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{Object.entries(PAYMENT_TERMS).map(([value, term]) => <option key={value} value={value}>{term.label}</option>)}</select></label>
               <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Скидка менеджера</span><select value={discountPercent} onChange={(event) => { setDiscountPercent(Number(event.target.value)); setSavedProposalId(null); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]"><option value={0}>Без скидки</option><option value={1}>1%</option><option value={2}>2%</option><option value={3}>3%</option></select></label>
             </div>
-            {hasSeedTreatment && <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3"><label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Фактический тоннаж семян для протравливания, т *</span><Input type="number" min="0.01" step="0.01" value={seedTons} onChange={(event) => { setSeedTons(event.target.value); setSavedProposalId(null); }} aria-describedby="seed-tonnage-help" placeholder="Например, 110" /></label><p id="seed-tonnage-help" className="mt-2 text-xs leading-relaxed text-[#285238]">Запросите значение у хозяйства. Оно умножается на норму применения каждого протравителя в л/т или кг/т.</p></div>}
-            <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>{hasSeedTreatment ? "Протравители: тоннаж семян × л/т или кг/т." : "Расчёт по норме, фасовке и площади."}</strong> {PAYMENT_TERMS[paymentTerm].description}. Для каждой позиции можно задать ручную цену и норму применения; скидка ограничена 3%.</div>
+            <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>Расчёт по норме, фасовке и площади.</strong> {PAYMENT_TERMS[paymentTerm].description}. Для каждой позиции можно задать ручную цену и норму применения; скидка ограничена 3%.</div>
             <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Примечание для КП</span><Textarea value={notes} onChange={(event) => { setNotes(event.target.value); setSavedProposalId(null); }} rows={4} placeholder="Условия, договорённости, срок действия предложения" /></label>
             <div className="rounded-xl bg-[#f5f8f4] p-4">
               <div className="flex items-center gap-2 text-[#194f38]"><CircleDollarSign className="h-5 w-5 text-[#2e7d52]" /><span className="text-xs font-bold uppercase tracking-wide">Итог по КП</span></div>
@@ -352,9 +351,10 @@ export default function ProposalBuilder() {
                 const selectedCategory = categoryByStep[stepIndex] ?? availableCategories[0];
                 const categoryProducts = selectedCategory ? productsForCategory(selectedCategory) : [];
                 const selectedProductId = productByStep[stepIndex] ?? categoryProducts[0]?.id;
+                const isSeedTreatmentStep = /(протрав|семян)/i.test(`${step.stage} ${step.task}`);
 
                 return <article key={`${step.stage}-${stepIndex}`} className="rounded-xl border border-[#dde5dc] bg-[#fcfdfb]">
-                  <div className="border-b border-[#e7eee5] px-4 py-3"><span className="text-[10px] font-bold uppercase tracking-wide text-[#2e7d52]">Этап {stepIndex + 1} · {step.stage}</span><h3 className="mt-1 font-bold text-[#12352a]">{step.task}</h3></div>
+                  <div className="border-b border-[#e7eee5] px-4 py-3"><span className="text-[10px] font-bold uppercase tracking-wide text-[#2e7d52]">Этап {stepIndex + 1} · {step.stage}</span><h3 className="mt-1 font-bold text-[#12352a]">{step.task}</h3>{isSeedTreatmentStep && <div className="mt-3 max-w-sm rounded-lg border border-[#b9d7bd] bg-[#eef7ee] p-2.5"><label className="block space-y-1"><span className="text-[10px] font-bold uppercase tracking-wide text-[#194f38]">Тоннаж семян, т *</span><Input type="number" min="0.01" step="0.01" value={seedTons} onChange={(event) => { setSeedTons(event.target.value); setSavedProposalId(null); }} aria-describedby={`seed-tonnage-help-${stepIndex}`} placeholder="Введите тоннаж семян" className="h-8 bg-white text-xs" /></label><p id={`seed-tonnage-help-${stepIndex}`} className="mt-1.5 text-[11px] leading-relaxed text-[#285238]">Введите значение хозяйства. Потребность: тоннаж × норма, л/т или кг/т.</p></div>}</div>
                   <div className="divide-y divide-[#e7eee5]">
                     {step.products.map((product, productIndex) => {
                       const priceLine = pricing?.lines.find((line) => line.key === `${stepIndex}-${productIndex}`);
