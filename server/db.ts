@@ -136,6 +136,7 @@ export async function updateUserAccess(openId: string, role: "user" | "admin", p
   if (openId === ENV.ownerOpenId && role !== "admin") throw new Error("Нельзя снять права владельца кабинета");
   const target = await getUserByOpenId(openId);
   if (!target) return undefined;
+  if (target.status === "archived") throw new Error("Архивированный сотрудник недоступен для изменения");
   if (target.role === "admin" && role === "user") {
     const admins = await db.select({ id: users.id }).from(users).where(eq(users.role, "admin"));
     if (admins.length <= 1) throw new Error("Нельзя понизить последнего администратора");
@@ -148,6 +149,32 @@ export async function updateUserAccess(openId: string, role: "user" | "admin", p
     }
   });
   return getUserByOpenId(openId);
+}
+
+export async function transferAndArchiveUser(sourceOpenId: string, targetOpenId: string, archivedByOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  if (sourceOpenId === targetOpenId) throw new Error("Нельзя передать базу самому себе");
+  if (sourceOpenId === ENV.ownerOpenId) throw new Error("Нельзя архивировать владельца кабинета");
+
+  const [source, target] = await Promise.all([getUserByOpenId(sourceOpenId), getUserByOpenId(targetOpenId)]);
+  if (!source) throw new Error("Сотрудник-источник не найден");
+  if (!target) throw new Error("Сотрудник-получатель не найден");
+  if (source.status === "archived") throw new Error("Сотрудник уже архивирован");
+  if (target.status === "archived") throw new Error("Нельзя передать базу архивированному сотруднику");
+  if (source.role === "admin") {
+    const admins = await db.select({ id: users.id }).from(users).where(and(eq(users.role, "admin"), eq(users.status, "active")));
+    if (admins.length <= 1) throw new Error("Нельзя архивировать последнего администратора");
+  }
+
+  await db.transaction(async tx => {
+    await tx.update(farms).set({ ownerOpenId: targetOpenId }).where(eq(farms.ownerOpenId, sourceOpenId));
+    await tx.update(orderRequests).set({ ownerOpenId: targetOpenId }).where(eq(orderRequests.ownerOpenId, sourceOpenId));
+    await tx.delete(userPermissions).where(eq(userPermissions.userOpenId, sourceOpenId));
+    await tx.update(users).set({ status: "archived", archivedAt: new Date(), archivedByOpenId }).where(and(eq(users.openId, sourceOpenId), eq(users.status, "active")));
+  });
+
+  return { sourceOpenId, targetOpenId, archivedAt: new Date() };
 }
 
 export async function getTeamMemberWorkspace(openId: string) {

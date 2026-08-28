@@ -157,6 +157,16 @@ export const appRouter = router({
       if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Сотрудник не найден" });
       return updated;
     }),
+    transferAndArchive: adminProcedure.input(z.object({
+      sourceOpenId: z.string().trim().min(1).max(64),
+      targetOpenId: z.string().trim().min(1).max(64),
+    })).mutation(async ({ input, ctx }) => {
+      try {
+        return await db.transferAndArchiveUser(input.sourceOpenId, input.targetOpenId, ctx.user.openId);
+      } catch (error) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Не удалось передать базу сотрудника" });
+      }
+    }),
   }),
   farms: router({
     list: permissionProcedure("farms.read").query(({ ctx }) => db.listFarms(ctx.user.openId)),

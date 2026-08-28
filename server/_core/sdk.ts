@@ -310,6 +310,9 @@ class SDKServer {
     if (!user) {
       throw ForbiddenError("User not found");
     }
+    if (user.status === "archived") {
+      throw ForbiddenError("Доступ сотрудника архивирован администратором");
+    }
 
     await db.upsertUser({
       openId: user.openId,

@@ -5,6 +5,7 @@ vi.mock("./db", () => ({
   getUserPermissions: vi.fn(),
   listFarms: vi.fn(),
   updateUserAccess: vi.fn(),
+  transferAndArchiveUser: vi.fn(),
 }));
 
 import * as db from "./db";
@@ -18,6 +19,9 @@ const baseUser = {
   email: "employee@example.com",
   loginMethod: "invite",
   role: "user" as const,
+  status: "active" as const,
+  archivedAt: null,
+  archivedByOpenId: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   lastSignedIn: new Date(),
@@ -53,9 +57,19 @@ describe("user permissions", () => {
     expect(db.updateUserAccess).toHaveBeenCalledWith(baseUser.openId, "user", ["farms.read"], "owner");
   });
 
-  it("does not allow a regular user to change roles or permissions", async () => {
+  it("allows an administrator to transfer a base and archive an employee", async () => {
+    const admin = { ...baseUser, openId: "owner", role: "admin" as const };
+    vi.mocked(db.transferAndArchiveUser).mockResolvedValue({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2", archivedAt: new Date() });
+    const caller = appRouter.createCaller(context(admin));
+    await expect(caller.admin.transferAndArchive({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2" })).resolves.toMatchObject({ targetOpenId: "employee-2" });
+    expect(db.transferAndArchiveUser).toHaveBeenCalledWith(baseUser.openId, "employee-2", "owner");
+  });
+
+  it("does not allow a regular user to change roles or transfer a base", async () => {
     const caller = appRouter.createCaller(context(baseUser));
     await expect(caller.admin.updateAccess({ openId: "another-user", role: "admin", permissions: [] })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.admin.transferAndArchive({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2" })).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(db.updateUserAccess).not.toHaveBeenCalled();
+    expect(db.transferAndArchiveUser).not.toHaveBeenCalled();
   });
 });
