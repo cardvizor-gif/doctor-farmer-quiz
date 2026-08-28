@@ -9,6 +9,7 @@ vi.mock("./db", () => ({
 }));
 
 import { appRouter } from "./routers";
+import { ENV } from "./_core/env";
 import * as db from "./db";
 import type { TrpcContext } from "./_core/context";
 
@@ -46,11 +47,11 @@ describe("support ticket privacy", () => {
     const updated = { id: 15, status: "in_progress" };
     vi.mocked(db.listSupportTickets).mockResolvedValue([] as never);
     vi.mocked(db.updateSupportTicketStatus).mockResolvedValue(updated as never);
-    const admin = appRouter.createCaller(createContext("admin", "owner"));
+    const admin = appRouter.createCaller(createContext("admin", ENV.ownerOpenId));
 
     await expect(admin.support.list()).resolves.toEqual([]);
     await expect(admin.support.updateStatus({ id: 15, status: "in_progress" })).resolves.toEqual(updated);
-    expect(db.listSupportTickets).toHaveBeenCalledWith("owner", true);
+    expect(db.listSupportTickets).toHaveBeenCalledWith(ENV.ownerOpenId, true);
     expect(db.updateSupportTicketStatus).toHaveBeenCalledWith(15, "in_progress");
     await expect(appRouter.createCaller(createContext()).support.updateStatus({ id: 15, status: "resolved" })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });

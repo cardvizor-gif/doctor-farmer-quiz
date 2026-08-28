@@ -20,9 +20,10 @@ vi.mock("./db", () => ({
 }));
 
 import * as db from "./db";
+import { ENV } from "./_core/env";
 import { appRouter } from "./routers";
 
-const ownerOpenId = "owner-test-open-id";
+const ownerOpenId = ENV.ownerOpenId;
 const otherOpenId = "other-test-open-id";
 
 const farm = {

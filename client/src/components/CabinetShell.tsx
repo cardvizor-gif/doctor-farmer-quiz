@@ -21,10 +21,10 @@ export const cabinetNavigation = [
   { href: "/quiz", label: "Тестирование", icon: Trophy, permission: "quiz.use" as PermissionCode },
 ] as const;
 
-type NavigationUser = { role?: "user" | "admin" | null; permissions?: readonly PermissionCode[] | null } | null | undefined;
+type NavigationUser = { role?: "user" | "admin" | null; isSuperuser?: boolean | null; permissions?: readonly PermissionCode[] | null } | null | undefined;
 
 export function filterCabinetNavigation(user: NavigationUser) {
-  return cabinetNavigation.filter((item) => !item.permission || user?.role === "admin" || user?.permissions?.includes(item.permission));
+  return cabinetNavigation.filter((item) => !item.permission || Boolean(user?.isSuperuser) || user?.permissions?.includes(item.permission));
 }
 
 export function cabinetPageTitle(pathname: string) {
@@ -65,13 +65,14 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const [displayNameDraft, setDisplayNameDraft] = useState("");
   const { user, loading: isAuthLoading, logout } = useAuth();
   const utils = trpc.useUtils();
-  const canCreateSupport = user?.role === "admin" || Boolean(user?.permissions?.includes("support.create"));
+  const canCreateSupport = Boolean(user?.isSuperuser || user?.permissions?.includes("support.create"));
+  const canAccessSupport = Boolean(canCreateSupport || user?.permissions?.includes("support.manage"));
   const { data: accessRequests } = trpc.access.list.useQuery(undefined, {
-    enabled: user?.role === "admin",
+    enabled: Boolean(user?.isSuperuser),
     staleTime: 15_000,
   });
   const { data: supportTickets } = trpc.support.list.useQuery(undefined, {
-    enabled: canCreateSupport,
+    enabled: canAccessSupport,
     staleTime: 15_000,
   });
   const updateProfile = trpc.auth.updateProfile.useMutation({

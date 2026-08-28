@@ -3,12 +3,14 @@ import type { TrpcContext } from "./_core/context";
 
 vi.mock("./db", () => ({
   getUserPermissions: vi.fn(),
+  getUserByOpenId: vi.fn(),
   listFarms: vi.fn(),
   updateUserAccess: vi.fn(),
   transferAndArchiveUser: vi.fn(),
 }));
 
 import * as db from "./db";
+import { ENV } from "./_core/env";
 import { appRouter } from "./routers";
 
 const baseUser = {
@@ -50,19 +52,19 @@ describe("user permissions", () => {
   });
 
   it("allows administrators to set a role and a bounded permission list", async () => {
-    const admin = { ...baseUser, openId: "owner", role: "admin" as const };
+    const admin = { ...baseUser, openId: ENV.ownerOpenId, role: "admin" as const };
     vi.mocked(db.updateUserAccess).mockResolvedValue({ ...baseUser, permissions: ["farms.read"] } as never);
     const caller = appRouter.createCaller(context(admin));
     await expect(caller.admin.updateAccess({ openId: baseUser.openId, role: "user", permissions: ["farms.read"] })).resolves.toMatchObject({ openId: baseUser.openId });
-    expect(db.updateUserAccess).toHaveBeenCalledWith(baseUser.openId, "user", ["farms.read"], "owner");
+    expect(db.updateUserAccess).toHaveBeenCalledWith(baseUser.openId, "user", ["farms.read"], ENV.ownerOpenId);
   });
 
   it("allows an administrator to transfer a base and archive an employee", async () => {
-    const admin = { ...baseUser, openId: "owner", role: "admin" as const };
+    const admin = { ...baseUser, openId: ENV.ownerOpenId, role: "admin" as const };
     vi.mocked(db.transferAndArchiveUser).mockResolvedValue({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2", archivedAt: new Date() });
     const caller = appRouter.createCaller(context(admin));
     await expect(caller.admin.transferAndArchive({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2" })).resolves.toMatchObject({ targetOpenId: "employee-2" });
-    expect(db.transferAndArchiveUser).toHaveBeenCalledWith(baseUser.openId, "employee-2", "owner");
+    expect(db.transferAndArchiveUser).toHaveBeenCalledWith(baseUser.openId, "employee-2", ENV.ownerOpenId);
   });
 
   it("does not allow a regular user to change roles or transfer a base", async () => {
@@ -73,3 +75,20 @@ describe("user permissions", () => {
     expect(db.transferAndArchiveUser).not.toHaveBeenCalled();
   });
 });
+
+  it("does not allow a delegated administrator to assign the administrator role", async () => {
+    const delegatedAdmin = { ...baseUser, openId: "delegated-admin", role: "admin" as const };
+    vi.mocked(db.getUserPermissions).mockResolvedValue(["team.manage"]);
+    const caller = appRouter.createCaller(context(delegatedAdmin));
+    await expect(caller.admin.updateAccess({ openId: baseUser.openId, role: "admin", permissions: [] })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(db.updateUserAccess).not.toHaveBeenCalled();
+  });
+
+  it("allows a delegated administrator to update permissions of a regular employee", async () => {
+    const delegatedAdmin = { ...baseUser, openId: "delegated-admin", role: "admin" as const };
+    vi.mocked(db.getUserPermissions).mockResolvedValue(["team.manage"]);
+    vi.mocked(db.getUserByOpenId).mockResolvedValue(baseUser as never);
+    vi.mocked(db.updateUserAccess).mockResolvedValue({ ...baseUser, permissions: ["farms.read"] } as never);
+    const caller = appRouter.createCaller(context(delegatedAdmin));
+    await expect(caller.admin.updateAccess({ openId: baseUser.openId, role: "user", permissions: ["farms.read"] })).resolves.toMatchObject({ openId: baseUser.openId });
+  });

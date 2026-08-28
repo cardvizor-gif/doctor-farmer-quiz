@@ -162,6 +162,7 @@ export async function transferAndArchiveUser(sourceOpenId: string, targetOpenId:
   if (!target) throw new Error("Сотрудник-получатель не найден");
   if (source.status === "archived") throw new Error("Сотрудник уже архивирован");
   if (target.status === "archived") throw new Error("Нельзя передать базу архивированному сотруднику");
+  if (source.role === "admin" && archivedByOpenId !== ENV.ownerOpenId) throw new Error("Только суперпользователь может архивировать администратора");
   if (source.role === "admin") {
     const admins = await db.select({ id: users.id }).from(users).where(and(eq(users.role, "admin"), eq(users.status, "active")));
     if (admins.length <= 1) throw new Error("Нельзя архивировать последнего администратора");

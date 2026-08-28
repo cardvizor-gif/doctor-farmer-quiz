@@ -33,8 +33,8 @@ describe("accountIdentity", () => {
     expect(filterCabinetNavigation({ role: "user", permissions: ["farms.read", "quiz.use"] }).map((item) => item.href)).toEqual(["/", "/farms", "/quiz"]);
   });
 
-  it("shows all workspace sections to an administrator", () => {
-    expect(filterCabinetNavigation({ role: "admin", permissions: [] }).map((item) => item.href)).toEqual([
+  it("shows all workspace sections only to the superuser", () => {
+    expect(filterCabinetNavigation({ role: "admin", isSuperuser: true, permissions: [] }).map((item) => item.href)).toEqual([
       "/", "/agro-helper", "/farms", "/proposals/new", "/order-requests", "/knowledge-base", "/quiz",
     ]);
   });

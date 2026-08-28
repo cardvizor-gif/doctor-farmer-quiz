@@ -9,6 +9,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { sdk } from "./_core/sdk";
 import { allPermissionCodes, permissionCodes, type PermissionCode } from "../shared/permissions";
+import { ENV } from "./_core/env";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
 const orderItemSchema = z.object({
@@ -71,10 +72,20 @@ function managerIdentity(user: { displayName?: string | null; name?: string | nu
   };
 }
 
+const isSuperuser = (openId: string) => openId === ENV.ownerOpenId;
+const getEffectivePermissions = async (user: { openId: string; role: string }) => isSuperuser(user.openId) ? allPermissionCodes : await db.getUserPermissions(user.openId);
 const permissionProcedure = (permission: PermissionCode) => protectedProcedure.use(async ({ ctx, next }) => {
-  if (ctx.user.role === "admin") return next();
-  const permissions = await db.getUserPermissions(ctx.user.openId);
+  const permissions = await getEffectivePermissions(ctx.user);
   if (!permissions.includes(permission)) throw new TRPCError({ code: "FORBIDDEN", message: "Недостаточно прав для этого раздела" });
+  return next();
+});
+const teamProcedure = (permission: "team.read" | "team.manage" | "team.transfer") => protectedProcedure.use(async ({ ctx, next }) => {
+  const permissions = await getEffectivePermissions(ctx.user);
+  if (!permissions.includes(permission)) throw new TRPCError({ code: "FORBIDDEN", message: "Недостаточно прав администратора команды" });
+  return next();
+});
+const superuserProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!isSuperuser(ctx.user.openId)) throw new TRPCError({ code: "FORBIDDEN", message: "Операция доступна только суперпользователю" });
   return next();
 });
 
@@ -84,8 +95,8 @@ export const appRouter = router({
   auth: router({
     me: publicProcedure.query(async ({ ctx }) => {
       if (!ctx.user) return null;
-      const permissions = ctx.user.role === "admin" ? allPermissionCodes : await db.getUserPermissions(ctx.user.openId);
-      return { ...ctx.user, permissions };
+      const permissions = await getEffectivePermissions(ctx.user);
+      return { ...ctx.user, permissions, isSuperuser: isSuperuser(ctx.user.openId) };
     }),
     updateProfile: protectedProcedure.input(z.object({ displayName: z.string().trim().min(2, "Укажите имя не короче 2 символов").max(120, "Имя не должно превышать 120 символов") })).mutation(async ({ input, ctx }) => {
       const user = await db.updateUserDisplayName(ctx.user.openId, input.displayName);
@@ -108,8 +119,8 @@ export const appRouter = router({
       await db.requestAccess(input);
       return { accepted: true } as const;
     }),
-    list: adminProcedure.query(() => db.listAccessRequests()),
-    approve: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+    list: superuserProcedure.query(() => db.listAccessRequests()),
+    approve: superuserProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
       const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
       const code = Array.from(randomBytes(10), byte => alphabet[byte % alphabet.length]).join("");
       const codeHash = createHash("sha256").update(code).digest("hex");
@@ -118,7 +129,7 @@ export const appRouter = router({
       if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка не найдена или уже обработана" });
       return { request, code, expiresAt };
     }),
-    reject: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+    reject: superuserProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
       const request = await db.rejectAccessRequest(input.id, ctx.user.openId);
       if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка не найдена или уже обработана" });
       return request;
@@ -141,9 +152,9 @@ export const appRouter = router({
     }),
   }),
   admin: router({
-    team: adminProcedure.query(() => db.listTeamMembers()),
-    teamFarms: adminProcedure.query(() => db.listTeamFarms()),
-    memberWorkspace: adminProcedure.input(z.object({ openId: z.string().trim().min(1).max(64) })).query(async ({ input }) => {
+    team: teamProcedure("team.read").query(() => db.listTeamMembers()),
+    teamFarms: teamProcedure("team.read").query(() => db.listTeamFarms()),
+    memberWorkspace: teamProcedure("team.read").input(z.object({ openId: z.string().trim().min(1).max(64) })).query(async ({ input }) => {
       const workspace = await db.getTeamMemberWorkspace(input.openId);
       if (!workspace) throw new TRPCError({ code: "NOT_FOUND", message: "Сотрудник не найден" });
       return workspace;
@@ -153,11 +164,18 @@ export const appRouter = router({
       role: z.enum(["user", "admin"]),
       permissions: z.array(z.enum(permissionCodes)).max(permissionCodes.length),
     })).mutation(async ({ input, ctx }) => {
+      const permissions = await getEffectivePermissions(ctx.user);
+      if (!permissions.includes("team.manage")) throw new TRPCError({ code: "FORBIDDEN", message: "Недостаточно прав для управления командой" });
+      if (!isSuperuser(ctx.user.openId)) {
+        if (input.role !== "user") throw new TRPCError({ code: "FORBIDDEN", message: "Только суперпользователь может назначать администраторов" });
+        const target = await db.getUserByOpenId(input.openId);
+        if (target?.role === "admin" || input.openId === ctx.user.openId) throw new TRPCError({ code: "FORBIDDEN", message: "Делегированный администратор не может менять права администратора или свои права" });
+      }
       const updated = await db.updateUserAccess(input.openId, input.role, input.permissions, ctx.user.openId);
       if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Сотрудник не найден" });
       return updated;
     }),
-    transferAndArchive: adminProcedure.input(z.object({
+    transferAndArchive: teamProcedure("team.transfer").input(z.object({
       sourceOpenId: z.string().trim().min(1).max(64),
       targetOpenId: z.string().trim().min(1).max(64),
     })).mutation(async ({ input, ctx }) => {
@@ -220,7 +238,7 @@ export const appRouter = router({
       return ticket;
     }),
     create: permissionProcedure("support.create").input(supportTicketInputSchema).mutation(({ input, ctx }) => db.createSupportTicket(input, ctx.user.openId)),
-    updateStatus: adminProcedure.input(z.object({ id: z.number().int().positive(), status: z.enum(["new", "in_progress", "resolved"]) })).mutation(async ({ input }) => {
+    updateStatus: permissionProcedure("support.manage").input(z.object({ id: z.number().int().positive(), status: z.enum(["new", "in_progress", "resolved"]) })).mutation(async ({ input }) => {
       const ticket = await db.updateSupportTicketStatus(input.id, input.status);
       if (!ticket) throw new TRPCError({ code: "NOT_FOUND", message: "Обращение не найдено" });
       return ticket;
