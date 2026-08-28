@@ -19,7 +19,7 @@ function initials(name: string) {
 export default function AdminPanel() {
   const { data: currentUser } = trpc.auth.me.useQuery();
   const isSuperuser = Boolean(currentUser?.isSuperuser);
-  const { data: team = [], isLoading: isTeamLoading, error: teamError } = trpc.admin.team.useQuery();
+  const { data: team = [], isLoading: isTeamLoading, error: teamError } = trpc.admin.team.useQuery(undefined, { enabled: Boolean(currentUser), retry: false });
   const teamFarmsQuery = trpc.admin.teamFarms.useQuery(undefined, { enabled: false });
   const utils = trpc.useUtils();
   const [selectedOpenId, setSelectedOpenId] = useState<string | null>(null);
@@ -79,7 +79,7 @@ export default function AdminPanel() {
     await exportFarms(workspace.farms.map((farm) => ({ ...farm, managerName: name, managerEmail: workspace.member.email })), `Doctor-Farmer-реестр-${fileSafeName}.xlsx`);
   };
 
-  if (teamError) return <section className="mx-auto max-w-4xl rounded-3xl bg-white p-8 shadow-sm"><ShieldCheck className="h-8 w-8 text-[#5d7e34]" /><h2 className="mt-4 text-xl font-extrabold text-[#244b2d]">Панель доступна владельцу кабинета</h2><p className="mt-2 text-sm text-[#647461]">Войдите в административный аккаунт, чтобы просматривать состав команды и рабочие данные.</p></section>;
+  if (teamError) { const isForbidden = teamError.data?.code === "FORBIDDEN"; return <section className="mx-auto max-w-4xl rounded-3xl bg-white p-8 shadow-sm"><ShieldCheck className="h-8 w-8 text-[#5d7e34]" /><h2 className="mt-4 text-xl font-extrabold text-[#244b2d]">{isForbidden ? "Недостаточно прав для панели команды" : "Не удалось загрузить панель команды"}</h2><p className="mt-2 text-sm text-[#647461]">{isForbidden ? "Владелец кабинета должен назначить вам право просмотра команды." : "Обновите страницу и повторите попытку."}</p></section>; }
 
   return <section className="mx-auto max-w-6xl">
     <div className="rounded-[2rem] bg-[linear-gradient(130deg,#244f2f,#47733a)] p-7 text-white shadow-[0_20px_50px_rgba(31,75,44,0.22)] sm:p-9"><div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.15em] text-[#ddf2ad]">Управление командой</p><h2 className="mt-2 text-3xl font-extrabold tracking-tight">Панель администратора</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-white/78">Просматривайте зарегистрированных сотрудников и их рабочие базы. Изменение хозяйств и КП остаётся доступно только их владельцам.</p></div><Button type="button" variant="outline" onClick={() => void exportTeamFarms()} disabled={teamFarmsQuery.isFetching} className="shrink-0 border-white/35 bg-white/10 text-white hover:bg-white/20 hover:text-white"><Download className="mr-2 h-4 w-4" />{teamFarmsQuery.isFetching ? "Готовим Excel…" : "Выгрузить всю команду"}</Button></div><div className="mt-6 grid max-w-2xl grid-cols-3 gap-3"><div className="rounded-2xl bg-white/10 p-4"><strong className="block text-2xl">{employeeCount}</strong><span className="mt-1 block text-xs text-white/70">сотрудников</span></div><div className="rounded-2xl bg-white/10 p-4"><strong className="block text-2xl">{totalFarms}</strong><span className="mt-1 block text-xs text-white/70">хозяйств</span></div><div className="rounded-2xl bg-white/10 p-4"><strong className="block text-2xl">{totalProposals}</strong><span className="mt-1 block text-xs text-white/70">КП в базе</span></div></div></div>

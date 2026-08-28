@@ -67,6 +67,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const utils = trpc.useUtils();
   const canCreateSupport = Boolean(user?.isSuperuser || user?.permissions?.includes("support.create"));
   const canAccessSupport = Boolean(canCreateSupport || user?.permissions?.includes("support.manage"));
+  const canViewTeam = Boolean(user?.isSuperuser || user?.permissions?.includes("team.read"));
   const { data: accessRequests } = trpc.access.list.useQuery(undefined, {
     enabled: Boolean(user?.isSuperuser),
     staleTime: 15_000,
@@ -164,8 +165,8 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
             </div>
             <div className="cabinet-topbar-actions">
               <button type="button" className="cabinet-search-hint" onClick={() => setIsSearchOpen(true)} aria-label="Открыть поиск по кабинету"><Search className="h-4 w-4" /><span>Поиск по кабинету</span><kbd>⌘ K</kbd></button>
-              {user?.role === "admin" && <Link href="/admin" className="cabinet-admin-panel-link" aria-label="Открыть панель администратора"><UsersRound className="h-4 w-4" aria-hidden="true" /><span>Команда</span></Link>}
-              {user?.role === "admin" && <Link href="/access-requests" className="cabinet-access-requests-link" aria-label={pendingAccessRequests > 0 ? `Заявки доступа: ${pendingAccessRequests} новых` : "Заявки доступа: новых нет"}>
+              {canViewTeam && <Link href="/admin" className="cabinet-admin-panel-link" aria-label="Открыть панель администратора"><UsersRound className="h-4 w-4" aria-hidden="true" /><span>Команда</span></Link>}
+              {user?.isSuperuser && <Link href="/access-requests" className="cabinet-access-requests-link" aria-label={pendingAccessRequests > 0 ? `Заявки доступа: ${pendingAccessRequests} новых` : "Заявки доступа: новых нет"}>
                 <ShieldCheck className="h-4 w-4" aria-hidden="true" /><span>Заявки</span>{pendingAccessRequests > 0 && <strong aria-hidden="true">{pendingAccessRequests}</strong>}
               </Link>}
               {canCreateSupport && <Link href="/support" className="cabinet-access-requests-link" aria-label={newSupportTickets > 0 ? `Обращения: ${newSupportTickets} новых` : "Открыть обращения"}>
@@ -179,7 +180,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
                 </button>
                 {isAccountMenuOpen && <div className="cabinet-account-menu" role="menu" aria-label="Меню аккаунта">
                   <div className="cabinet-account-menu-identity"><span className="cabinet-account-avatar is-large" aria-hidden="true">{account.initials}</span><div><strong>{account.name}</strong><span>{account.email}</span></div></div>
-                  {user.role === "admin" && <Link href="/access-requests" role="menuitem" className="cabinet-account-edit-trigger" onClick={() => setIsAccountMenuOpen(false)}><ShieldCheck className="h-4 w-4" />Заявки доступа</Link>}
+                  {user.isSuperuser && <Link href="/access-requests" role="menuitem" className="cabinet-account-edit-trigger" onClick={() => setIsAccountMenuOpen(false)}><ShieldCheck className="h-4 w-4" />Заявки доступа</Link>}
                   {isEditingProfile ? <div className="cabinet-account-edit"><label htmlFor="cabinet-display-name">Отображаемое имя</label><input id="cabinet-display-name" value={displayNameDraft} onChange={(event) => setDisplayNameDraft(event.target.value)} maxLength={120} autoFocus /><div><button type="button" onClick={() => setIsEditingProfile(false)}>Отмена</button><button type="button" onClick={saveProfileName} disabled={displayNameDraft.trim().length < 2 || updateProfile.isPending}><Save className="h-3.5 w-3.5" />{updateProfile.isPending ? "Сохраняем…" : "Сохранить"}</button></div>{updateProfile.error && <p role="alert">Не удалось сохранить имя. Повторите ещё раз.</p>}</div> : <button type="button" role="menuitem" className="cabinet-account-edit-trigger" onClick={startProfileEdit}><PencilLine className="h-4 w-4" />Изменить отображаемое имя</button>}
                   <button type="button" role="menuitem" className="cabinet-account-logout" onClick={() => void handleLogout()} disabled={isLoggingOut}><LogOut className="h-4 w-4" />{isLoggingOut ? "Выходим…" : "Выйти из аккаунта"}</button>
                 </div>}

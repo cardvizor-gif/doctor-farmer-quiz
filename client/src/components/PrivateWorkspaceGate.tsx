@@ -20,10 +20,10 @@ export function privateWorkspaceGateCopy(pathname: string) {
   };
 }
 
-type PermissionAwareUser = { role?: "user" | "admin" | null; permissions?: readonly PermissionCode[] | null } | null | undefined;
+type PermissionAwareUser = { role?: "user" | "admin" | null; isSuperuser?: boolean | null; permissions?: readonly PermissionCode[] | null } | null | undefined;
 
 export function canAccessWorkspace(user: PermissionAwareUser, requiredPermission?: PermissionCode) {
-  return !requiredPermission || user?.role === "admin" || Boolean(user?.permissions?.includes(requiredPermission));
+  return !requiredPermission || Boolean(user?.isSuperuser) || Boolean(user?.permissions?.includes(requiredPermission));
 }
 
 export default function PrivateWorkspaceGate({ children, requiredPermission }: { children: ReactNode; requiredPermission?: PermissionCode }) {

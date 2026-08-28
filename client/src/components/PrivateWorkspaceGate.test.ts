@@ -19,7 +19,12 @@ describe("privateWorkspaceGateCopy", () => {
     expect(canAccessWorkspace({ role: "user", permissions: ["farms.read"] }, "quiz.use")).toBe(false);
   });
 
-  it("gives administrators access to every protected section", () => {
-    expect(canAccessWorkspace({ role: "admin", permissions: [] }, "team.manage")).toBe(true);
+  it("gives only the superuser access to every protected section", () => {
+    expect(canAccessWorkspace({ role: "admin", isSuperuser: true, permissions: [] }, "team.manage")).toBe(true);
+  });
+
+  it("does not bypass permissions for a delegated administrator", () => {
+    expect(canAccessWorkspace({ role: "admin", isSuperuser: false, permissions: [] }, "team.manage")).toBe(false);
+    expect(canAccessWorkspace({ role: "admin", isSuperuser: false, permissions: ["team.read"] }, "team.manage")).toBe(false);
   });
 });

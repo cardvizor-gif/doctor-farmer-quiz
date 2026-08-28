@@ -44,7 +44,7 @@ function Router() {
   const CabinetProposalBuilder = privateCabinetPage(ProposalBuilder, "proposals.read");
   const CabinetOrderRequests = privateCabinetPage(OrderRequests, "orders.read");
   const CabinetAccessRequests = cabinetPage(AccessRequests);
-  const CabinetAdminPanel = cabinetPage(AdminPanel);
+  const CabinetAdminPanel = privateCabinetPage(AdminPanel, "team.read");
   const CabinetSupportTickets = privateCabinetPage(SupportTickets, "support.create");
 
   return (
