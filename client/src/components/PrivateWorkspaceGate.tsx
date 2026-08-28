@@ -2,6 +2,7 @@ import AccessPortalDialog from "@/components/AccessPortalDialog";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { LockKeyhole, ShieldCheck, Sprout } from "lucide-react";
+import type { PermissionCode } from "@shared/permissions";
 import { type ReactNode, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -19,8 +20,14 @@ export function privateWorkspaceGateCopy(pathname: string) {
   };
 }
 
-export default function PrivateWorkspaceGate({ children }: { children: ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+type PermissionAwareUser = { role?: "user" | "admin" | null; permissions?: readonly PermissionCode[] | null } | null | undefined;
+
+export function canAccessWorkspace(user: PermissionAwareUser, requiredPermission?: PermissionCode) {
+  return !requiredPermission || user?.role === "admin" || Boolean(user?.permissions?.includes(requiredPermission));
+}
+
+export default function PrivateWorkspaceGate({ children, requiredPermission }: { children: ReactNode; requiredPermission?: PermissionCode }) {
+  const { isAuthenticated, loading, user } = useAuth();
   const [location] = useLocation();
   const [isAccessOpen, setIsAccessOpen] = useState(false);
   const copy = privateWorkspaceGateCopy(location);
@@ -56,6 +63,20 @@ export default function PrivateWorkspaceGate({ children }: { children: ReactNode
       </section>
       <AccessPortalDialog open={isAccessOpen} onClose={() => setIsAccessOpen(false)} />
     </>);
+  }
+
+  if (!canAccessWorkspace(user, requiredPermission)) {
+    const title = requiredPermission === "quiz.use" ? "Тестирование недоступно" : requiredPermission === "agro.use" ? "АгроПомощник недоступен" : "Раздел недоступен";
+    return (
+      <section className="flex min-h-[64vh] items-center justify-center px-5 py-10">
+        <div className="max-w-xl rounded-[2rem] border border-white/80 bg-white/95 p-8 text-center shadow-[0_20px_60px_rgba(31,75,44,0.16)] sm:p-12">
+          <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#fff4dc] text-[#9b6a20]"><LockKeyhole className="h-7 w-7" /></div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b6a20]">Ограниченный доступ</p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#1f4b2c]">{title}</h2>
+          <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[#5f6f5e]">Для этого раздела администратор должен назначить вам соответствующее право доступа.</p>
+        </div>
+      </section>
+    );
   }
 
   return <>{children}</>;

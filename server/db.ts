@@ -1,7 +1,8 @@
 import { and, count, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, orderRequestItems, orderRequests, proposals, shipmentItems, shipments, supportAttachments, supportTickets, users } from "../drizzle/schema";
+import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, orderRequestItems, orderRequests, proposals, shipmentItems, shipments, supportAttachments, supportTickets, userPermissions, users } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
+import type { PermissionCode } from "../shared/permissions";
 import { ENV } from './_core/env';
 import { storagePut } from "./storage";
 
@@ -91,6 +92,13 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getUserPermissions(openId: string): Promise<PermissionCode[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({ permission: userPermissions.permission }).from(userPermissions).where(eq(userPermissions.userOpenId, openId));
+  return rows.map(row => row.permission as PermissionCode);
+}
+
 export async function updateUserDisplayName(openId: string, displayName: string) {
   const db = await getDb();
   if (!db) {
@@ -104,18 +112,42 @@ export async function updateUserDisplayName(openId: string, displayName: string)
 export async function listTeamMembers() {
   const db = await getDb();
   if (!db) return [];
-  const [members, farmCounts, proposalCounts] = await Promise.all([
+  const [members, farmCounts, proposalCounts, permissions] = await Promise.all([
     db.select().from(users).orderBy(desc(users.lastSignedIn)),
     db.select({ ownerOpenId: farms.ownerOpenId, count: count(farms.id) }).from(farms).where(isNotNull(farms.ownerOpenId)).groupBy(farms.ownerOpenId),
     db.select({ ownerOpenId: farms.ownerOpenId, count: count(proposals.id) }).from(proposals).innerJoin(farms, eq(proposals.farmId, farms.id)).where(isNotNull(farms.ownerOpenId)).groupBy(farms.ownerOpenId),
+    db.select().from(userPermissions),
   ]);
   const farmsByOwner = new Map(farmCounts.flatMap((item) => item.ownerOpenId ? [[item.ownerOpenId, Number(item.count)] as const] : []));
   const proposalsByOwner = new Map(proposalCounts.flatMap((item) => item.ownerOpenId ? [[item.ownerOpenId, Number(item.count)] as const] : []));
+  const permissionsByOwner = new Map<string, string[]>();
+  permissions.forEach(({ userOpenId, permission }) => permissionsByOwner.set(userOpenId, [...(permissionsByOwner.get(userOpenId) ?? []), permission]));
   return members.map((member) => ({
     ...member,
     farmCount: farmsByOwner.get(member.openId) ?? 0,
     proposalCount: proposalsByOwner.get(member.openId) ?? 0,
+    permissions: permissionsByOwner.get(member.openId) ?? [],
   }));
+}
+
+export async function updateUserAccess(openId: string, role: "user" | "admin", permissions: PermissionCode[], grantedByOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  if (openId === ENV.ownerOpenId && role !== "admin") throw new Error("Нельзя снять права владельца кабинета");
+  const target = await getUserByOpenId(openId);
+  if (!target) return undefined;
+  if (target.role === "admin" && role === "user") {
+    const admins = await db.select({ id: users.id }).from(users).where(eq(users.role, "admin"));
+    if (admins.length <= 1) throw new Error("Нельзя понизить последнего администратора");
+  }
+  await db.transaction(async tx => {
+    await tx.update(users).set({ role }).where(eq(users.openId, openId));
+    await tx.delete(userPermissions).where(eq(userPermissions.userOpenId, openId));
+    if (role === "user" && permissions.length > 0) {
+      await tx.insert(userPermissions).values(permissions.map(permission => ({ userOpenId: openId, permission, grantedByOpenId })));
+    }
+  });
+  return getUserByOpenId(openId);
 }
 
 export async function getTeamMemberWorkspace(openId: string) {

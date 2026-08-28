@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountIdentity, cabinetPageTitle } from "./CabinetShell";
+import { accountIdentity, cabinetPageTitle, filterCabinetNavigation } from "./CabinetShell";
 
 describe("accountIdentity", () => {
   it("uses the authenticated name and email in the account menu", () => {
@@ -27,5 +27,15 @@ describe("accountIdentity", () => {
 
   it("uses a dedicated page title for the internal support ticket list", () => {
     expect(cabinetPageTitle("/support")).toBe("Обращения");
+  });
+
+  it("shows only assigned workspace sections to a regular employee", () => {
+    expect(filterCabinetNavigation({ role: "user", permissions: ["farms.read", "quiz.use"] }).map((item) => item.href)).toEqual(["/", "/farms", "/quiz"]);
+  });
+
+  it("shows all workspace sections to an administrator", () => {
+    expect(filterCabinetNavigation({ role: "admin", permissions: [] }).map((item) => item.href)).toEqual([
+      "/", "/agro-helper", "/farms", "/proposals/new", "/order-requests", "/knowledge-base", "/quiz",
+    ]);
   });
 });

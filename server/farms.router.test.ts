@@ -16,6 +16,7 @@ vi.mock("./db", () => ({
   listTeamMembers: vi.fn(),
   listTeamFarms: vi.fn(),
   getTeamMemberWorkspace: vi.fn(),
+  getUserPermissions: vi.fn().mockResolvedValue(["farms.read", "farms.write", "proposals.read", "proposals.write"]),
 }));
 
 import * as db from "./db";

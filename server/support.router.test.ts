@@ -5,6 +5,7 @@ vi.mock("./db", () => ({
   getSupportTicketById: vi.fn(),
   listSupportTickets: vi.fn(),
   updateSupportTicketStatus: vi.fn(),
+  getUserPermissions: vi.fn().mockResolvedValue(["support.create"]),
 }));
 
 import { appRouter } from "./routers";

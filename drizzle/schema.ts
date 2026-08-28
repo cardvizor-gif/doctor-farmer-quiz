@@ -27,6 +27,24 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+export const userPermissions = mysqlTable(
+  "userPermissions",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userOpenId: varchar("userOpenId", { length: 64 }).notNull(),
+    permission: varchar("permission", { length: 64 }).notNull(),
+    grantedByOpenId: varchar("grantedByOpenId", { length: 64 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [
+    uniqueIndex("user_permissions_user_permission_unique").on(table.userOpenId, table.permission),
+    index("user_permissions_user_idx").on(table.userOpenId),
+  ],
+);
+
+export type UserPermission = typeof userPermissions.$inferSelect;
+export type InsertUserPermission = typeof userPermissions.$inferInsert;
+
 export const farms = mysqlTable(
   "farms",
   {

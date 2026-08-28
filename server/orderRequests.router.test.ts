@@ -6,6 +6,7 @@ vi.mock("./db", () => ({
   createOrderRequest: vi.fn(),
   updateOrderRequest: vi.fn(),
   createShipment: vi.fn(),
+  getUserPermissions: vi.fn().mockResolvedValue(["orders.read", "orders.write"]),
 }));
 
 import { appRouter } from "./routers";

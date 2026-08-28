@@ -20,7 +20,7 @@ export default function AccessPortalDialog({ open, onClose }: { open: boolean; o
   });
   const activateInvite = trpc.access.activate.useMutation({
     onSuccess: (user) => {
-      utils.auth.me.setData(undefined, user);
+      void utils.auth.me.invalidate();
       toast.success("Кабинет активирован");
       onClose();
       window.location.assign("/farms");

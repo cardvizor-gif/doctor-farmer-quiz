@@ -8,6 +8,7 @@ import * as db from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { sdk } from "./_core/sdk";
+import { allPermissionCodes, permissionCodes, type PermissionCode } from "../shared/permissions";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
 const orderItemSchema = z.object({
@@ -70,11 +71,22 @@ function managerIdentity(user: { displayName?: string | null; name?: string | nu
   };
 }
 
+const permissionProcedure = (permission: PermissionCode) => protectedProcedure.use(async ({ ctx, next }) => {
+  if (ctx.user.role === "admin") return next();
+  const permissions = await db.getUserPermissions(ctx.user.openId);
+  if (!permissions.includes(permission)) throw new TRPCError({ code: "FORBIDDEN", message: "Недостаточно прав для этого раздела" });
+  return next();
+});
+
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query(async ({ ctx }) => {
+      if (!ctx.user) return null;
+      const permissions = ctx.user.role === "admin" ? allPermissionCodes : await db.getUserPermissions(ctx.user.openId);
+      return { ...ctx.user, permissions };
+    }),
     updateProfile: protectedProcedure.input(z.object({ displayName: z.string().trim().min(2, "Укажите имя не короче 2 символов").max(120, "Имя не должно превышать 120 символов") })).mutation(async ({ input, ctx }) => {
       const user = await db.updateUserDisplayName(ctx.user.openId, input.displayName);
       if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "Пользователь не найден" });
@@ -136,59 +148,68 @@ export const appRouter = router({
       if (!workspace) throw new TRPCError({ code: "NOT_FOUND", message: "Сотрудник не найден" });
       return workspace;
     }),
+    updateAccess: adminProcedure.input(z.object({
+      openId: z.string().trim().min(1).max(64),
+      role: z.enum(["user", "admin"]),
+      permissions: z.array(z.enum(permissionCodes)).max(permissionCodes.length),
+    })).mutation(async ({ input, ctx }) => {
+      const updated = await db.updateUserAccess(input.openId, input.role, input.permissions, ctx.user.openId);
+      if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Сотрудник не найден" });
+      return updated;
+    }),
   }),
   farms: router({
-    list: protectedProcedure.query(({ ctx }) => db.listFarms(ctx.user.openId)),
-    byId: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
+    list: permissionProcedure("farms.read").query(({ ctx }) => db.listFarms(ctx.user.openId)),
+    byId: permissionProcedure("farms.read").input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
       const farm = await db.getFarmById(input.id, ctx.user.openId);
       if (!farm) throw new TRPCError({ code: "NOT_FOUND", message: "Хозяйство не найдено" });
       return farm;
     }),
-    create: protectedProcedure.input(farmInputSchema).mutation(async ({ input, ctx }) => {
+    create: permissionProcedure("farms.write").input(farmInputSchema).mutation(async ({ input, ctx }) => {
       const farm = await db.createFarm(input, ctx.user.openId);
       if (!farm) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Не удалось создать карточку хозяйства" });
       return farm;
     }),
-    bulkCreate: protectedProcedure.input(z.object({ farms: z.array(farmInputSchema).min(1).max(FARM_IMPORT_MAX_ROWS) })).mutation(async ({ input, ctx }) => {
+    bulkCreate: permissionProcedure("farms.write").input(z.object({ farms: z.array(farmInputSchema).min(1).max(FARM_IMPORT_MAX_ROWS) })).mutation(async ({ input, ctx }) => {
       return db.createFarms(input.farms, ctx.user.openId);
     }),
-    update: protectedProcedure.input(farmInputSchema.extend({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+    update: permissionProcedure("farms.write").input(farmInputSchema.extend({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
       const { id, ...farmInput } = input;
       const farm = await db.updateFarm(id, farmInput, ctx.user.openId);
       if (!farm) throw new TRPCError({ code: "NOT_FOUND", message: "Хозяйство не найдено" });
       return farm;
     }),
-    remove: protectedProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ input, ctx }) => db.removeFarm(input.id, ctx.user.openId)),
+    remove: permissionProcedure("farms.write").input(z.object({ id: z.number().int().positive() })).mutation(({ input, ctx }) => db.removeFarm(input.id, ctx.user.openId)),
     claimLegacy: adminProcedure.mutation(({ ctx }) => db.claimLegacyFarms(ctx.user.openId)),
   }),
   proposals: router({
-    list: protectedProcedure.input(z.object({ farmId: z.number().int().positive().optional() }).optional()).query(({ input, ctx }) => db.listProposals(ctx.user.openId, input?.farmId)),
-    byId: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
+    list: permissionProcedure("proposals.read").input(z.object({ farmId: z.number().int().positive().optional() }).optional()).query(({ input, ctx }) => db.listProposals(ctx.user.openId, input?.farmId)),
+    byId: permissionProcedure("proposals.read").input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
       const proposal = await db.getProposalById(input.id, ctx.user.openId);
       if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено" });
       return proposal;
     }),
-    create: protectedProcedure.input(proposalInputSchema).mutation(async ({ input, ctx }) => {
+    create: permissionProcedure("proposals.write").input(proposalInputSchema).mutation(async ({ input, ctx }) => {
       const farm = await db.getFarmById(input.farmId, ctx.user.openId);
       if (!farm) throw new TRPCError({ code: "NOT_FOUND", message: "Сначала выберите существующее хозяйство" });
       const proposal = await db.createProposal(input, ctx.user.openId);
       if (!proposal) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Не удалось сохранить коммерческое предложение" });
       return proposal;
     }),
-    updateStatus: protectedProcedure.input(z.object({ id: z.number().int().positive(), status: z.enum(proposalStatuses) })).mutation(async ({ input, ctx }) => {
+    updateStatus: permissionProcedure("proposals.write").input(z.object({ id: z.number().int().positive(), status: z.enum(proposalStatuses) })).mutation(async ({ input, ctx }) => {
       const proposal = await db.updateProposalStatus(input.id, input.status, ctx.user.openId);
       if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено" });
       return proposal;
     }),
   }),
   support: router({
-    list: protectedProcedure.query(({ ctx }) => db.listSupportTickets(ctx.user.openId, ctx.user.role === "admin")),
-    byId: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
+    list: permissionProcedure("support.create").query(({ ctx }) => db.listSupportTickets(ctx.user.openId, ctx.user.role === "admin")),
+    byId: permissionProcedure("support.create").input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
       const ticket = await db.getSupportTicketById(input.id, ctx.user.openId, ctx.user.role === "admin");
       if (!ticket) throw new TRPCError({ code: "NOT_FOUND", message: "Обращение не найдено" });
       return ticket;
     }),
-    create: protectedProcedure.input(supportTicketInputSchema).mutation(({ input, ctx }) => db.createSupportTicket(input, ctx.user.openId)),
+    create: permissionProcedure("support.create").input(supportTicketInputSchema).mutation(({ input, ctx }) => db.createSupportTicket(input, ctx.user.openId)),
     updateStatus: adminProcedure.input(z.object({ id: z.number().int().positive(), status: z.enum(["new", "in_progress", "resolved"]) })).mutation(async ({ input }) => {
       const ticket = await db.updateSupportTicketStatus(input.id, input.status);
       if (!ticket) throw new TRPCError({ code: "NOT_FOUND", message: "Обращение не найдено" });
@@ -196,24 +217,24 @@ export const appRouter = router({
     }),
   }),
   orderRequests: router({
-    list: protectedProcedure.query(({ ctx }) => db.listOrderRequests(ctx.user.openId)),
-    byId: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
+    list: permissionProcedure("orders.read").query(({ ctx }) => db.listOrderRequests(ctx.user.openId)),
+    byId: permissionProcedure("orders.read").input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
       const request = await db.getOrderRequestById(input.id, ctx.user.openId);
       if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка не найдена" });
       return request;
     }),
-    create: protectedProcedure.input(orderRequestInputSchema).mutation(async ({ input, ctx }) => {
+    create: permissionProcedure("orders.write").input(orderRequestInputSchema).mutation(async ({ input, ctx }) => {
       const request = await db.createOrderRequest(input, ctx.user.openId, managerIdentity(ctx.user));
       if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Выберите существующее хозяйство" });
       return request;
     }),
-    update: protectedProcedure.input(orderRequestInputSchema.safeExtend({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+    update: permissionProcedure("orders.write").input(orderRequestInputSchema.safeExtend({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
       const { id, ...payload } = input;
       const request = await db.updateOrderRequest(id, payload, ctx.user.openId, managerIdentity(ctx.user));
       if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Черновик заявки не найден или уже передан в бухгалтерию" });
       return request;
     }),
-    createShipment: protectedProcedure.input(shipmentInputSchema).mutation(async ({ input, ctx }) => {
+    createShipment: permissionProcedure("orders.write").input(shipmentInputSchema).mutation(async ({ input, ctx }) => {
       const { requestId, ...payload } = input;
       const request = await db.createShipment(requestId, payload, ctx.user.openId);
       if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка недоступна, не передана в бухгалтерию или количество превышает остаток" });

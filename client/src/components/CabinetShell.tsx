@@ -9,16 +9,23 @@ import { trpc } from "@/lib/trpc";
 import { BookOpen, Building2, ChevronDown, ClipboardList, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
+import type { PermissionCode } from "@shared/permissions";
 
 export const cabinetNavigation = [
-  { href: "/", label: "Обзор", icon: LayoutDashboard },
-  { href: "/agro-helper", label: "АгроПомощник", icon: Sprout },
-  { href: "/farms", label: "Хозяйства", icon: Building2 },
-  { href: "/proposals/new", label: "Генератор КП", icon: FilePlus2 },
-  { href: "/order-requests", label: "Заявки", icon: ClipboardList },
-  { href: "/knowledge-base", label: "База знаний", icon: BookOpen },
-  { href: "/quiz", label: "Тестирование", icon: Trophy },
+  { href: "/", label: "Обзор", icon: LayoutDashboard, permission: undefined },
+  { href: "/agro-helper", label: "АгроПомощник", icon: Sprout, permission: "agro.use" as PermissionCode },
+  { href: "/farms", label: "Хозяйства", icon: Building2, permission: "farms.read" as PermissionCode },
+  { href: "/proposals/new", label: "Генератор КП", icon: FilePlus2, permission: "proposals.read" as PermissionCode },
+  { href: "/order-requests", label: "Заявки", icon: ClipboardList, permission: "orders.read" as PermissionCode },
+  { href: "/knowledge-base", label: "База знаний", icon: BookOpen, permission: "knowledge.read" as PermissionCode },
+  { href: "/quiz", label: "Тестирование", icon: Trophy, permission: "quiz.use" as PermissionCode },
 ] as const;
+
+type NavigationUser = { role?: "user" | "admin" | null; permissions?: readonly PermissionCode[] | null } | null | undefined;
+
+export function filterCabinetNavigation(user: NavigationUser) {
+  return cabinetNavigation.filter((item) => !item.permission || user?.role === "admin" || user?.permissions?.includes(item.permission));
+}
 
 export function cabinetPageTitle(pathname: string) {
   if (pathname.startsWith("/support")) return "Обращения";
@@ -58,20 +65,22 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const [displayNameDraft, setDisplayNameDraft] = useState("");
   const { user, loading: isAuthLoading, logout } = useAuth();
   const utils = trpc.useUtils();
+  const canCreateSupport = user?.role === "admin" || Boolean(user?.permissions?.includes("support.create"));
   const { data: accessRequests } = trpc.access.list.useQuery(undefined, {
     enabled: user?.role === "admin",
     staleTime: 15_000,
   });
   const { data: supportTickets } = trpc.support.list.useQuery(undefined, {
-    enabled: Boolean(user),
+    enabled: canCreateSupport,
     staleTime: 15_000,
   });
   const updateProfile = trpc.auth.updateProfile.useMutation({
     onSuccess: (updatedUser) => {
-      utils.auth.me.setData(undefined, updatedUser);
+      void utils.auth.me.invalidate();
       setIsEditingProfile(false);
     },
   });
+  const visibleNavigation = filterCabinetNavigation(user);
   const pageTitle = cabinetPageTitle(location);
   const pageTheme = cabinetTheme(location);
   const account = accountIdentity(user);
@@ -132,7 +141,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
             <button type="button" className="cabinet-mobile-close" onClick={() => setIsMobileMenuOpen(false)} aria-label="Закрыть меню"><X className="h-5 w-5" /></button>
           </div>
           <nav className="cabinet-nav">
-            {cabinetNavigation.map((item) => {
+            {visibleNavigation.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.href;
               return <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)} className={`cabinet-nav-item ${isActive ? "is-active" : ""}`}>
@@ -158,7 +167,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
               {user?.role === "admin" && <Link href="/access-requests" className="cabinet-access-requests-link" aria-label={pendingAccessRequests > 0 ? `Заявки доступа: ${pendingAccessRequests} новых` : "Заявки доступа: новых нет"}>
                 <ShieldCheck className="h-4 w-4" aria-hidden="true" /><span>Заявки</span>{pendingAccessRequests > 0 && <strong aria-hidden="true">{pendingAccessRequests}</strong>}
               </Link>}
-              {user && <Link href="/support" className="cabinet-access-requests-link" aria-label={newSupportTickets > 0 ? `Обращения: ${newSupportTickets} новых` : "Открыть обращения"}>
+              {canCreateSupport && <Link href="/support" className="cabinet-access-requests-link" aria-label={newSupportTickets > 0 ? `Обращения: ${newSupportTickets} новых` : "Открыть обращения"}>
                 <MessageSquareText className="h-4 w-4" aria-hidden="true" /><span>Обращения</span>{newSupportTickets > 0 && <strong aria-hidden="true">{newSupportTickets}</strong>}
               </Link>}
               {!isAuthLoading && (user ? <div className="cabinet-account-wrap">

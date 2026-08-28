@@ -6,7 +6,8 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Toaster } from "@/components/ui/sonner";
 import CabinetShell from "@/components/CabinetShell";
-import PrivateWorkspaceGate from "@/components/PrivateWorkspaceGate";
+import PrivateWorkspaceGate from "./components/PrivateWorkspaceGate";
+import type { PermissionCode } from "@shared/permissions";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Home = lazy(() => import("./pages/Home"));
@@ -30,21 +31,21 @@ function RouteFallback() {
 
 function Router() {
   const cabinetPage = (Page: React.ComponentType) => () => <CabinetShell><Page /></CabinetShell>;
-  const CabinetDashboard = cabinetPage(Dashboard);
-  const CabinetAgroHelper = cabinetPage(AgroHelper);
-  const CabinetKnowledgeBase = cabinetPage(KnowledgeBase);
-  const privateCabinetPage = (Page: React.ComponentType) => () => (
+  const privateCabinetPage = (Page: React.ComponentType, requiredPermission?: PermissionCode) => () => (
     <CabinetShell>
-      <PrivateWorkspaceGate><Page /></PrivateWorkspaceGate>
+      <PrivateWorkspaceGate requiredPermission={requiredPermission}><Page /></PrivateWorkspaceGate>
     </CabinetShell>
   );
-  const CabinetHome = privateCabinetPage(Home);
-  const CabinetFarmWorkspace = privateCabinetPage(FarmWorkspace);
-  const CabinetProposalBuilder = privateCabinetPage(ProposalBuilder);
-  const CabinetOrderRequests = privateCabinetPage(OrderRequests);
+  const CabinetDashboard = cabinetPage(Dashboard);
+  const CabinetAgroHelper = privateCabinetPage(AgroHelper, "agro.use");
+  const CabinetKnowledgeBase = privateCabinetPage(KnowledgeBase, "knowledge.read");
+  const CabinetHome = privateCabinetPage(Home, "quiz.use");
+  const CabinetFarmWorkspace = privateCabinetPage(FarmWorkspace, "farms.read");
+  const CabinetProposalBuilder = privateCabinetPage(ProposalBuilder, "proposals.read");
+  const CabinetOrderRequests = privateCabinetPage(OrderRequests, "orders.read");
   const CabinetAccessRequests = cabinetPage(AccessRequests);
   const CabinetAdminPanel = cabinetPage(AdminPanel);
-  const CabinetSupportTickets = privateCabinetPage(SupportTickets);
+  const CabinetSupportTickets = privateCabinetPage(SupportTickets, "support.create");
 
   return (
     <Switch>

@@ -1,0 +1,35 @@
+export const permissionCodes = [
+  "farms.read",
+  "farms.write",
+  "proposals.read",
+  "proposals.write",
+  "orders.read",
+  "orders.write",
+  "support.create",
+  "support.manage",
+  "team.read",
+  "team.manage",
+  "knowledge.read",
+  "agro.use",
+  "quiz.use",
+] as const;
+
+export type PermissionCode = (typeof permissionCodes)[number];
+
+export const permissionLabels: Record<PermissionCode, { title: string; description: string }> = {
+  "farms.read": { title: "Хозяйства: просмотр", description: "Просмотр собственных карточек хозяйств." },
+  "farms.write": { title: "Хозяйства: редактирование", description: "Создание, изменение, импорт и удаление собственных карточек." },
+  "proposals.read": { title: "КП: просмотр", description: "Просмотр собственных коммерческих предложений." },
+  "proposals.write": { title: "КП: редактирование", description: "Создание и изменение собственных коммерческих предложений." },
+  "orders.read": { title: "Заявки: просмотр", description: "Просмотр собственных заявок и истории отгрузок." },
+  "orders.write": { title: "Заявки: редактирование", description: "Создание и изменение собственных заявок и отгрузок." },
+  "support.create": { title: "Обращения: создание", description: "Создание и просмотр собственных обращений." },
+  "support.manage": { title: "Обращения: обработка", description: "Просмотр общей очереди и изменение статусов обращений." },
+  "team.read": { title: "Команда: просмотр", description: "Просмотр доступной командной сводки." },
+  "team.manage": { title: "Команда: управление", description: "Назначение ролей и прав доступа." },
+  "knowledge.read": { title: "База знаний", description: "Доступ к базе знаний препаратов и материалов." },
+  "agro.use": { title: "АгроПомощник", description: "Доступ к схемам защиты и расчётам применения." },
+  "quiz.use": { title: "Тестирование", description: "Доступ к профессиональным тестам." },
+};
+
+export const allPermissionCodes = [...permissionCodes] as PermissionCode[];
