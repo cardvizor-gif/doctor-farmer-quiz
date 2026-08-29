@@ -62,6 +62,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.role = 'admin';
       updateSet.role = 'admin';
     }
+    if (user.openId === ENV.ownerOpenId) {
+      values.isSuperuser = 1;
+      updateSet.isSuperuser = 1;
+    }
 
     if (!values.lastSignedIn) {
       values.lastSignedIn = new Date();
@@ -133,9 +137,11 @@ export async function listTeamMembers() {
 export async function updateUserAccess(openId: string, role: "user" | "admin", permissions: PermissionCode[], grantedByOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
-  if (openId === ENV.ownerOpenId && role !== "admin") throw new Error("Нельзя снять права владельца кабинета");
   const target = await getUserByOpenId(openId);
   if (!target) return undefined;
+  if (target.isSuperuser || openId === ENV.ownerOpenId) {
+    if (role !== "admin") throw new Error("Нельзя снять права владельца кабинета");
+  }
   if (target.status === "archived") throw new Error("Архивированный сотрудник недоступен для изменения");
   if (target.role === "admin" && role === "user") {
     const admins = await db.select({ id: users.id }).from(users).where(eq(users.role, "admin"));
@@ -155,14 +161,15 @@ export async function transferAndArchiveUser(sourceOpenId: string, targetOpenId:
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
   if (sourceOpenId === targetOpenId) throw new Error("Нельзя передать базу самому себе");
-  if (sourceOpenId === ENV.ownerOpenId) throw new Error("Нельзя архивировать владельца кабинета");
 
-  const [source, target] = await Promise.all([getUserByOpenId(sourceOpenId), getUserByOpenId(targetOpenId)]);
+  const [source, target, archivedBy] = await Promise.all([getUserByOpenId(sourceOpenId), getUserByOpenId(targetOpenId), getUserByOpenId(archivedByOpenId)]);
   if (!source) throw new Error("Сотрудник-источник не найден");
   if (!target) throw new Error("Сотрудник-получатель не найден");
+  if (!archivedBy) throw new Error("Администратор-инициатор не найден");
   if (source.status === "archived") throw new Error("Сотрудник уже архивирован");
   if (target.status === "archived") throw new Error("Нельзя передать базу архивированному сотруднику");
-  if (source.role === "admin" && archivedByOpenId !== ENV.ownerOpenId) throw new Error("Только суперпользователь может архивировать администратора");
+  if (source.isSuperuser) throw new Error("Нельзя архивировать владельца кабинета");
+  if (source.role === "admin" && !archivedBy.isSuperuser && archivedByOpenId !== ENV.ownerOpenId) throw new Error("Только суперпользователь может архивировать администратора");
   if (source.role === "admin") {
     const admins = await db.select({ id: users.id }).from(users).where(and(eq(users.role, "admin"), eq(users.status, "active")));
     if (admins.length <= 1) throw new Error("Нельзя архивировать последнего администратора");

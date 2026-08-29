@@ -42,7 +42,10 @@ export function getSessionCookieOptions(
   return {
     httpOnly: true,
     path: "/",
-    sameSite: "none",
+    // The cabinet and /api/trpc share the same site. Lax works for the
+    // top-level OAuth redirect and avoids browsers rejecting SameSite=None
+    // when a reverse proxy fails to forward the HTTPS signal.
+    sameSite: "lax",
     secure: isSecureRequest(req),
   };
 }

@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `isSuperuser` int DEFAULT 0 NOT NULL;

@@ -19,6 +19,8 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  /** Explicit owner marker survives OAuth re-login and is never editable from the admin UI. */
+  isSuperuser: int("isSuperuser").default(0).notNull(),
   status: mysqlEnum("status", ["active", "archived"]).default("active").notNull(),
   archivedAt: timestamp("archivedAt"),
   archivedByOpenId: varchar("archivedByOpenId", { length: 64 }),

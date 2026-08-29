@@ -72,8 +72,8 @@ function managerIdentity(user: { displayName?: string | null; name?: string | nu
   };
 }
 
-const isSuperuser = (openId: string) => openId === ENV.ownerOpenId;
-const getEffectivePermissions = async (user: { openId: string; role: string }) => isSuperuser(user.openId) ? allPermissionCodes : await db.getUserPermissions(user.openId);
+const isSuperuser = (user: { openId: string; isSuperuser?: number | boolean | null }) => Boolean(user.isSuperuser) || user.openId === ENV.ownerOpenId;
+const getEffectivePermissions = async (user: { openId: string; isSuperuser?: number | boolean | null }) => isSuperuser(user) ? allPermissionCodes : await db.getUserPermissions(user.openId);
 const permissionProcedure = (permission: PermissionCode) => protectedProcedure.use(async ({ ctx, next }) => {
   const permissions = await getEffectivePermissions(ctx.user);
   if (!permissions.includes(permission)) throw new TRPCError({ code: "FORBIDDEN", message: "Недостаточно прав для этого раздела" });
@@ -85,7 +85,7 @@ const teamProcedure = (permission: "team.read" | "team.manage" | "team.transfer"
   return next();
 });
 const superuserProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (!isSuperuser(ctx.user.openId)) throw new TRPCError({ code: "FORBIDDEN", message: "Операция доступна только суперпользователю" });
+  if (!isSuperuser(ctx.user)) throw new TRPCError({ code: "FORBIDDEN", message: "Операция доступна только суперпользователю" });
   return next();
 });
 
@@ -96,7 +96,7 @@ export const appRouter = router({
     me: publicProcedure.query(async ({ ctx }) => {
       if (!ctx.user) return null;
       const permissions = await getEffectivePermissions(ctx.user);
-      return { ...ctx.user, permissions, isSuperuser: isSuperuser(ctx.user.openId) };
+      return { ...ctx.user, permissions, isSuperuser: isSuperuser(ctx.user) };
     }),
     updateProfile: protectedProcedure.input(z.object({ displayName: z.string().trim().min(2, "Укажите имя не короче 2 символов").max(120, "Имя не должно превышать 120 символов") })).mutation(async ({ input, ctx }) => {
       const user = await db.updateUserDisplayName(ctx.user.openId, input.displayName);
@@ -166,7 +166,7 @@ export const appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const permissions = await getEffectivePermissions(ctx.user);
       if (!permissions.includes("team.manage")) throw new TRPCError({ code: "FORBIDDEN", message: "Недостаточно прав для управления командой" });
-      if (!isSuperuser(ctx.user.openId)) {
+      if (!isSuperuser(ctx.user)) {
         if (input.role !== "user") throw new TRPCError({ code: "FORBIDDEN", message: "Только суперпользователь может назначать администраторов" });
         const target = await db.getUserByOpenId(input.openId);
         if (target?.role === "admin" || input.openId === ctx.user.openId) throw new TRPCError({ code: "FORBIDDEN", message: "Делегированный администратор не может менять права администратора или свои права" });
