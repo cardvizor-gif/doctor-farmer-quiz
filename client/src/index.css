@@ -675,7 +675,7 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 
 /* Mobile-first dashboard refresh: compact sales actions with a light agronomy surface. */
 .dashboard-home { position: relative; isolation: isolate; min-width: 0; color: var(--field-ink); }
-.dashboard-home::before { content: ""; position: absolute; z-index: -1; top: 170px; right: -24px; bottom: -28px; left: -24px; border-radius: 28px; background-image: linear-gradient(180deg, rgba(239,247,223,.9) 0%, rgba(221,239,199,.54) 42%, rgba(203,229,175,.72) 100%), url("/manus-storage/doctor-farmer-light-field-background_15957baa.jpg"); background-position: center bottom; background-size: cover; opacity: .92; }
+.dashboard-home::before { content: ""; position: absolute; z-index: -1; top: 0; right: -24px; bottom: -28px; left: -24px; border-radius: 28px; background-image: linear-gradient(180deg, rgba(239,247,223,.9) 0%, rgba(221,239,199,.54) 42%, rgba(203,229,175,.72) 100%), url("/manus-storage/doctor-farmer-light-field-background_15957baa.jpg"); background-position: center bottom; background-size: cover; opacity: .92; }
 .dashboard-home > * { position: relative; z-index: 1; }
 .dashboard-mobile-brand { display: none; }
 .dashboard-intro { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; justify-content: space-between; gap: 24px; max-width: 1180px; margin-inline: auto; padding: 4px 0 22px; }
@@ -729,7 +729,7 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   .cabinet-content { padding: 12px 10px calc(92px + env(safe-area-inset-bottom)); }
   .dashboard-mobile-brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 2px 4px 16px; }
   .dashboard-mobile-brand span { color: var(--field-muted); font-size: 12px; font-weight: 700; }
-  .dashboard-home::before { top: 156px; right: -10px; bottom: -12px; left: -10px; border-radius: 20px; }
+  .dashboard-home::before { top: 0; right: -10px; bottom: -12px; left: -10px; border-radius: 20px; }
   .dashboard-intro { display: block; padding: 2px 4px 16px; }
   .dashboard-eyebrow { margin-bottom: 6px; font-size: 10px; }
   .dashboard-intro h1, .dashboard-section-heading h2 { font-size: 18px; }
