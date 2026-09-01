@@ -127,7 +127,7 @@ export default function AgroHelper() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f7f1] text-[#15211c] flex flex-col font-sans selection:bg-[#66a46c] selection:text-white">
+    <div className="agro-helper-workspace min-h-screen bg-[#f4f7f1] text-[#15211c] flex flex-col font-sans selection:bg-[#66a46c] selection:text-white">
       
       {/* Стили для печати (экспорта в PDF) */}
       <style dangerouslySetInnerHTML={{ __html: `
