@@ -674,9 +674,11 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 @media (max-width: 760px) { .cabinet-account-copy, .cabinet-account-trigger > svg { display: none; }.cabinet-account-trigger { padding: 4px; border-radius: 10px; }.cabinet-account-avatar { width: 31px; height: 31px; }.cabinet-account-menu { position: fixed; top: 61px; right: 12px; width: min(276px, calc(100vw - 24px)); }.cabinet-login-button { padding: 8px 10px; font-size: 11px; } }
 
 /* Mobile-first dashboard refresh: compact sales actions with a light agronomy surface. */
-.dashboard-home { min-width: 0; color: var(--field-ink); }
+.dashboard-home { position: relative; isolation: isolate; min-width: 0; color: var(--field-ink); }
+.dashboard-home::before { content: ""; position: absolute; z-index: -1; top: 170px; right: -24px; bottom: -28px; left: -24px; border-radius: 28px; background-image: linear-gradient(180deg, rgba(239,247,223,.9) 0%, rgba(221,239,199,.54) 42%, rgba(203,229,175,.72) 100%), url("/manus-storage/doctor-farmer-light-field-background_15957baa.jpg"); background-position: center bottom; background-size: cover; opacity: .92; }
+.dashboard-home > * { position: relative; z-index: 1; }
 .dashboard-mobile-brand { display: none; }
-.dashboard-intro { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 4px 0 22px; }
+.dashboard-intro { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; justify-content: space-between; gap: 24px; max-width: 1180px; margin-inline: auto; padding: 4px 0 22px; }
 .dashboard-intro-copy { min-width: 0; }
 .dashboard-eyebrow { margin: 0 0 7px; color: var(--field-mid); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .dashboard-intro h1, .dashboard-section-heading h2 { margin: 0; color: var(--field-ink); font-size: clamp(24px, 3vw, 34px); font-weight: 700; letter-spacing: -.05em; line-height: 1.08; }
@@ -687,7 +689,7 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 .dashboard-quick-action-primary { background: var(--field-lime); color: #263d20; }
 .dashboard-quick-action-primary:hover { background: #d1f94d; }
 .dashboard-section { min-width: 0; }
-.dashboard-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.dashboard-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; max-width: 1180px; margin: 0 auto 12px; }
 .dashboard-section-heading h2 { font-size: 22px; }
 .dashboard-section-note { color: var(--field-muted); font-size: 12px; }
 .dashboard-module-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
@@ -706,7 +708,7 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 .dashboard-module-copy strong { overflow: hidden; color: var(--field-ink); font-size: 14px; font-weight: 800; line-height: 1.2; text-overflow: ellipsis; }
 .dashboard-module-copy small { overflow: hidden; color: var(--field-muted); font-size: 11px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 .dashboard-module-action { color: var(--field-mid); font-size: 11px; font-weight: 800; }
-.dashboard-support-strip { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; border: 0; border-radius: 16px; background: rgba(230,241,215,.76); padding: 14px 16px; color: var(--field-deep); }
+.dashboard-support-strip { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1180px; margin: 14px auto 0; border: 0; border-radius: 16px; background: rgba(230,241,215,.76); padding: 14px 16px; color: var(--field-deep); }
 .dashboard-support-strip strong, .dashboard-support-strip span { display: block; }
 .dashboard-support-strip strong { font-size: 13px; }
 .dashboard-support-strip span { margin-top: 3px; color: var(--field-muted); font-size: 11px; }
@@ -727,6 +729,7 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   .cabinet-content { padding: 12px 10px calc(92px + env(safe-area-inset-bottom)); }
   .dashboard-mobile-brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 2px 4px 16px; }
   .dashboard-mobile-brand span { color: var(--field-muted); font-size: 12px; font-weight: 700; }
+  .dashboard-home::before { top: 156px; right: -10px; bottom: -12px; left: -10px; border-radius: 20px; }
   .dashboard-intro { display: block; padding: 2px 4px 16px; }
   .dashboard-eyebrow { margin-bottom: 6px; font-size: 10px; }
   .dashboard-intro h1, .dashboard-section-heading h2 { font-size: 18px; }
