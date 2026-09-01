@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountIdentity, cabinetPageTitle, filterCabinetNavigation } from "./CabinetShell";
+import { accountIdentity, cabinetPageTitle, filterCabinetNavigation, mobileNavigation } from "./CabinetShell";
 
 describe("accountIdentity", () => {
   it("uses the authenticated name and email in the account menu", () => {
@@ -36,6 +36,16 @@ describe("accountIdentity", () => {
   it("shows all workspace sections only to the superuser", () => {
     expect(filterCabinetNavigation({ role: "admin", isSuperuser: true, permissions: [] }).map((item) => item.href)).toEqual([
       "/", "/agro-helper", "/farms", "/proposals/new", "/order-requests", "/knowledge-base", "/quiz",
+    ]);
+  });
+
+  it("keeps five focused destinations in the mobile bottom navigation", () => {
+    expect(mobileNavigation.map((item) => [item.href, item.label])).toEqual([
+      ["/", "Главная"],
+      ["/agro-helper", "Схемы"],
+      ["/farms", "Хозяйства"],
+      ["/proposals/new", "КП"],
+      ["/knowledge-base", "База знаний"],
     ]);
   });
 });

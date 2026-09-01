@@ -6,7 +6,7 @@ import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { countPendingAccessRequests } from "@/lib/accessRequests";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, Building2, ChevronDown, ClipboardList, FilePlus2, Headphones, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
+import { BookOpen, Building2, ChevronDown, ClipboardList, FilePlus2, Headphones, Home, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import type { PermissionCode } from "@shared/permissions";
@@ -19,6 +19,14 @@ export const cabinetNavigation = [
   { href: "/order-requests", label: "Заявки", icon: ClipboardList, permission: "orders.read" as PermissionCode },
   { href: "/knowledge-base", label: "База знаний", icon: BookOpen, permission: "knowledge.read" as PermissionCode },
   { href: "/quiz", label: "Тестирование", icon: Trophy, permission: "quiz.use" as PermissionCode },
+] as const;
+
+export const mobileNavigation = [
+  { href: "/", label: "Главная", icon: Home, permission: undefined },
+  { href: "/agro-helper", label: "Схемы", icon: Sprout, permission: "agro.use" as PermissionCode },
+  { href: "/farms", label: "Хозяйства", icon: Building2, permission: "farms.read" as PermissionCode },
+  { href: "/proposals/new", label: "КП", icon: FilePlus2, permission: "proposals.read" as PermissionCode },
+  { href: "/knowledge-base", label: "База знаний", icon: BookOpen, permission: "knowledge.read" as PermissionCode },
 ] as const;
 
 type NavigationUser = { role?: "user" | "admin" | null; isSuperuser?: boolean | null; permissions?: readonly PermissionCode[] | null } | null | undefined;
@@ -190,6 +198,16 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
           <main className="cabinet-content">{children}</main>
         </div>
       </div>
+      <nav className="cabinet-mobile-bottom-nav" aria-label="Основная навигация">
+        {mobileNavigation.map((item) => {
+          const Icon = item.icon;
+          const isActive = item.href === "/" ? location === "/" : location.startsWith(item.href);
+          return <Link key={item.href} href={item.href} className={`cabinet-mobile-bottom-nav-item ${isActive ? "is-active" : ""}`} aria-current={isActive ? "page" : undefined}>
+            <Icon className="h-5 w-5" strokeWidth={isActive ? 2.3 : 1.8} />
+            <span>{item.label}</span>
+          </Link>;
+        })}
+      </nav>
       <CabinetSearchDialog open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <CabinetSupportDialog open={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
       <AccessPortalDialog open={isAccessOpen} onClose={() => setIsAccessOpen(false)} />
