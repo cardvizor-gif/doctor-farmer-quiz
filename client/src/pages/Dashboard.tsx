@@ -4,6 +4,9 @@ import { BookOpen, Building2, ClipboardList, FileText, HelpCircle, Layers3, Spro
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
 
+export const dashboardTitle = "Рабочий кабинет";
+export const dashboardSubtitle = "Хозяйства, схемы защиты, КП и заявки — в одном рабочем кабинете.";
+
 export const dashboardModules = [
   {
     title: "АгроПомощник",
@@ -77,8 +80,8 @@ export default function Dashboard() {
       <section className="dashboard-intro" aria-labelledby="dashboard-title">
         <div className="dashboard-intro-copy">
           <p className="dashboard-eyebrow">Рабочее пространство менеджера</p>
-          <h1 id="dashboard-title">Что нужно сделать?</h1>
-          <p className="dashboard-intro-text">Хозяйства, схемы защиты, КП и заявки — в одном рабочем кабинете.</p>
+          <h1 id="dashboard-title">{dashboardTitle}</h1>
+          <p className="dashboard-intro-text">{dashboardSubtitle}</p>
         </div>
         <div className="dashboard-quick-actions" aria-label="Быстрые действия">
           <Link href="/farms" className="dashboard-quick-action dashboard-quick-action-primary">Новое хозяйство</Link>
