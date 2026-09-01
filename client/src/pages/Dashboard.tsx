@@ -4,7 +4,7 @@ import { BookOpen, Building2, ClipboardList, FileText, HelpCircle, Layers3, Spro
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
 
-const modules = [
+export const dashboardModules = [
   {
     title: "АгроПомощник",
     hint: "Схемы защиты",
@@ -96,7 +96,7 @@ export default function Dashboard() {
         </div>
 
         <div className="dashboard-module-grid">
-          {modules.map((module) => {
+          {dashboardModules.map((module) => {
             const Icon = module.icon;
             return (
               <Link key={module.href} href={module.href} className="dashboard-module-card">
