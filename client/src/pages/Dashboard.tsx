@@ -74,12 +74,10 @@ export default function Dashboard() {
     <div className="dashboard-home">
       <div className="dashboard-mobile-brand">
         <DoctorFarmerLogo className="h-9 w-auto" clickable={false} />
-        <span>Рабочий кабинет</span>
       </div>
 
       <section className="dashboard-intro" aria-labelledby="dashboard-title">
         <div className="dashboard-intro-copy">
-          <p className="dashboard-eyebrow">Рабочее пространство менеджера</p>
           <h1 id="dashboard-title">{dashboardTitle}</h1>
           <p className="dashboard-intro-text">{dashboardSubtitle}</p>
         </div>
@@ -92,10 +90,8 @@ export default function Dashboard() {
       <section className="dashboard-section" aria-labelledby="dashboard-modules-title">
         <div className="dashboard-section-heading">
           <div>
-            <p className="dashboard-eyebrow">Основные разделы</p>
             <h2 id="dashboard-modules-title">Инструменты</h2>
           </div>
-          <span className="dashboard-section-note">Выберите нужный модуль</span>
         </div>
 
         <div className="dashboard-module-grid">

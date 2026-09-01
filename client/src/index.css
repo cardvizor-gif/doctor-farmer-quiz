@@ -937,3 +937,18 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   .dashboard-intro h1 { font-size: 34px; }
   .dashboard-section-heading h2 { font-size: 24px; }
 }
+
+/* Final heading calibration: only the approved title pair remains on the dashboard. */
+.dashboard-intro h1 { font-size: clamp(30px, 3vw, 38px); }
+.dashboard-intro-text { max-width: 760px; font-size: 15px; }
+
+@media (min-width: 1800px) {
+  .dashboard-intro h1 { font-size: 40px; }
+  .dashboard-intro-text { font-size: 17px; }
+}
+
+@media (max-width: 767px) {
+  .dashboard-mobile-brand { padding-bottom: 12px; }
+  .dashboard-intro h1 { font-size: 20px; }
+  .dashboard-intro-text { font-size: 15px; }
+}
