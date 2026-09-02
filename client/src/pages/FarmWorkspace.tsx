@@ -5,9 +5,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { buildAgroHelperContextQuery, buildProposalContextQuery } from "@/lib/proposal";
+import { getFarmReturnState, getFarmSelectionState, isFarmsMobileViewport } from "@/lib/farmMobileNavigation";
 import { downloadFarmImportTemplate, downloadFarmsWorkbook, readFarmImportFile, type ImportFilePreview } from "@/lib/workspaceTransfer";
 import type { Farm } from "../../../drizzle/schema";
-import { AlertCircle, Building2, ChevronRight, CircleDollarSign, Download, FileSpreadsheet, FileText, MapPin, Plus, Save, Search, Sprout, Upload, UsersRound } from "lucide-react";
+import { AlertCircle, Building2, ChevronLeft, ChevronRight, CircleDollarSign, Download, FileSpreadsheet, FileText, MapPin, MoreVertical, Plus, Save, Search, Sprout, Upload, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
@@ -172,6 +173,9 @@ export default function FarmWorkspace() {
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
+  const [isMoreActionsOpen, setIsMoreActionsOpen] = useState(false);
+  const listScrollTopRef = useRef(0);
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [draft, setDraft] = useState<FarmDraft>(blankDraft());
@@ -191,9 +195,46 @@ export default function FarmWorkspace() {
     }
   }, [farms, selectedFarmId]);
 
+  useEffect(() => {
+    if (mobileView === "detail") {
+      window.scrollTo(0, 0);
+      return;
+    }
+    window.requestAnimationFrame(() => window.scrollTo(0, listScrollTopRef.current));
+  }, [mobileView]);
+
+  const openFarmFromList = (farm: Farm) => {
+    const isMobile = isFarmsMobileViewport(window.innerWidth);
+    const nextState = getFarmSelectionState(isMobile, window.scrollY);
+    if (isMobile) {
+      listScrollTopRef.current = nextState.listScrollTop;
+      setIsMoreActionsOpen(false);
+      setMobileView(nextState.mobileView);
+    }
+    setSelectedFarmId(farm.id);
+    setDraft(farmToDraft(farm));
+  };
+
   const selectFarm = (farm: Farm) => {
     setSelectedFarmId(farm.id);
     setDraft(farmToDraft(farm));
+  };
+
+  const openCreateFarm = () => {
+    const isMobile = isFarmsMobileViewport(window.innerWidth);
+    const nextState = getFarmSelectionState(isMobile, window.scrollY);
+    if (isMobile) {
+      listScrollTopRef.current = nextState.listScrollTop;
+      setMobileView(nextState.mobileView);
+    }
+    setIsCreating(true);
+  };
+
+  const returnToFarmList = () => {
+    const nextState = getFarmReturnState(listScrollTopRef.current);
+    setIsCreating(false);
+    setMobileView(nextState.mobileView);
+    listScrollTopRef.current = nextState.listScrollTop;
   };
 
   const createFarm = trpc.farms.create.useMutation({
@@ -269,7 +310,7 @@ export default function FarmWorkspace() {
   };
 
   return (
-    <div className="farm-workspace min-h-screen bg-[#f4f7f1] text-[#15211c]">
+    <div className="farm-workspace min-h-screen bg-[#f4f7f1] text-[#15211c]" data-mobile-view={mobileView}>
       <header className="sticky top-0 z-30 border-b border-[#dde5dc] bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <Link href="/" className="shrink-0"><DoctorFarmerLogo className="h-9 w-auto" clickable={false} /></Link>
@@ -280,27 +321,27 @@ export default function FarmWorkspace() {
             <Link href="/proposals/new"><Button variant="outline" size="sm" className="border-[#2e7d52] text-[#194f38]"><FileText className="mr-1.5 h-4 w-4" />Генератор КП</Button></Link>
             <Button size="sm" className="bg-[#194f38] hover:bg-[#12352a]" onClick={() => setIsCreating(true)}><Plus className="mr-1.5 h-4 w-4" />Новое хозяйство</Button>
           </nav>
-          <Button size="sm" className="bg-[#194f38] hover:bg-[#12352a] sm:hidden" onClick={() => setIsCreating(true)}><Plus className="h-4 w-4" /></Button>
+          <Button size="sm" aria-label="Новое хозяйство" className="farm-mobile-header-new bg-[#194f38] hover:bg-[#12352a] sm:hidden" onClick={openCreateFarm}><Plus className="h-4 w-4" /></Button>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
-        <section className="farm-workspace-hero mb-7 grid gap-5 rounded-3xl border border-[#dce8dc] bg-[#173f30] p-6 text-white shadow-[0_18px_60px_rgba(19,53,42,0.16)] lg:grid-cols-[1.4fr_1fr] lg:p-8">
+          <section className="farm-workspace-hero mb-7 grid gap-5 rounded-3xl border border-[#dce8dc] bg-[#173f30] p-6 text-white shadow-[0_18px_60px_rgba(19,53,42,0.16)] lg:grid-cols-[1.4fr_1fr] lg:p-8">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-emerald-100"><Building2 className="h-3.5 w-3.5" />Клиентская база</div>
             <h1 className="max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">Хозяйства и возможности продаж</h1>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-emerald-50/80">Соберите агрономический и коммерческий контекст хозяйства, зафиксируйте следующий шаг и подготовьте основу для персонального коммерческого предложения.</p>
-            <div className="mt-5 flex flex-wrap gap-2"><Button variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setIsCreating(true)}><Plus className="mr-1.5 h-4 w-4" />Новое хозяйство</Button><Button variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setLocation("/proposals/new")}><FileText className="mr-1.5 h-4 w-4" />Открыть генератор КП</Button><Button variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setIsImportOpen(true)}><Upload className="mr-1.5 h-4 w-4" />Импорт Excel</Button><Button variant="outline" size="sm" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => void downloadFarmsWorkbook(farms)}><Download className="mr-1.5 h-4 w-4" />Экспорт реестра</Button></div>
+            <p className="farm-hero-description mt-3 max-w-xl text-sm leading-relaxed text-emerald-50/80">Соберите агрономический и коммерческий контекст хозяйства, зафиксируйте следующий шаг и подготовьте основу для персонального коммерческого предложения.</p>
+            <div className="farm-hero-actions mt-5 flex flex-wrap gap-2"><Button variant="outline" size="sm" className="farm-hero-new-action border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={openCreateFarm}><Plus className="mr-1.5 h-4 w-4" />Новое хозяйство</Button><Button variant="outline" size="sm" className="farm-hero-extra-action border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setLocation("/proposals/new")}><FileText className="mr-1.5 h-4 w-4" />Открыть генератор КП</Button><Button variant="outline" size="sm" className="farm-hero-extra-action border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setIsImportOpen(true)}><Upload className="mr-1.5 h-4 w-4" />Импорт Excel</Button><Button variant="outline" size="sm" className="farm-hero-extra-action border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => void downloadFarmsWorkbook(farms)}><Download className="mr-1.5 h-4 w-4" />Экспорт реестра</Button><div className="farm-mobile-more-actions"><Button type="button" variant="outline" size="sm" aria-expanded={isMoreActionsOpen} aria-label="Дополнительные действия" className="farm-mobile-more-trigger border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setIsMoreActionsOpen(current => !current)}><MoreVertical className="h-4 w-4" />Ещё</Button>{isMoreActionsOpen && <div className="farm-mobile-more-menu"><button type="button" onClick={() => setLocation("/proposals/new")}><FileText className="h-4 w-4" />Открыть генератор КП</button><button type="button" onClick={() => setIsImportOpen(true)}><Upload className="h-4 w-4" />Импорт Excel</button><button type="button" onClick={() => void downloadFarmsWorkbook(farms)}><Download className="h-4 w-4" />Экспорт реестра</button></div>}</div></div>
           </div>
-          <div className="grid grid-cols-3 gap-2 self-end">
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Хозяйств</span><strong className="mt-1 block text-2xl">{farms.length}</strong></div>
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Площадь</span><strong className="mt-1 block text-2xl">{displayNumber(totalArea)}<small className="ml-1 text-sm font-medium">га</small></strong></div>
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Действий</span><strong className="mt-1 block text-2xl">{nextActions}</strong></div>
+          <div className="farm-hero-stats grid grid-cols-3 gap-2 self-end">
+            <div className="farm-hero-stat rounded-2xl border border-white/10 bg-white/10 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Хозяйств</span><strong className="mt-1 block text-2xl">{farms.length}</strong></div>
+            <div className="farm-hero-stat rounded-2xl border border-white/10 bg-white/10 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Площадь</span><strong className="mt-1 block text-2xl">{displayNumber(totalArea)}<small className="ml-1 text-sm font-medium">га</small></strong></div>
+            <div className="farm-hero-stat rounded-2xl border border-white/10 bg-white/10 p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Действий</span><strong className="mt-1 block text-2xl">{nextActions}</strong></div>
           </div>
         </section>
 
         <div className="grid gap-6 xl:grid-cols-[0.85fr_1.45fr]">
-          <section className="overflow-hidden rounded-2xl border border-[#dde5dc] bg-white shadow-sm">
+          <section className="farm-list-panel overflow-hidden rounded-2xl border border-[#dde5dc] bg-white shadow-sm">
             <div className="border-b border-[#e7eee5] p-4">
               <div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-bold text-[#12352a]">Реестр хозяйств</h2><div className="flex items-center gap-2"><Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs text-[#194f38]" onClick={() => void downloadFarmImportTemplate()}><FileSpreadsheet className="mr-1 h-3.5 w-3.5" />Шаблон</Button><span className="rounded-full bg-[#e8efe5] px-2.5 py-1 text-xs font-bold text-[#194f38]">{filteredFarms.length}</span></div></div>
               <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#72917d]" /><Input value={search} onChange={event => setSearch(event.target.value)} className="pl-9" placeholder="Поиск по хозяйству, району, культуре" /></div>
@@ -308,18 +349,19 @@ export default function FarmWorkspace() {
             <div className="max-h-[620px] overflow-y-auto p-2">
               {farmsQuery.isLoading && <div className="p-6 text-center text-sm text-[#6f7a73]">Загружаем хозяйства…</div>}
               {farmsQuery.isError && <div className="p-6 text-center text-sm text-red-700">Не удалось загрузить реестр. Обновите страницу.</div>}
-              {!farmsQuery.isLoading && filteredFarms.length === 0 && <div className="p-6 text-center"><Building2 className="mx-auto mb-3 h-9 w-9 text-[#9bb3a2]" /><p className="text-sm font-semibold text-[#194f38]">Пока нет ваших карточек хозяйств</p><p className="mt-1 text-xs leading-relaxed text-[#6f7a73]">Здесь отображаются только записи вашего аккаунта. Добавьте хозяйство или импортируйте собственный реестр.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><Button onClick={() => setIsCreating(true)} size="sm" className="bg-[#194f38] hover:bg-[#12352a]"><Plus className="mr-1 h-4 w-4" />Добавить хозяйство</Button><Button onClick={() => setLocation("/proposals/new")} variant="outline" size="sm" className="border-[#2e7d52] text-[#194f38]"><FileText className="mr-1 h-4 w-4" />Генератор КП</Button>{user?.role === "admin" && <Button onClick={() => claimLegacyFarms.mutate()} variant="outline" size="sm" disabled={claimLegacyFarms.isPending} className="border-[#8cac48] text-[#365d24]">{claimLegacyFarms.isPending ? "Переносим…" : "Принять тестовые записи"}</Button>}</div></div>}
-              {filteredFarms.map(farm => <button key={farm.id} type="button" onClick={() => selectFarm(farm)} className={`mb-1 w-full rounded-xl p-3 text-left transition-colors ${selectedFarmId === farm.id ? "bg-[#e8f1e7]" : "hover:bg-[#f5f8f4]"}`}>
+              {!farmsQuery.isLoading && filteredFarms.length === 0 && <div className="p-6 text-center"><Building2 className="mx-auto mb-3 h-9 w-9 text-[#9bb3a2]" /><p className="text-sm font-semibold text-[#194f38]">Пока нет ваших карточек хозяйств</p><p className="mt-1 text-xs leading-relaxed text-[#6f7a73]">Здесь отображаются только записи вашего аккаунта. Добавьте хозяйство или импортируйте собственный реестр.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><Button onClick={openCreateFarm} size="sm" className="bg-[#194f38] hover:bg-[#12352a]"><Plus className="mr-1 h-4 w-4" />Добавить хозяйство</Button><Button onClick={() => setLocation("/proposals/new")} variant="outline" size="sm" className="border-[#2e7d52] text-[#194f38]"><FileText className="mr-1 h-4 w-4" />Генератор КП</Button>{user?.role === "admin" && <Button onClick={() => claimLegacyFarms.mutate()} variant="outline" size="sm" disabled={claimLegacyFarms.isPending} className="border-[#8cac48] text-[#365d24]">{claimLegacyFarms.isPending ? "Переносим…" : "Принять тестовые записи"}</Button>}</div></div>}
+              {filteredFarms.map(farm => <button key={farm.id} type="button" onClick={() => openFarmFromList(farm)} className={`mb-1 w-full rounded-xl p-3 text-left transition-colors ${selectedFarmId === farm.id ? "bg-[#e8f1e7]" : "hover:bg-[#f5f8f4]"}`}>
                 <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-bold text-[#12352a]">{farm.name}</p><p className="mt-0.5 flex items-center gap-1 text-xs text-[#6f7a73]"><MapPin className="h-3 w-3" />{[farm.district, farm.settlement].filter(Boolean).join(" · ") || "Локация не указана"}</p></div><span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${stages[farm.salesStage].className}`}>{stages[farm.salesStage].label}</span></div>
                 <div className="mt-3 flex items-center justify-between border-t border-[#dce8dc] pt-2 text-xs text-[#486656]"><span>{displayNumber(farm.totalArea)} га</span><span>{farm.nextAction?.trim() ? "Есть следующий шаг" : "Без задачи"}</span></div>
               </button>)}
             </div>
           </section>
 
-          <section className="rounded-2xl border border-[#dde5dc] bg-white p-5 shadow-sm sm:p-6">
+          <section className="farm-detail-panel rounded-2xl border border-[#dde5dc] bg-white p-5 shadow-sm sm:p-6">
+            <div className="farm-mobile-detail-back"><Button type="button" variant="ghost" size="sm" onClick={returnToFarmList}><ChevronLeft className="mr-1.5 h-4 w-4" />Хозяйства</Button></div>
             {!selectedFarm && <div className="flex min-h-[460px] flex-col items-center justify-center text-center"><Sprout className="mb-4 h-12 w-12 text-[#8cac91]" /><h2 className="text-xl font-bold text-[#12352a]">Выберите хозяйство из реестра</h2><p className="mt-2 max-w-sm text-sm leading-relaxed text-[#6f7a73]">Здесь будет карточка клиента: контакты, культуры, потенциал и сценарий следующего действия.</p><Button onClick={() => setLocation("/proposals/new")} variant="outline" className="mt-5 border-[#2e7d52] text-[#194f38]"><FileText className="mr-1.5 h-4 w-4" />Перейти к генератору КП</Button></div>}
             {selectedFarm && <form onSubmit={event => { event.preventDefault(); updateFarm.mutate({ id: selectedFarm.id, ...makePayload(draft) }); }}>
-              <div className="mb-6 flex flex-col gap-4 border-b border-[#e7eee5] pb-5 sm:flex-row sm:items-start sm:justify-between">
+              <div className="farm-detail-form-header mb-6 flex flex-col gap-4 border-b border-[#e7eee5] pb-5 sm:flex-row sm:items-start sm:justify-between">
                 <div><div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#2e7d52]"><UsersRound className="h-4 w-4" />Карточка хозяйства</div><h2 className="text-2xl font-extrabold tracking-tight text-[#12352a]">{selectedFarm.name}</h2><p className="mt-1 text-sm text-[#6f7a73]">Обновляйте договорённости и контекст перед визитом или подготовкой КП.</p></div>
                 <div className="flex flex-wrap items-center justify-end gap-2"><span className={`rounded-full px-3 py-2 text-xs font-bold ${stages[selectedFarm.salesStage].className}`}>{stages[selectedFarm.salesStage].label}</span>{lastSavedAt && <span className="rounded-full bg-[#e8f1e7] px-2.5 py-1.5 text-[10px] font-bold text-[#194f38]" role="status">Карточка сохранена</span>}<Button type="submit" disabled={updateFarm.isPending} className="bg-[#194f38] hover:bg-[#12352a]"><Save className="mr-1.5 h-4 w-4" />Сохранить</Button></div>
               </div>
@@ -333,10 +375,10 @@ export default function FarmWorkspace() {
             </form>}
           </section>
         </div>
-        {totalPotential > 0 && <p className="mt-5 flex items-center gap-2 text-xs text-[#6f7a73]"><CircleDollarSign className="h-4 w-4 text-[#2e7d52]" />Совокупный зафиксированный потенциал: <strong className="text-[#194f38]">{displayNumber(totalPotential)} ₽</strong></p>}
+        {totalPotential > 0 && <p className="farm-total-potential mt-5 flex items-center gap-2 text-xs text-[#6f7a73]"><CircleDollarSign className="h-4 w-4 text-[#2e7d52]" />Совокупный зафиксированный потенциал: <strong className="text-[#194f38]">{displayNumber(totalPotential)} ₽</strong></p>}
       </main>
 
-        {isCreating && <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#12352a]/45 p-0 sm:items-center sm:p-4"><div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7"><div className="mb-6 flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wide text-[#2e7d52]">Новая карточка</p><h2 className="mt-1 text-2xl font-extrabold text-[#12352a]">Добавить хозяйство</h2><p className="mt-1 text-sm text-[#6f7a73]">Заполните только известные данные — карточку можно дополнить позже.</p></div><Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>Закрыть</Button></div><form onSubmit={event => { event.preventDefault(); createFarm.mutate(makePayload(createDraft)); }}><FarmFields draft={createDraft} onChange={changeCreateDraft} showNotes={false} /><div className="mt-6 flex justify-end gap-3"><Button type="button" variant="outline" onClick={() => setIsCreating(false)}>Отмена</Button><Button type="submit" disabled={createFarm.isPending} className="bg-[#194f38] hover:bg-[#12352a]"><Plus className="mr-1.5 h-4 w-4" />Создать карточку</Button></div></form></div></div>}
+        {isCreating && <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#12352a]/45 p-0 sm:items-center sm:p-4"><div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7"><div className="mb-6 flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wide text-[#2e7d52]">Новая карточка</p><h2 className="mt-1 text-2xl font-extrabold text-[#12352a]">Добавить хозяйство</h2><p className="mt-1 text-sm text-[#6f7a73]">Заполните только известные данные — карточку можно дополнить позже.</p></div><Button type="button" variant="ghost" onClick={returnToFarmList}><ChevronLeft className="mr-1 h-4 w-4 sm:hidden" /><span className="sm:hidden">Хозяйства</span><span className="hidden sm:inline">Закрыть</span></Button></div><form onSubmit={event => { event.preventDefault(); createFarm.mutate(makePayload(createDraft)); }}><FarmFields draft={createDraft} onChange={changeCreateDraft} showNotes={false} /><div className="mt-6 flex justify-end gap-3"><Button type="button" variant="outline" onClick={returnToFarmList}>Отмена</Button><Button type="submit" disabled={createFarm.isPending} className="bg-[#194f38] hover:bg-[#12352a]"><Plus className="mr-1.5 h-4 w-4" />Создать карточку</Button></div></form></div></div>}
         <input ref={importInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFile} />
         {isImportOpen && <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#12352a]/45 p-0 sm:items-center sm:p-4"><div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7"><div className="mb-5 flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wide text-[#2e7d52]">Импорт реестра</p><h2 className="mt-1 text-2xl font-extrabold text-[#12352a]">Загрузить хозяйства из Excel</h2><p className="mt-1 max-w-xl text-sm leading-relaxed text-[#6f7a73]">Сначала кабинет проверит все строки. В базу попадут только данные из файла без ошибок после вашего подтверждения.</p></div><Button type="button" variant="ghost" onClick={() => { setImportPreview(null); setIsImportOpen(false); }}>Закрыть</Button></div><div className="grid gap-3 rounded-2xl border border-[#dce8dc] bg-[#f5f8f4] p-4 sm:grid-cols-[1fr_auto]"><div><p className="font-bold text-[#194f38]">1. Скачайте и заполните шаблон</p><p className="mt-1 text-xs leading-relaxed text-[#66766b]">Обязательна только колонка «Название хозяйства *». Поддерживаются Excel (.xlsx, .xls) и CSV до 5 МБ.</p></div><Button type="button" variant="outline" className="border-[#2e7d52] text-[#194f38]" onClick={() => void downloadFarmImportTemplate()}><FileSpreadsheet className="mr-1.5 h-4 w-4" />Скачать шаблон</Button></div><div className="mt-4 flex flex-col gap-3 rounded-2xl border border-dashed border-[#9eb9a0] p-5 text-center"><Upload className="mx-auto h-7 w-7 text-[#2e7d52]" /><div><p className="font-bold text-[#194f38]">2. Выберите заполненный файл</p><p className="mt-1 text-xs text-[#6f7a73]">Строки не сохраняются автоматически.</p></div><Button type="button" disabled={isReadingImport} className="mx-auto bg-[#194f38] text-white hover:bg-[#12352a]" onClick={() => importInputRef.current?.click()}>{isReadingImport ? "Проверяем файл…" : "Выбрать Excel или CSV"}</Button><Input type="file" accept=".xlsx,.xls,.csv" disabled={isReadingImport} className="mx-auto max-w-sm cursor-pointer text-xs file:mr-3 file:rounded-md file:border-0 file:bg-[#e8f1e7] file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-[#194f38]" onChange={handleImportFile} /></div>{importPreview && <div className="mt-5 rounded-2xl border border-[#dce8dc]"><div className="flex flex-col gap-2 border-b border-[#e7eee5] p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-bold text-[#12352a]">Предпросмотр: {importPreview.fileName}</p><p className="mt-1 text-xs text-[#6f7a73]">Строк: {importPreview.rows.length} · Готово: {importableFarms.length} · Ошибок: {importErrors.length + importPreview.headerErrors.length}</p></div>{importPreview.headerErrors.length === 0 && importErrors.length === 0 && <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">Можно сохранить</span>}</div>{(importPreview.headerErrors.length > 0 || importErrors.length > 0) && <div className="m-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><div className="flex gap-2"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><div><strong>Импорт заблокирован до исправления ошибок.</strong><ul className="mt-1 list-disc space-y-1 pl-4 text-xs">{[...importPreview.headerErrors, ...importErrors].slice(0, 8).map((error) => <li key={error}>{error}</li>)}</ul>{importErrors.length + importPreview.headerErrors.length > 8 && <p className="mt-2 text-xs">Показаны первые 8 ошибок.</p>}</div></div></div>} {importPreview.headerErrors.length === 0 && <div className="max-h-52 overflow-auto p-4"><table className="w-full min-w-[420px] text-left text-xs"><thead className="text-[#527060]"><tr><th className="pb-2">Строка</th><th className="pb-2">Хозяйство</th><th className="pb-2">Площадь</th><th className="pb-2">Результат</th></tr></thead><tbody className="divide-y divide-[#edf2eb]">{importPreview.rows.slice(0, 50).map((row) => <tr key={row.rowNumber}><td className="py-2 text-[#6f7a73]">{row.rowNumber}</td><td className="py-2 font-semibold text-[#194f38]">{row.name}</td><td className="py-2">{displayNumber(row.totalArea)} га</td><td className={`py-2 font-semibold ${row.errors.length ? "text-amber-800" : "text-emerald-700"}`}>{row.errors.length ? row.errors[0] : "Готово"}</td></tr>)}</tbody></table>{importPreview.rows.length > 50 && <p className="mt-3 text-xs text-[#6f7a73]">В предпросмотре показаны первые 50 строк.</p>}</div>}</div>}<div className="mt-6 flex flex-col-reverse gap-3 border-t border-[#e7eee5] pt-5 sm:flex-row sm:items-center sm:justify-between"><Button type="button" variant="outline" onClick={() => { setImportPreview(null); importInputRef.current?.click(); }}>Выбрать другой файл</Button><Button type="button" disabled={!importPreview || importPreview.headerErrors.length > 0 || importErrors.length > 0 || importFarms.isPending} className="bg-[#194f38] text-white hover:bg-[#12352a]" onClick={() => importFarms.mutate({ farms: importableFarms })}>{importFarms.isPending ? "Сохраняем…" : `Подтвердить импорт (${importableFarms.length})`}</Button></div></div></div>}
     </div>
