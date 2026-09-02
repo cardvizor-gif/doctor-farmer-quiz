@@ -968,3 +968,29 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 @media (min-width: 1800px) {
   .dashboard-home { min-height: calc(100dvh - 116px); }
 }
+
+/* пункт 4 ТЗ: облегчённая подача Схем / АгроПомощника */
+.agro-helper-workspace { background: #f7f9f3 !important; }
+.agro-helper-workspace > header { border-bottom: 0 !important; box-shadow: 0 1px 0 rgba(54,77,37,.04) !important; }
+.agro-helper-workspace > main { gap: 18px !important; }
+.agro-helper-filter-card,
+.agro-helper-main-card { border: 0 !important; border-radius: 18px !important; box-shadow: 0 8px 20px rgba(54,77,37,.055) !important; }
+.agro-helper-filter-card [class*="border-b"] { border-bottom: 0 !important; }
+.agro-helper-main-card { padding: 22px !important; }
+.agro-helper-scheme-header { padding-bottom: 18px !important; border-bottom: 0 !important; }
+.agro-helper-scheme-header > div:first-child > div:first-child { background: #eef5df !important; color: #315f2f !important; }
+.agro-helper-recommendations { margin-top: 18px !important; border: 0 !important; border-radius: 14px !important; background: #f1f6e8 !important; }
+.agro-helper-step-card { border: 0 !important; border-radius: 15px !important; background: rgba(248,250,245,.86) !important; box-shadow: none !important; padding: 16px !important; }
+.agro-helper-step-card > div:first-child { padding-bottom: 10px !important; border-bottom: 1px solid #e6eddc !important; }
+.agro-helper-product-card { border: 0 !important; border-radius: 13px !important; background: #fff !important; box-shadow: 0 4px 12px rgba(54,77,37,.045) !important; padding: 13px !important; }
+.agro-helper-product-stats { border: 0 !important; background: #f3f7ec !important; }
+.agro-helper-replacement { border-top: 0 !important; padding-top: 8px !important; }
+
+@media (max-width: 767px) {
+  .agro-helper-workspace > main { gap: 10px !important; }
+  .agro-helper-main-card { padding: 14px !important; border-radius: 16px !important; }
+  .agro-helper-scheme-header { gap: 10px !important; padding-bottom: 10px !important; }
+  .agro-helper-recommendations { margin-top: 12px !important; padding: 12px !important; }
+  .agro-helper-step-card { padding: 12px !important; }
+  .agro-helper-product-card { padding: 11px !important; }
+}

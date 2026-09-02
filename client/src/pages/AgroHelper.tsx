@@ -194,7 +194,7 @@ export default function AgroHelper() {
         {/* Левая панель: фильтры и параметры */}
         <aside className="lg:col-span-4 space-y-6 no-print">
           
-          <Card className="bg-[#ffffff] border border-[#dde5dc] shadow-sm rounded-2xl">
+          <Card className="agro-helper-filter-card bg-[#ffffff] border border-[#dde5dc] shadow-sm rounded-2xl">
             <CardHeader className="pb-4 border-b border-[#dde5dc]">
               <CardTitle className="text-base font-bold text-[#12352a] flex items-center gap-2">
                 <Filter className="w-4 h-4 text-[#2e7d52]" /> Выбор культуры и технологии
@@ -309,7 +309,7 @@ export default function AgroHelper() {
 
           {/* Сохраненные схемы в браузере */}
           {savedSchemes.length > 0 && (
-            <Card className="bg-[#ffffff] border border-[#dde5dc] shadow-sm rounded-2xl">
+            <Card className="agro-helper-filter-card bg-[#ffffff] border border-[#dde5dc] shadow-sm rounded-2xl">
               <CardHeader className="pb-3 border-b border-[#dde5dc]">
                 <CardTitle className="text-sm font-bold text-[#12352a] flex items-center gap-2">
                   <BookmarkCheck className="w-4 h-4 text-[#d5a642]" /> Сохранённые схемы ({savedSchemes.length})
@@ -348,10 +348,10 @@ export default function AgroHelper() {
         {/* Правая панель: детализированная схема защиты с подсказками и калькулятором */}
         <section className="lg:col-span-8 space-y-6">
           
-          <div className="bg-white border border-[#dde5dc] rounded-2xl p-6 sm:p-8 shadow-sm">
+          <div className="agro-helper-main-card bg-white border border-[#dde5dc] rounded-2xl p-6 sm:p-8 shadow-sm">
             
             {/* Шапка схемы */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#dde5dc]">
+            <div className="agro-helper-scheme-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#dde5dc]">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8efe5] text-[#194f38] text-xs font-bold mb-2">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#2e7d52]" /> Регламент защиты растений
@@ -386,7 +386,7 @@ export default function AgroHelper() {
             {selectedCrop && (() => {
               const rec = getCropRecommendation(selectedCrop.id);
               return (
-                <div className="mt-6 p-4 rounded-xl bg-[#f4f7f1] border border-[#dde5dc] space-y-2 text-xs text-[#15211c]">
+                <div className="agro-helper-recommendations mt-6 p-4 rounded-xl bg-[#f4f7f1] border border-[#dde5dc] space-y-2 text-xs text-[#15211c]">
                   <div className="font-bold text-[#12352a] flex items-center gap-1.5">
                     <Info className="w-4 h-4 text-[#2e7d52]" />
                     <span>Рекомендации агронома по применению баковых смесей ({selectedCrop.name}):</span>
@@ -412,7 +412,7 @@ export default function AgroHelper() {
               ) : (
                 filteredSteps.map((step, stepIndex) => {
                   return (
-                    <div key={stepIndex} className="border border-[#dde5dc] rounded-xl p-5 bg-[#fbfcf9] shadow-2xs space-y-4">
+                    <div key={stepIndex} className="agro-helper-step-card border border-[#dde5dc] rounded-xl p-5 bg-[#fbfcf9] shadow-2xs space-y-4">
                       
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#dde5dc]">
                         <div>
@@ -440,7 +440,7 @@ export default function AgroHelper() {
                           const alternatives = getRegisteredAlternatives(activeProduct.group, activeProduct.name);
 
                           return (
-                            <div key={prodIndex} className="bg-white border border-[#dde5dc] rounded-xl p-4 space-y-3">
+                            <div key={prodIndex} className="agro-helper-product-card bg-white border border-[#dde5dc] rounded-xl p-4 space-y-3">
                               
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="space-y-1">
@@ -455,7 +455,7 @@ export default function AgroHelper() {
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-4 bg-[#f4f7f1] px-3.5 py-2 rounded-lg border border-[#dde5dc]">
+                                <div className="agro-helper-product-stats flex items-center gap-4 bg-[#f4f7f1] px-3.5 py-2 rounded-lg border border-[#dde5dc]">
                                   <div>
                                     <div className="text-[10px] font-mono text-[#6f7a73] uppercase">Норма расхода</div>
                                     <div className="text-xs font-bold text-[#12352a]">{activeProduct.rate}</div>
@@ -471,7 +471,7 @@ export default function AgroHelper() {
                               </div>
 
                               {/* Выбор замены препарата (в поле / без печати) */}
-                              <div className="pt-3 border-t border-[#dde5dc] flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
+                              <div className="agro-helper-replacement pt-3 border-t border-[#dde5dc] flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
                                 <div className="text-xs text-[#6f7a73] flex items-center gap-1.5">
                                   <Droplet className="w-3.5 h-3.5 text-[#66a46c] flex-shrink-0" />
                                   <span>Выбрать вариант для культуры:</span>
