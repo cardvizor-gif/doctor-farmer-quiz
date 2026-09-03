@@ -16,6 +16,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   /** User-controlled label for the cabinet; OAuth resyncs never overwrite it. */
   displayName: varchar("displayName", { length: 120 }),
+  position: varchar("position", { length: 160 }),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
@@ -212,6 +213,8 @@ export const accessRequests = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     email: varchar("email", { length: 320 }).notNull(),
     requestedName: varchar("requestedName", { length: 120 }).notNull(),
+    /** Historical requests may predate the position field; new requests validate it at the API boundary. */
+    position: varchar("position", { length: 160 }),
     status: mysqlEnum("status", ["pending", "approved", "rejected", "activated"]).notNull().default("pending"),
     reviewedByOpenId: varchar("reviewedByOpenId", { length: 64 }),
     reviewedAt: timestamp("reviewedAt"),
@@ -225,6 +228,25 @@ export const accessRequests = mysqlTable(
   table => [
     uniqueIndex("access_requests_email_unique").on(table.email),
     index("access_requests_status_created_idx").on(table.status, table.createdAt),
+  ],
+);
+
+export const inviteCodeHistory = mysqlTable(
+  "inviteCodeHistory",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    requestId: int("requestId").notNull().references(() => accessRequests.id, { onDelete: "cascade" }),
+    codeHash: varchar("codeHash", { length: 128 }).notNull(),
+    encryptedCode: text("encryptedCode").notNull(),
+    expiresAt: timestamp("expiresAt").notNull(),
+    issuedByOpenId: varchar("issuedByOpenId", { length: 64 }).notNull(),
+    usedAt: timestamp("usedAt"),
+    usedByOpenId: varchar("usedByOpenId", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [
+    index("invite_code_history_request_created_idx").on(table.requestId, table.createdAt),
+    index("invite_code_history_hash_idx").on(table.codeHash),
   ],
 );
 
@@ -246,3 +268,5 @@ export type SupportAttachment = typeof supportAttachments.$inferSelect;
 export type InsertSupportAttachment = typeof supportAttachments.$inferInsert;
 export type AccessRequest = typeof accessRequests.$inferSelect;
 export type InsertAccessRequest = typeof accessRequests.$inferInsert;
+export type InviteCodeHistory = typeof inviteCodeHistory.$inferSelect;
+export type InsertInviteCodeHistory = typeof inviteCodeHistory.$inferInsert;

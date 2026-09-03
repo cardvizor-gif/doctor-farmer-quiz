@@ -114,6 +114,7 @@ export const appRouter = router({
   access: router({
     request: publicProcedure.input(z.object({
       requestedName: z.string().trim().min(2, "Укажите имя").max(120),
+      position: z.string().trim().min(2, "Укажите должность").max(160),
       email: z.string().trim().email("Укажите рабочий e-mail").max(320),
     })).mutation(async ({ input }) => {
       await db.requestAccess(input);
@@ -125,8 +126,18 @@ export const appRouter = router({
       const code = Array.from(randomBytes(10), byte => alphabet[byte % alphabet.length]).join("");
       const codeHash = createHash("sha256").update(code).digest("hex");
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      const request = await db.approveAccessRequest(input.id, ctx.user.openId, codeHash, expiresAt);
+      const request = await db.approveAccessRequest(input.id, ctx.user.openId, code, codeHash, expiresAt);
       if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка не найдена или уже обработана" });
+      return { request, code, expiresAt };
+    }),
+    history: superuserProcedure.input(z.object({ id: z.number().int().positive() })).query(({ input }) => db.listInviteCodeHistory(input.id)),
+    reissue: superuserProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+      const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const code = Array.from(randomBytes(10), byte => alphabet[byte % alphabet.length]).join("");
+      const codeHash = createHash("sha256").update(code).digest("hex");
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const request = await db.reissueAccessRequest(input.id, ctx.user.openId, code, codeHash, expiresAt);
+      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка не найдена или уже активирована" });
       return { request, code, expiresAt };
     }),
     reject: superuserProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
@@ -143,7 +154,7 @@ export const appRouter = router({
       const openId = `invite_${randomBytes(16).toString("hex")}`;
       const consumed = await db.consumeInvite(invite.id, attemptedHash, openId);
       if (!consumed) throw new TRPCError({ code: "UNAUTHORIZED", message: "Код уже использован или истёк" });
-      await db.upsertUser({ openId, name: invite.requestedName, displayName: invite.requestedName, email: invite.email, loginMethod: "invite", lastSignedIn: new Date() });
+      await db.upsertUser({ openId, name: invite.requestedName, displayName: invite.requestedName, position: invite.position, email: invite.email, loginMethod: "invite", lastSignedIn: new Date() });
       const user = await db.getUserByOpenId(openId);
       if (!user) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Не удалось активировать кабинет" });
       const sessionToken = await sdk.createSessionToken(openId, { name: invite.requestedName, expiresInMs: 30 * 24 * 60 * 60 * 1000 });

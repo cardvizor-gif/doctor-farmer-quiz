@@ -64,6 +64,13 @@
       "when": 1788041773805,
       "tag": "0008_hard_ikaris",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1788440514992,
+      "tag": "0009_real_doctor_faustus",
+      "breakpoints": true
     }
   ]
 }
