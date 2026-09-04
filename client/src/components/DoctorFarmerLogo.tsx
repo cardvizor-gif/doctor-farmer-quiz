@@ -1,31 +1,33 @@
 import { Link } from "wouter";
 
-export function DoctorFarmerLogo({ className = "h-11 w-auto", clickable = true }: { className?: string; clickable?: boolean }) {
+type DoctorFarmerLogoProps = {
+  className?: string;
+  clickable?: boolean;
+  monochrome?: boolean;
+};
+
+export function DoctorFarmerLogo({ className = "h-11 w-auto", clickable = true, monochrome = false }: DoctorFarmerLogoProps) {
+  const primaryColor = monochrome ? "#F1F4EA" : "#4B9B12";
+  const secondaryColor = monochrome ? "#F1F4EA" : "#003399";
+  const centerColor = monochrome ? "transparent" : "#FFFFFF";
   const content = (
-    <svg 
-      viewBox="0 0 210 82" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg" 
+    <svg
+      viewBox="0 0 210 82"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
       className={`${className} cursor-pointer transition-opacity hover:opacity-90`}
       aria-label="Doctor Farmer"
+      role="img"
     >
-      {/* Иконка-крест: пропорциональные закругленные капсулы */}
       <g transform="translate(2, 4)">
-        {/* Вертикальная синяя капсула */}
-        <rect x="22" y="0" width="30" height="74" rx="15" fill="#003399" />
-        
-        {/* Горизонтальная зеленая капсула */}
-        <rect x="0" y="22" width="74" height="30" rx="15" fill="#4B9B12" />
-
-        {/* Центральный белый квадрат для пересечения */}
-        <rect x="22" y="22" width="30" height="30" fill="#FFFFFF" />
+        <rect x="22" y="0" width="30" height="74" rx="15" fill={secondaryColor} />
+        <rect x="0" y="22" width="74" height="30" rx="15" fill={primaryColor} />
+        <rect x="22" y="22" width="30" height="30" fill={centerColor} />
       </g>
-
-      {/* Текст Doctor Farmer */}
-      <text x="94" y="34" fontFamily="'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif" fontSize="28" fontWeight="700" fill="#4B9B12" letterSpacing="-0.7">
+      <text x="94" y="34" fontFamily="'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif" fontSize="28" fontWeight="700" fill={primaryColor} letterSpacing="-0.7">
         Doctor
       </text>
-      <text x="94" y="67" fontFamily="'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif" fontSize="28" fontWeight="700" fill="#003399" letterSpacing="-0.7">
+      <text x="94" y="67" fontFamily="'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif" fontSize="28" fontWeight="700" fill={secondaryColor} letterSpacing="-0.7">
         Farmer
       </text>
     </svg>

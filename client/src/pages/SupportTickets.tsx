@@ -32,7 +32,7 @@ export default function SupportTickets() {
   const selected = detailQuery.data;
   const isAdmin = user?.role === "admin";
 
-  return <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
+  return <main className="support-tickets-page mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
     <section className="rounded-3xl border border-[#dce8dc] bg-white p-5 shadow-[0_16px_45px_rgba(19,53,42,0.08)] sm:p-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#5f893c]"><MessageSquareText className="h-4 w-4" />Внутренний сервис</div><h2 className="text-2xl font-extrabold text-[#12352a]">Обращения</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#5d725f]">Здесь собраны обращения, отправленные через поддержку. {isAdmin ? "Вы видите общую очередь команды и можете менять статус обработки." : "Вы видите только свои обращения и прикреплённые файлы."}</p></div><Badge className="w-fit bg-[#e9f5dd] text-[#315d36] hover:bg-[#e9f5dd]">{tickets.length} {tickets.length === 1 ? "обращение" : "обращений"}</Badge></div>
     </section>

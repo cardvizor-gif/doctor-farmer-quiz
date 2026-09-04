@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountIdentity, cabinetPageTitle, filterCabinetNavigation, mobileNavigation } from "./CabinetShell";
+import { accountIdentity, cabinetPageTitle, cabinetTheme, filterCabinetNavigation, mobileNavigation } from "./CabinetShell";
 
 describe("accountIdentity", () => {
   it("uses the authenticated name and email in the account menu", () => {
@@ -37,6 +37,12 @@ describe("accountIdentity", () => {
     expect(filterCabinetNavigation({ role: "admin", isSuperuser: true, permissions: [] }).map((item) => item.href)).toEqual([
       "/", "/agro-helper", "/farms", "/proposals/new", "/order-requests", "/knowledge-base", "/quiz",
     ]);
+  });
+
+  it("keeps the knowledge base outside the graphite theme scope", () => {
+    expect(cabinetTheme("/knowledge-base")).toBe("knowledge");
+    expect(cabinetTheme("/admin")).toBe("overview");
+    expect(cabinetTheme("/farms")).toBe("farms");
   });
 
   it("keeps five focused destinations in the mobile bottom navigation", () => {

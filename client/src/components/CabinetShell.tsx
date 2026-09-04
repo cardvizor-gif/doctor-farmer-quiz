@@ -40,7 +40,7 @@ export function cabinetPageTitle(pathname: string) {
   return cabinetNavigation.find((item) => item.href === pathname)?.label ?? "Рабочий кабинет";
 }
 
-function cabinetTheme(pathname: string) {
+export function cabinetTheme(pathname: string) {
   if (pathname === "/") return "overview";
   if (pathname.startsWith("/agro-helper")) return "agro";
   if (pathname.startsWith("/farms")) return "farms";
@@ -169,12 +169,12 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   };
 
   return (
-    <div className="cabinet-canvas">
+    <div className={`cabinet-canvas cabinet-canvas-${pageTheme}`}>
       <div className="cabinet-frame">
         <aside className={`cabinet-sidebar ${isMobileMenuOpen ? "is-open" : ""}`} aria-label="Навигация рабочего кабинета">
           <div className="cabinet-sidebar-top">
             <Link href="/" className="cabinet-brand" onClick={() => setIsMobileMenuOpen(false)} aria-label="Doctor Farmer — обзор">
-              <DoctorFarmerLogo className="h-10 w-auto" clickable={false} />
+              <DoctorFarmerLogo className="h-10 w-auto" clickable={false} monochrome={pageTheme !== "knowledge"} />
             </Link>
             <button type="button" className="cabinet-mobile-close" onClick={() => setIsMobileMenuOpen(false)} aria-label="Закрыть меню"><X className="h-5 w-5" /></button>
           </div>
