@@ -6,7 +6,7 @@ import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { countPendingAccessRequests } from "@/lib/accessRequests";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, Building2, ChevronDown, ClipboardList, FilePlus2, Headphones, Home, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
+import { Briefcase, Building2, ChevronDown, ClipboardList, FilePlus2, Headphones, Home, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import type { PermissionCode } from "@shared/permissions";
@@ -17,7 +17,7 @@ export const cabinetNavigation = [
   { href: "/farms", label: "Хозяйства", icon: Building2, permission: "farms.read" as PermissionCode },
   { href: "/proposals/new", label: "Генератор КП", icon: FilePlus2, permission: "proposals.read" as PermissionCode },
   { href: "/order-requests", label: "Заявки", icon: ClipboardList, permission: "orders.read" as PermissionCode },
-  { href: "/knowledge-base", label: "База знаний", icon: BookOpen, permission: "knowledge.read" as PermissionCode },
+  { href: "/sales", label: "Продажи", icon: Briefcase, permission: "sales.read" as PermissionCode },
   { href: "/quiz", label: "Тестирование", icon: Trophy, permission: "quiz.use" as PermissionCode },
 ] as const;
 
@@ -26,7 +26,7 @@ export const mobileNavigation = [
   { href: "/agro-helper", label: "Схемы", icon: Sprout, permission: "agro.use" as PermissionCode },
   { href: "/farms", label: "Хозяйства", icon: Building2, permission: "farms.read" as PermissionCode },
   { href: "/proposals/new", label: "КП", icon: FilePlus2, permission: "proposals.read" as PermissionCode },
-  { href: "/knowledge-base", label: "База знаний", icon: BookOpen, permission: "knowledge.read" as PermissionCode },
+  { href: "/sales", label: "Продажи", icon: Briefcase, permission: "sales.read" as PermissionCode },
 ] as const;
 
 type NavigationUser = { role?: "user" | "admin" | null; isSuperuser?: boolean | null; permissions?: readonly PermissionCode[] | null } | null | undefined;

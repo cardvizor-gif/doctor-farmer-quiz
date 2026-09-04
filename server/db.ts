@@ -1,6 +1,6 @@
-import { and, count, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, inviteCodeHistory, orderRequestItems, orderRequests, proposals, shipmentItems, shipments, supportAttachments, supportTickets, userPermissions, users } from "../drizzle/schema";
+import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, inviteCodeHistory, orderRequestItems, orderRequests, proposals, regions, salesTasks, shipmentItems, shipments, supportAttachments, supportTickets, userPermissions, users, workspaceMembers, workspaces } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
 import type { PermissionCode } from "../shared/permissions";
 import { creditedActiveSeconds } from "../shared/activity";
@@ -53,6 +53,11 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
     textFields.forEach(assignNullable);
 
+    if (user.primaryRegionId !== undefined) {
+      values.primaryRegionId = user.primaryRegionId;
+      updateSet.primaryRegionId = user.primaryRegionId;
+    }
+
     if (user.lastSignedIn !== undefined) {
       values.lastSignedIn = user.lastSignedIn;
       updateSet.lastSignedIn = user.lastSignedIn;
@@ -96,6 +101,160 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function listRegions() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(regions).where(eq(regions.isActive, 1)).orderBy(regions.name);
+}
+
+export async function getRegionById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(regions).where(eq(regions.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function listWorkspacesForUser(openId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({ workspace: workspaces, region: regions, membership: workspaceMembers })
+    .from(workspaceMembers)
+    .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
+    .innerJoin(regions, eq(workspaces.regionId, regions.id))
+    .where(and(eq(workspaceMembers.userOpenId, openId), eq(workspaces.isActive, 1)))
+    .orderBy(regions.name);
+}
+
+export async function listWorkspaces() {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({ workspace: workspaces, region: regions, member: workspaceMembers, user: users })
+    .from(workspaces)
+    .innerJoin(regions, eq(workspaces.regionId, regions.id))
+    .leftJoin(workspaceMembers, eq(workspaceMembers.workspaceId, workspaces.id))
+    .leftJoin(users, eq(workspaceMembers.userOpenId, users.openId))
+    .where(eq(workspaces.isActive, 1))
+    .orderBy(regions.name, users.displayName);
+  const grouped = new Map<number, { workspace: typeof rows[number]["workspace"]; region: typeof rows[number]["region"]; members: Array<{ membership: NonNullable<typeof rows[number]["member"]>; user: NonNullable<typeof rows[number]["user"]> }> }>();
+  rows.forEach(({ workspace, region, member, user }) => {
+    const item = grouped.get(workspace.id) ?? { workspace, region, members: [] };
+    if (member && user) item.members.push({ membership: member, user });
+    grouped.set(workspace.id, item);
+  });
+  return Array.from(grouped.values());
+}
+
+export async function createWorkspace(name: string, regionId: number, createdByOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const region = await getRegionById(regionId);
+  if (!region) throw new Error("Регион не найден");
+  const result = await db.insert(workspaces).values({ name: name.trim(), regionId, createdByOpenId });
+  const workspaceId = Number(result[0].insertId);
+  return db.select().from(workspaces).where(eq(workspaces.id, workspaceId)).limit(1).then(rows => rows[0]);
+}
+
+export async function upsertWorkspaceMember(workspaceId: number, userOpenId: string, membershipRole: "manager" | "rop" | "cluster_director" | "deputy_ceo" | "ceo", assignedByOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const [workspace, user] = await Promise.all([
+    db.select().from(workspaces).where(and(eq(workspaces.id, workspaceId), eq(workspaces.isActive, 1))).limit(1),
+    getUserByOpenId(userOpenId),
+  ]);
+  if (!workspace[0]) throw new Error("Рабочее пространство не найдено");
+  if (!user || user.status === "archived") throw new Error("Сотрудник не найден или архивирован");
+  await db.insert(workspaceMembers).values({ workspaceId, userOpenId, membershipRole, assignedByOpenId }).onDuplicateKeyUpdate({ set: { membershipRole, assignedByOpenId, updatedAt: new Date() } });
+  return listWorkspaces();
+}
+
+export async function getWorkspaceMember(workspaceId: number, userOpenId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(workspaceMembers).where(and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userOpenId, userOpenId))).limit(1);
+  return rows[0];
+}
+
+export async function getWorkspaceById(workspaceId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select({ workspace: workspaces, region: regions }).from(workspaces).innerJoin(regions, eq(workspaces.regionId, regions.id)).where(and(eq(workspaces.id, workspaceId), eq(workspaces.isActive, 1))).limit(1);
+  return rows[0];
+}
+
+export async function createSalesTask(input: {
+  workspaceId: number;
+  creatorOpenId: string;
+  assigneeOpenId: string;
+  farmId?: number | null;
+  proposalId?: number | null;
+  title: string;
+  description?: string | null;
+  dueAt?: Date | null;
+  priority: "low" | "normal" | "high";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const result = await db.insert(salesTasks).values({ ...input, title: input.title.trim(), description: input.description?.trim() || null, dueAt: input.dueAt ?? null, farmId: input.farmId ?? null, proposalId: input.proposalId ?? null });
+  const rows = await db.select().from(salesTasks).where(eq(salesTasks.id, Number(result[0].insertId))).limit(1);
+  return rows[0];
+}
+
+export async function getSalesTaskById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(salesTasks).where(eq(salesTasks.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function updateSalesTaskStatus(id: number, status: "todo" | "in_progress" | "done" | "cancelled") {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  await db.update(salesTasks).set({ status, completedAt: status === "done" ? new Date() : null }).where(eq(salesTasks.id, id));
+  const rows = await db.select().from(salesTasks).where(eq(salesTasks.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function removeWorkspaceMember(workspaceId: number, userOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  await db.delete(workspaceMembers).where(and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userOpenId, userOpenId)));
+  return listWorkspaces();
+}
+
+export async function listWorkspaceMembers(workspaceIds: number[]) {
+  const db = await getDb();
+  if (!db || workspaceIds.length === 0) return [];
+  return db.select({ membership: workspaceMembers, user: users }).from(workspaceMembers).innerJoin(users, eq(workspaceMembers.userOpenId, users.openId)).where(and(inArray(workspaceMembers.workspaceId, workspaceIds), eq(users.status, "active"))).orderBy(users.displayName);
+}
+
+export async function listWorkspaceTasksForUser(openId: string) {
+  const memberships = await listWorkspacesForUser(openId);
+  const workspaceIds = memberships.map((item) => item.workspace.id);
+  const db = await getDb();
+  if (!db || workspaceIds.length === 0) return [];
+  const rows = await db.select({ task: salesTasks, workspace: workspaces, region: regions, assignee: users })
+    .from(salesTasks)
+    .innerJoin(workspaces, eq(salesTasks.workspaceId, workspaces.id))
+    .innerJoin(regions, eq(workspaces.regionId, regions.id))
+    .innerJoin(users, eq(salesTasks.assigneeOpenId, users.openId))
+    .where(and(eq(salesTasks.assigneeOpenId, openId), inArray(salesTasks.workspaceId, workspaceIds)))
+    .orderBy(salesTasks.dueAt, desc(salesTasks.createdAt));
+  return rows;
+}
+
+export async function listWorkspaceTasks(workspaceIds: number[]) {
+  const db = await getDb();
+  if (!db || workspaceIds.length === 0) return [];
+  const rows = await db.select({ task: salesTasks, workspace: workspaces, region: regions, assignee: users })
+    .from(salesTasks)
+    .innerJoin(workspaces, eq(salesTasks.workspaceId, workspaces.id))
+    .innerJoin(regions, eq(workspaces.regionId, regions.id))
+    .innerJoin(users, eq(salesTasks.assigneeOpenId, users.openId))
+    .where(inArray(salesTasks.workspaceId, workspaceIds))
+    .orderBy(salesTasks.dueAt, desc(salesTasks.createdAt));
+  return rows;
 }
 
 export async function getUserPermissions(openId: string): Promise<PermissionCode[]> {
@@ -588,7 +747,7 @@ export async function claimLegacyFarms(ownerOpenId: string) {
   return { claimed: Number(result[0].affectedRows ?? 0) };
 }
 
-type AccessRequestInput = { requestedName: string; position: string; email: string };
+type AccessRequestInput = { requestedName: string; position: string; email: string; regionId: number };
 
 const normalizeAccessEmail = (email: string) => email.trim().toLowerCase();
 
@@ -617,6 +776,8 @@ export async function requestAccess(input: AccessRequestInput) {
   if (!db) throw new Error("База данных недоступна");
   const email = normalizeAccessEmail(input.email);
   const requestedName = input.requestedName.trim();
+  const region = await getRegionById(input.regionId);
+  if (!region || region.isActive !== 1) throw new Error("Выберите действующий регион");
   const existing = await db.select().from(accessRequests).where(eq(accessRequests.email, email)).limit(1);
 
   if (existing[0]?.status === "pending" || existing[0]?.status === "activated") return existing[0];
@@ -624,6 +785,7 @@ export async function requestAccess(input: AccessRequestInput) {
     await db.update(accessRequests).set({
       requestedName,
       position: input.position.trim(),
+      regionId: input.regionId,
       status: "pending",
       reviewedByOpenId: null,
       reviewedAt: null,
@@ -636,7 +798,7 @@ export async function requestAccess(input: AccessRequestInput) {
     return refreshed[0];
   }
 
-  const result = await db.insert(accessRequests).values({ email, requestedName, position: input.position.trim(), status: "pending" });
+  const result = await db.insert(accessRequests).values({ email, requestedName, position: input.position.trim(), regionId: input.regionId, status: "pending" });
   const created = await db.select().from(accessRequests).where(eq(accessRequests.id, Number(result[0].insertId))).limit(1);
   return created[0];
 }

@@ -5,6 +5,34 @@ import { decimal, index, int, mysqlEnum, mysqlTable, text, timestamp, uniqueInde
  * Extend this file with additional tables as your product grows.
  * Columns use camelCase to match both database fields and generated types.
  */
+export const regions = mysqlTable("regions", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 160 }).notNull().unique(),
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Region = typeof regions.$inferSelect;
+export type InsertRegion = typeof regions.$inferInsert;
+
+export const workspaces = mysqlTable(
+  "workspaces",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 160 }).notNull(),
+    regionId: int("regionId").notNull().references(() => regions.id, { onDelete: "restrict" }),
+    isActive: int("isActive").default(1).notNull(),
+    createdByOpenId: varchar("createdByOpenId", { length: 64 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [uniqueIndex("workspaces_region_unique").on(table.regionId), index("workspaces_active_idx").on(table.isActive)],
+);
+
+export type Workspace = typeof workspaces.$inferSelect;
+export type InsertWorkspace = typeof workspaces.$inferInsert;
+
 export const users = mysqlTable("users", {
   /**
    * Surrogate primary key. Auto-incremented numeric value managed by the database.
@@ -17,6 +45,8 @@ export const users = mysqlTable("users", {
   /** User-controlled label for the cabinet; OAuth resyncs never overwrite it. */
   displayName: varchar("displayName", { length: 120 }),
   position: varchar("position", { length: 160 }),
+  /** Primary business region selected during access request; nullable for historical users. */
+  primaryRegionId: int("primaryRegionId").references(() => regions.id, { onDelete: "set null" }),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
@@ -36,6 +66,23 @@ export const users = mysqlTable("users", {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+export const workspaceMembers = mysqlTable(
+  "workspaceMembers",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+    userOpenId: varchar("userOpenId", { length: 64 }).notNull().references(() => users.openId, { onDelete: "cascade" }),
+    membershipRole: mysqlEnum("membershipRole", ["manager", "rop", "cluster_director", "deputy_ceo", "ceo"]).notNull().default("manager"),
+    assignedByOpenId: varchar("assignedByOpenId", { length: 64 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [uniqueIndex("workspace_members_user_unique").on(table.workspaceId, table.userOpenId), index("workspace_members_user_idx").on(table.userOpenId), index("workspace_members_role_idx").on(table.membershipRole)],
+);
+
+export type WorkspaceMember = typeof workspaceMembers.$inferSelect;
+export type InsertWorkspaceMember = typeof workspaceMembers.$inferInsert;
 
 export const userPermissions = mysqlTable(
   "userPermissions",
@@ -217,8 +264,9 @@ export const accessRequests = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     email: varchar("email", { length: 320 }).notNull(),
     requestedName: varchar("requestedName", { length: 120 }).notNull(),
-    /** Historical requests may predate the position field; new requests validate it at the API boundary. */
+    /** Historical requests may predate the position and region fields; new requests validate them at the API boundary. */
     position: varchar("position", { length: 160 }),
+    regionId: int("regionId").references(() => regions.id, { onDelete: "set null" }),
     status: mysqlEnum("status", ["pending", "approved", "rejected", "activated"]).notNull().default("pending"),
     reviewedByOpenId: varchar("reviewedByOpenId", { length: 64 }),
     reviewedAt: timestamp("reviewedAt"),
@@ -234,6 +282,30 @@ export const accessRequests = mysqlTable(
     index("access_requests_status_created_idx").on(table.status, table.createdAt),
   ],
 );
+
+export const salesTasks = mysqlTable(
+  "salesTasks",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+    creatorOpenId: varchar("creatorOpenId", { length: 64 }).notNull().references(() => users.openId, { onDelete: "restrict" }),
+    assigneeOpenId: varchar("assigneeOpenId", { length: 64 }).notNull().references(() => users.openId, { onDelete: "restrict" }),
+    farmId: int("farmId").references(() => farms.id, { onDelete: "set null" }),
+    proposalId: int("proposalId").references(() => proposals.id, { onDelete: "set null" }),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    dueAt: timestamp("dueAt"),
+    priority: mysqlEnum("priority", ["low", "normal", "high"]).notNull().default("normal"),
+    status: mysqlEnum("status", ["todo", "in_progress", "done", "cancelled"]).notNull().default("todo"),
+    completedAt: timestamp("completedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [index("sales_tasks_workspace_due_idx").on(table.workspaceId, table.dueAt), index("sales_tasks_assignee_status_idx").on(table.assigneeOpenId, table.status), index("sales_tasks_creator_idx").on(table.creatorOpenId)],
+);
+
+export type SalesTask = typeof salesTasks.$inferSelect;
+export type InsertSalesTask = typeof salesTasks.$inferInsert;
 
 export const inviteCodeHistory = mysqlTable(
   "inviteCodeHistory",

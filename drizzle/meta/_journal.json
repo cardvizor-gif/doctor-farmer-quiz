@@ -78,6 +78,13 @@
       "when": 1788497284244,
       "tag": "0010_spicy_blink",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1788525402593,
+      "tag": "0011_sharp_hellfire_club",
+      "breakpoints": true
     }
   ]
 }

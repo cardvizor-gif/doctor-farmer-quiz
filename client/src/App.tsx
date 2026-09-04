@@ -13,6 +13,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Home = lazy(() => import("./pages/Home"));
 const AgroHelper = lazy(() => import("./pages/AgroHelper"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
+const Sales = lazy(() => import("./pages/Sales"));
 const FarmWorkspace = lazy(() => import("./pages/FarmWorkspace"));
 const ProposalBuilder = lazy(() => import("./pages/ProposalBuilder"));
 const OrderRequests = lazy(() => import("./pages/OrderRequests"));
@@ -39,6 +40,7 @@ function Router() {
   const CabinetDashboard = cabinetPage(Dashboard);
   const CabinetAgroHelper = privateCabinetPage(AgroHelper, "agro.use");
   const CabinetKnowledgeBase = privateCabinetPage(KnowledgeBase, "knowledge.read");
+  const CabinetSales = privateCabinetPage(Sales, "sales.read");
   const CabinetHome = privateCabinetPage(Home, "quiz.use");
   const CabinetFarmWorkspace = privateCabinetPage(FarmWorkspace, "farms.read");
   const CabinetProposalBuilder = privateCabinetPage(ProposalBuilder, "proposals.read");
@@ -53,6 +55,7 @@ function Router() {
       <Route path={"/quiz"} component={CabinetHome} />
       <Route path={"/agro-helper"} component={CabinetAgroHelper} />
       <Route path={"/knowledge-base"} component={CabinetKnowledgeBase} />
+      <Route path={"/sales"} component={CabinetSales} />
       <Route path={"/farms"} component={CabinetFarmWorkspace} />
       <Route path={"/proposals/new"} component={CabinetProposalBuilder} />
       <Route path={"/order-requests"} component={CabinetOrderRequests} />

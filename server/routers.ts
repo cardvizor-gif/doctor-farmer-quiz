@@ -9,6 +9,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { sdk } from "./_core/sdk";
 import { allPermissionCodes, permissionCodes, type PermissionCode } from "../shared/permissions";
+import { canOverseeRole, type RegionalMembershipRole } from "../shared/regions";
 import { ENV } from "./_core/env";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
@@ -88,6 +89,15 @@ const superuserProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (!isSuperuser(ctx.user)) throw new TRPCError({ code: "FORBIDDEN", message: "Операция доступна только суперпользователю" });
   return next();
 });
+const workspaceProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const permissions = await getEffectivePermissions(ctx.user);
+  if (!isSuperuser(ctx.user) && !permissions.includes("workspace.manage")) throw new TRPCError({ code: "FORBIDDEN", message: "Недостаточно прав для управления рабочими пространствами" });
+  return next();
+});
+
+const regionalRoleSchema = z.enum(["manager", "rop", "cluster_director", "deputy_ceo", "ceo"]);
+const salesTaskStatusSchema = z.enum(["todo", "in_progress", "done", "cancelled"]);
+const salesTaskPrioritySchema = z.enum(["low", "normal", "high"]);
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -112,10 +122,12 @@ export const appRouter = router({
     }),
   }),
   access: router({
+    regions: publicProcedure.query(() => db.listRegions()),
     request: publicProcedure.input(z.object({
       requestedName: z.string().trim().min(2, "Укажите имя").max(120),
       position: z.string().trim().min(2, "Укажите должность").max(160),
       email: z.string().trim().email("Укажите рабочий e-mail").max(320),
+      regionId: z.number().int().positive(),
     })).mutation(async ({ input }) => {
       await db.requestAccess(input);
       return { accepted: true } as const;
@@ -154,7 +166,7 @@ export const appRouter = router({
       const openId = `invite_${randomBytes(16).toString("hex")}`;
       const consumed = await db.consumeInvite(invite.id, attemptedHash, openId);
       if (!consumed) throw new TRPCError({ code: "UNAUTHORIZED", message: "Код уже использован или истёк" });
-      await db.upsertUser({ openId, name: invite.requestedName, displayName: invite.requestedName, position: invite.position, email: invite.email, loginMethod: "invite", lastSignedIn: new Date() });
+      await db.upsertUser({ openId, name: invite.requestedName, displayName: invite.requestedName, position: invite.position, primaryRegionId: invite.regionId, email: invite.email, loginMethod: "invite", lastSignedIn: new Date() });
       const user = await db.getUserByOpenId(openId);
       if (!user) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Не удалось активировать кабинет" });
       const sessionToken = await sdk.createSessionToken(openId, { name: invite.requestedName, expiresInMs: 30 * 24 * 60 * 60 * 1000 });
@@ -165,6 +177,61 @@ export const appRouter = router({
   activity: router({
     ping: protectedProcedure.mutation(({ ctx }) => db.recordUserActivity(ctx.user.openId)),
     forUser: superuserProcedure.input(z.object({ openId: z.string().trim().min(1).max(64) })).query(({ input }) => db.getUserActivity(input.openId)),
+  }),
+  workspace: router({
+    regions: protectedProcedure.query(() => db.listRegions()),
+    list: workspaceProcedure.query(() => db.listWorkspaces()),
+    mine: permissionProcedure("sales.read").query(({ ctx }) => db.listWorkspacesForUser(ctx.user.openId)),
+    create: workspaceProcedure.input(z.object({ name: z.string().trim().min(2).max(160), regionId: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+      try {
+        return await db.createWorkspace(input.name, input.regionId, ctx.user.openId);
+      } catch (error) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Не удалось создать рабочее пространство" });
+      }
+    }),
+    assign: workspaceProcedure.input(z.object({ workspaceId: z.number().int().positive(), userOpenId: z.string().trim().min(1).max(64), membershipRole: regionalRoleSchema })).mutation(async ({ input, ctx }) => {
+      try {
+        return await db.upsertWorkspaceMember(input.workspaceId, input.userOpenId, input.membershipRole, ctx.user.openId);
+      } catch (error) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Не удалось назначить сотрудника" });
+      }
+    }),
+    removeMember: workspaceProcedure.input(z.object({ workspaceId: z.number().int().positive(), userOpenId: z.string().trim().min(1).max(64) })).mutation(({ input }) => db.removeWorkspaceMember(input.workspaceId, input.userOpenId)),
+  }),
+  sales: router({
+    overview: permissionProcedure("sales.read").query(async ({ ctx }) => {
+      const memberships = await db.listWorkspacesForUser(ctx.user.openId);
+      const workspaces = isSuperuser(ctx.user) ? await db.listWorkspaces() : memberships;
+      const workspaceIds = workspaces.map((item) => item.workspace.id);
+      const leadershipWorkspaceIds = memberships.filter((item) => item.membership.membershipRole !== "manager").map((item) => item.workspace.id);
+      const tasks = isSuperuser(ctx.user) ? await db.listWorkspaceTasks(workspaceIds) : leadershipWorkspaceIds.length ? [...await db.listWorkspaceTasks(leadershipWorkspaceIds), ...await db.listWorkspaceTasksForUser(ctx.user.openId)].filter((item, index, all) => all.findIndex((candidate) => candidate.task.id === item.task.id) === index) : await db.listWorkspaceTasksForUser(ctx.user.openId);
+      const members = await db.listWorkspaceMembers(workspaceIds);
+      return { workspaces, tasks, members };
+    }),
+    createTask: permissionProcedure("sales.write").input(z.object({
+      workspaceId: z.number().int().positive(),
+      assigneeOpenId: z.string().trim().min(1).max(64),
+      title: z.string().trim().min(2, "Укажите задачу").max(255),
+      description: z.string().trim().max(10_000).nullable().optional(),
+      dueAt: z.date().nullable().optional(),
+      priority: salesTaskPrioritySchema.default("normal"),
+    })).mutation(async ({ input, ctx }) => {
+      const workspaceMember = await db.getWorkspaceMember(input.workspaceId, ctx.user.openId);
+      const assigneeMember = await db.getWorkspaceMember(input.workspaceId, input.assigneeOpenId);
+      if (!workspaceMember || !assigneeMember) throw new TRPCError({ code: "FORBIDDEN", message: "Нет доступа к этому рабочему пространству" });
+      const permissions = await getEffectivePermissions(ctx.user);
+      if (input.assigneeOpenId !== ctx.user.openId && !isSuperuser(ctx.user) && (!permissions.includes("sales.assign") || !canOverseeRole(workspaceMember.membershipRole as RegionalMembershipRole, assigneeMember.membershipRole as RegionalMembershipRole))) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Нельзя ставить задачи этому сотруднику" });
+      }
+      const task = await db.createSalesTask({ ...input, creatorOpenId: ctx.user.openId, description: input.description ?? null, dueAt: input.dueAt ?? null, priority: input.priority });
+      return task;
+    }),
+    updateStatus: permissionProcedure("sales.write").input(z.object({ id: z.number().int().positive(), status: salesTaskStatusSchema })).mutation(async ({ input, ctx }) => {
+      const task = await db.getSalesTaskById(input.id);
+      if (!task) throw new TRPCError({ code: "NOT_FOUND", message: "Задача не найдена" });
+      if (task.assigneeOpenId !== ctx.user.openId && !isSuperuser(ctx.user)) throw new TRPCError({ code: "FORBIDDEN", message: "Изменять можно только свои задачи" });
+      return db.updateSalesTaskStatus(input.id, input.status);
+    }),
   }),
   admin: router({
     team: teamProcedure("team.read").query(() => db.listTeamMembers()),

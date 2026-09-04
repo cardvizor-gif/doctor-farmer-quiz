@@ -13,7 +13,7 @@ describe("главная страница рабочего кабинета", ()
       "Хозяйства",
       "Генератор КП",
       "Заявки",
-      "База знаний",
+      "Продажи",
       "Тестирование",
     ]);
   });
@@ -23,5 +23,6 @@ describe("главная страница рабочего кабинета", ()
     expect(new Set(hrefs).size).toBe(6);
     expect(hrefs).toContain("/farms");
     expect(hrefs).toContain("/proposals/new");
+    expect(hrefs).toContain("/sales");
   });
 });

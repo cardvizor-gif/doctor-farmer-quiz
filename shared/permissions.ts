@@ -13,6 +13,10 @@ export const permissionCodes = [
   "knowledge.read",
   "agro.use",
   "quiz.use",
+  "sales.read",
+  "sales.write",
+  "sales.assign",
+  "workspace.manage",
 ] as const;
 
 export type PermissionCode = (typeof permissionCodes)[number];
@@ -32,6 +36,10 @@ export const permissionLabels: Record<PermissionCode, { title: string; descripti
   "knowledge.read": { title: "База знаний", description: "Доступ к базе знаний препаратов и материалов." },
   "agro.use": { title: "АгроПомощник", description: "Доступ к схемам защиты и расчётам применения." },
   "quiz.use": { title: "Тестирование", description: "Доступ к профессиональным тестам." },
+  "sales.read": { title: "Продажи: просмотр", description: "Просмотр рабочего плана, задач и доступных сделок." },
+  "sales.write": { title: "Продажи: свои задачи", description: "Создание личных задач и обновление их статуса." },
+  "sales.assign": { title: "Продажи: постановка задач", description: "Постановка задач сотрудникам в доступных рабочих пространствах." },
+  "workspace.manage": { title: "Рабочие пространства", description: "Управление регионами, пространствами и назначениями команды." },
 };
 
 export const allPermissionCodes = [...permissionCodes] as PermissionCode[];

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { BookOpen, Building2, ClipboardList, FileText, HelpCircle, Layers3, Sprout, Trophy } from "lucide-react";
+import { Briefcase, Building2, ClipboardList, FileText, HelpCircle, Layers3, Sprout, Trophy } from "lucide-react";
 import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
 
@@ -41,11 +41,11 @@ export const dashboardModules = [
     tone: "orange",
   },
   {
-    title: "База знаний",
-    hint: "Препараты и нормы",
+    title: "Продажи",
+    hint: "Задачи и команда",
     action: "Открыть",
-    href: "/knowledge-base",
-    icon: BookOpen,
+    href: "/sales",
+    icon: Briefcase,
     tone: "blue",
   },
   {

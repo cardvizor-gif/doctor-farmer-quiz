@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TrpcContext } from "./_core/context";
 
 vi.mock("./db", () => ({
-  requestAccess: vi.fn(), listAccessRequests: vi.fn(), approveAccessRequest: vi.fn(), listInviteCodeHistory: vi.fn(), reissueAccessRequest: vi.fn(), rejectAccessRequest: vi.fn(),
+  requestAccess: vi.fn(), listRegions: vi.fn(), listAccessRequests: vi.fn(), approveAccessRequest: vi.fn(), listInviteCodeHistory: vi.fn(), reissueAccessRequest: vi.fn(), rejectAccessRequest: vi.fn(),
   findActiveInvite: vi.fn(), consumeInvite: vi.fn(), upsertUser: vi.fn(), getUserByOpenId: vi.fn(),
 }));
 vi.mock("./_core/sdk", () => ({ sdk: { createSessionToken: vi.fn().mockResolvedValue("local-session") } }));
@@ -11,7 +11,7 @@ import * as db from "./db";
 import { appRouter } from "./routers";
 import { ENV } from "./_core/env";
 
-const request = { id: 7, email: "colleague@example.com", requestedName: "Коллега", position: "Менеджер по продажам", status: "pending" as const, reviewedByOpenId: null, reviewedAt: null, inviteCodeHash: null, inviteCodeExpiresAt: null, inviteCodeUsedAt: null, localOpenId: null, createdAt: new Date(), updatedAt: new Date() };
+const request = { id: 7, email: "colleague@example.com", requestedName: "Коллега", position: "Менеджер по продажам", regionId: 1, status: "pending" as const, reviewedByOpenId: null, reviewedAt: null, inviteCodeHash: null, inviteCodeExpiresAt: null, inviteCodeUsedAt: null, localOpenId: null, createdAt: new Date(), updatedAt: new Date() };
 const user = { id: 4, openId: "invite_test", name: "Коллега", displayName: "Коллега", position: request.position, email: request.email, loginMethod: "invite", role: "user" as const, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() };
 function context(role: "admin" | "user" | null): TrpcContext & { res: { cookie: ReturnType<typeof vi.fn> } } {
   return { user: role ? { ...user, openId: role === "admin" ? ENV.ownerOpenId : "other", role } : null, req: { protocol: "https", headers: {} } as TrpcContext["req"], res: { cookie: vi.fn(), clearCookie: vi.fn() } as unknown as TrpcContext["res"] } as TrpcContext & { res: { cookie: ReturnType<typeof vi.fn> } };
@@ -21,12 +21,19 @@ describe("access invitations", () => {
   beforeEach(() => vi.clearAllMocks());
   it("accepts a public access request without disclosing request data", async () => {
     const caller = appRouter.createCaller(context(null));
-    await expect(caller.access.request({ requestedName: "Коллега", position: request.position, email: request.email })).resolves.toEqual({ accepted: true });
-    expect(db.requestAccess).toHaveBeenCalledWith({ requestedName: "Коллега", position: request.position, email: request.email });
+    await expect(caller.access.request({ requestedName: "Коллега", position: request.position, email: request.email, regionId: request.regionId })).resolves.toEqual({ accepted: true });
+    expect(db.requestAccess).toHaveBeenCalledWith({ requestedName: "Коллега", position: request.position, email: request.email, regionId: request.regionId });
   });
+  it("exposes only the active region reference data before authentication", async () => {
+    vi.mocked(db.listRegions).mockResolvedValue([{ id: 1, name: "Республика Башкортостан", isActive: 1, createdAt: new Date() }]);
+    const caller = appRouter.createCaller(context(null));
+    await expect(caller.access.regions()).resolves.toHaveLength(1);
+    expect(db.listRegions).toHaveBeenCalledTimes(1);
+  });
+
   it("requires a position when a colleague submits an access request", async () => {
     const caller = appRouter.createCaller(context(null));
-    await expect(caller.access.request({ requestedName: "Коллега", email: request.email } as never)).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(caller.access.request({ requestedName: "Коллега", email: request.email, regionId: request.regionId } as never)).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
   it("limits request review and invitation codes to the administrator", async () => {
     vi.mocked(db.approveAccessRequest).mockResolvedValue({ ...request, status: "approved" });
