@@ -28,6 +28,10 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  /** Last authenticated cabinet activity ping; null for users who have not visited after this feature was enabled. */
+  lastActivityAt: timestamp("lastActivityAt"),
+  /** Accumulated active seconds, counted only across short visible activity intervals. */
+  activeSeconds: int("activeSeconds").default(0).notNull(),
 });
 
 export type User = typeof users.$inferSelect;

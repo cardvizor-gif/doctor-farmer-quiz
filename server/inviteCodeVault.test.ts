@@ -19,7 +19,10 @@ describe("invite code vault", () => {
   it("rejects a malformed or tampered payload", () => {
     expect(() => decryptInviteCode("invalid")) .toThrow();
     const encrypted = encryptInviteCode("ABCD2345EF");
-    const tampered = `${encrypted.slice(0, -1)}${encrypted.endsWith("A") ? "B" : "A"}`;
+    const [ivPart, authTagPart, ciphertextPart] = encrypted.split(".");
+    const ciphertext = Buffer.from(ciphertextPart, "base64url");
+    ciphertext[0] ^= 1;
+    const tampered = [ivPart, authTagPart, ciphertext.toString("base64url")].join(".");
 
     expect(() => decryptInviteCode(tampered)).toThrow();
   });

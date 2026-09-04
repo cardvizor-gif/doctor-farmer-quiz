@@ -1,8 +1,9 @@
-import { and, count, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, count, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, inviteCodeHistory, orderRequestItems, orderRequests, proposals, shipmentItems, shipments, supportAttachments, supportTickets, userPermissions, users } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
 import type { PermissionCode } from "../shared/permissions";
+import { creditedActiveSeconds } from "../shared/activity";
 import { ENV } from './_core/env';
 import { storagePut } from "./storage";
 import { decryptInviteCode, encryptInviteCode } from "./inviteCodeVault";
@@ -39,7 +40,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
     const updateSet: Record<string, unknown> = {};
 
-    const textFields = ["name", "email", "loginMethod"] as const;
+    const textFields = ["name", "email", "loginMethod", "position"] as const;
     type TextField = (typeof textFields)[number];
 
     const assignNullable = (field: TextField) => {
@@ -587,9 +588,29 @@ export async function claimLegacyFarms(ownerOpenId: string) {
   return { claimed: Number(result[0].affectedRows ?? 0) };
 }
 
-type AccessRequestInput = { requestedName: string; email: string };
+type AccessRequestInput = { requestedName: string; position: string; email: string };
 
 const normalizeAccessEmail = (email: string) => email.trim().toLowerCase();
+
+export async function recordUserActivity(openId: string, now = new Date()) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const current = await db.select({ lastActivityAt: users.lastActivityAt }).from(users).where(eq(users.openId, openId)).limit(1);
+  if (!current[0]) return undefined;
+  const creditedSeconds = creditedActiveSeconds(current[0].lastActivityAt, now);
+  await db.update(users).set({
+    lastActivityAt: now,
+    ...(creditedSeconds > 0 ? { activeSeconds: sql`${users.activeSeconds} + ${creditedSeconds}` } : {}),
+  }).where(eq(users.openId, openId));
+  return { lastActivityAt: now, creditedSeconds };
+}
+
+export async function getUserActivity(openId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select({ lastSignedIn: users.lastSignedIn, lastActivityAt: users.lastActivityAt, activeSeconds: users.activeSeconds }).from(users).where(eq(users.openId, openId)).limit(1);
+  return rows[0];
+}
 
 export async function requestAccess(input: AccessRequestInput) {
   const db = await getDb();
@@ -602,6 +623,7 @@ export async function requestAccess(input: AccessRequestInput) {
   if (existing[0]) {
     await db.update(accessRequests).set({
       requestedName,
+      position: input.position.trim(),
       status: "pending",
       reviewedByOpenId: null,
       reviewedAt: null,
@@ -614,7 +636,7 @@ export async function requestAccess(input: AccessRequestInput) {
     return refreshed[0];
   }
 
-  const result = await db.insert(accessRequests).values({ email, requestedName, status: "pending" });
+  const result = await db.insert(accessRequests).values({ email, requestedName, position: input.position.trim(), status: "pending" });
   const created = await db.select().from(accessRequests).where(eq(accessRequests.id, Number(result[0].insertId))).limit(1);
   return created[0];
 }

@@ -73,6 +73,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const [displayNameDraft, setDisplayNameDraft] = useState("");
   const { user, loading: isAuthLoading, logout } = useAuth();
   const utils = trpc.useUtils();
+  const activityPing = trpc.activity.ping.useMutation();
   const canCreateSupport = Boolean(user?.isSuperuser || user?.permissions?.includes("support.create"));
   const canAccessSupport = Boolean(canCreateSupport || user?.permissions?.includes("support.manage"));
   const canViewTeam = Boolean(user?.isSuperuser || user?.permissions?.includes("team.read"));
@@ -96,6 +97,33 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const account = accountIdentity(user);
   const pendingAccessRequests = countPendingAccessRequests(accessRequests);
   const newSupportTickets = (supportTickets ?? []).filter((ticket) => ticket.status === "new").length;
+
+  useEffect(() => {
+    if (!user?.openId) return;
+    let lastInteractionAt = Date.now();
+    const markInteraction = () => { lastInteractionAt = Date.now(); };
+    const sendActivityPing = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastInteractionAt > 90_000) return;
+      activityPing.mutate();
+    };
+    const interactionEvents = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
+    interactionEvents.forEach(eventName => window.addEventListener(eventName, markInteraction, { passive: true }));
+    const intervalId = window.setInterval(sendActivityPing, 60_000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        markInteraction();
+        sendActivityPing();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    sendActivityPing();
+    return () => {
+      window.clearInterval(intervalId);
+      interactionEvents.forEach(eventName => window.removeEventListener(eventName, markInteraction));
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [user?.openId]);
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {

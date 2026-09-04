@@ -162,6 +162,10 @@ export const appRouter = router({
       return user;
     }),
   }),
+  activity: router({
+    ping: protectedProcedure.mutation(({ ctx }) => db.recordUserActivity(ctx.user.openId)),
+    forUser: superuserProcedure.input(z.object({ openId: z.string().trim().min(1).max(64) })).query(({ input }) => db.getUserActivity(input.openId)),
+  }),
   admin: router({
     team: teamProcedure("team.read").query(() => db.listTeamMembers()),
     teamFarms: teamProcedure("team.read").query(() => db.listTeamFarms()),
