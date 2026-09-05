@@ -93,7 +93,7 @@ export default function Dashboard() {
           {dashboardModules.map((module) => {
             const Icon = module.icon;
             return (
-              <Link key={module.href} href={module.href} className="dashboard-module-card">
+              <Link key={module.href} href={module.href} className={`dashboard-module-card dashboard-module-card-${module.tone}`}>
                 <span className={`dashboard-module-icon ${toneClasses[module.tone]}`} aria-hidden="true">
                   <Icon className="h-12 w-12" strokeWidth={1.7} />
                 </span>

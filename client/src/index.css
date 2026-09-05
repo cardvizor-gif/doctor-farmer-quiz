@@ -1273,3 +1273,38 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 .cabinet-canvas:not(.cabinet-canvas-knowledge) .cabinet-content .admin-panel-page > div:first-child [class*="text-white/"],
 .cabinet-canvas:not(.cabinet-canvas-knowledge) .cabinet-content .access-requests-page > div:first-child [class*="text-white/"],
 .cabinet-canvas:not(.cabinet-canvas-knowledge) .cabinet-content .order-requests-page > div:first-child [class*="text-white/"] { color: #5e6c6e !important; }
+
+/* Compact no-scroll home mode for short phone viewports. Desktop layout remains unchanged. */
+@media (max-width: 767px) {
+  .cabinet-topbar { min-height: 60px !important; padding: 6px 10px !important; }
+  .cabinet-content { padding-top: 8px !important; padding-bottom: calc(74px + env(safe-area-inset-bottom)) !important; }
+  .dashboard-intro { padding: 2px 4px 10px !important; }
+  .dashboard-intro h1 { font-size: 20px !important; line-height: 1.05 !important; }
+  .dashboard-intro-text { max-width: 100%; margin-top: 4px !important; overflow: hidden; font-size: 11px !important; line-height: 1.25 !important; text-overflow: ellipsis; white-space: nowrap; }
+  .dashboard-quick-actions { margin-top: 9px !important; gap: 7px !important; }
+  .dashboard-quick-action { min-height: 38px !important; border-radius: 11px !important; padding-inline: 6px !important; font-size: 12px !important; }
+  .dashboard-section-heading { margin-bottom: 6px !important; }
+  .dashboard-section-heading h2 { font-size: 17px !important; }
+  .dashboard-module-grid { gap: 7px !important; }
+  .dashboard-module-card { aspect-ratio: 1 / 1 !important; border-radius: 14px !important; padding: 8px !important; box-shadow: 0 7px 15px rgba(54,77,37,.06) !important; }
+  .dashboard-module-card:hover { transform: none !important; }
+  .dashboard-module-card-emerald { background: #eaf5df !important; }
+  .dashboard-module-card-sage { background: #eef3d8 !important; }
+  .dashboard-module-card-gold { background: #fbf0df !important; }
+  .dashboard-module-card-orange { background: #f8e9df !important; }
+  .dashboard-module-card-blue { background: #e8f0f1 !important; }
+  .dashboard-module-card-violet { background: #eceaf2 !important; }
+  .dashboard-module-icon { width: 42px !important; height: 42px !important; border-radius: 12px !important; }
+  .dashboard-module-icon svg { width: 34px !important; height: 34px !important; }
+  .dashboard-module-copy { gap: 0 !important; margin-top: 4px !important; }
+  .dashboard-module-copy strong { font-size: 13px !important; line-height: 1.1 !important; }
+  .dashboard-module-copy small, .dashboard-module-action { display: none !important; }
+  .dashboard-support-strip { display: none !important; }
+}
+
+/* Tablet topbar guard: keep the menu and account actions clear at 621–900 px. */
+@media (min-width: 621px) and (max-width: 900px) {
+  .cabinet-topbar { padding-inline: 12px !important; }
+  .cabinet-topbar-actions { gap: 8px !important; }
+  .cabinet-search-hint { display: none !important; }
+}

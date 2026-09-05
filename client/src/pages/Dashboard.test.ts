@@ -18,6 +18,10 @@ describe("главная страница рабочего кабинета", ()
     ]);
   });
 
+  it("назначает каждому модулю отдельный цветовой токен", () => {
+    expect(new Set(dashboardModules.map((module) => module.tone)).size).toBe(6);
+  });
+
   it("сохраняет уникальные рабочие маршруты всех карточек", () => {
     const hrefs = dashboardModules.map((module) => module.href);
     expect(new Set(hrefs).size).toBe(6);
