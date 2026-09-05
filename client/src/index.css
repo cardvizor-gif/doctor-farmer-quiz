@@ -1388,3 +1388,20 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   .dashboard-module-card .dashboard-module-copy { margin-top: 4px !important; }
   .dashboard-module-card .dashboard-module-copy strong { font-size: 11px !important; }
 }
+
+/* Final mobile fit: clean card surfaces and fill the usable viewport between shell controls. */
+.dashboard-module-card::before { display: none !important; }
+
+@media (max-width: 767px) {
+  .dashboard-module-grid {
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    height: clamp(475px, calc(100dvh - 285px), 590px);
+  }
+  .dashboard-module-card { aspect-ratio: auto !important; height: 100%; }
+}
+
+@media (max-width: 767px) and (max-height: 760px) {
+  .dashboard-module-grid {
+    height: clamp(390px, calc(100dvh - 225px), 520px);
+  }
+}
