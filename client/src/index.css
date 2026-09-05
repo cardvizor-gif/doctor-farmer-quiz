@@ -1109,7 +1109,8 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 .cabinet-theme-proposal .proposal-workspace-hero,
 .admin-panel-page > div:first-child,
 .access-requests-page > div:first-child,
-.order-requests-page > div:first-child { background: #eef2f1 !important; border: 1px solid #d7e0df !important; border-top: 3px solid #b8e53d !important; color: #26343a !important; box-shadow: 0 14px 32px rgba(31,47,52,.08) !important; }
+.order-requests-page > div:first-child,
+.sales-page > div:first-child { background: #eef2f1 !important; border: 1px solid #d7e0df !important; border-top: 3px solid #b8e53d !important; color: #26343a !important; box-shadow: 0 14px 32px rgba(31,47,52,.08) !important; }
 .cabinet-theme-farms .farm-workspace-hero::after,
 .cabinet-theme-proposal .proposal-workspace-hero::after { border-color: rgba(38,52,58,.1); box-shadow: 0 0 0 30px rgba(38,52,58,.025), 0 0 0 60px rgba(38,52,58,.018); }
 .cabinet-theme-farms .farm-workspace-hero > div:first-child,
@@ -1120,29 +1121,35 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 .cabinet-theme-proposal .proposal-workspace-hero [class*="text-emerald"],
 .admin-panel-page > div:first-child [class*="text-white"],
 .access-requests-page > div:first-child [class*="text-white"],
-.order-requests-page > div:first-child [class*="text-white"] { color: #5e6c6e !important; }
+.order-requests-page > div:first-child [class*="text-white"],
+.sales-page > div:first-child [class*="text-white"] { color: #5e6c6e !important; }
 .cabinet-theme-farms .farm-workspace-hero h1,
 .cabinet-theme-farms .farm-workspace-hero h2,
 .cabinet-theme-proposal .proposal-workspace-hero h1,
 .cabinet-theme-proposal .proposal-workspace-hero h2,
 .admin-panel-page > div:first-child h2,
 .access-requests-page > div:first-child h2,
-.order-requests-page > div:first-child h2 { color: #26343a !important; }
+.order-requests-page > div:first-child h2,
+.sales-page > div:first-child h2 { color: #26343a !important; }
+.sales-page > div:first-child [class*="text-[#b9dc55]"] { color: #6f8730 !important; }
 .cabinet-theme-farms .farm-workspace-hero [class*="bg-white/10"],
 .cabinet-theme-proposal .proposal-workspace-hero [class*="bg-white/10"],
 .admin-panel-page > div:first-child [class*="bg-white/10"],
 .access-requests-page > div:first-child [class*="bg-white/10"],
-.order-requests-page > div:first-child [class*="bg-white/10"] { border-color: #dbe3e2 !important; background: #fff !important; color: #26343a !important; }
+.order-requests-page > div:first-child [class*="bg-white/10"],
+.sales-page > div:first-child [class*="bg-white/10"] { border-color: #dbe3e2 !important; background: #fff !important; color: #26343a !important; }
 .cabinet-theme-farms .farm-workspace-hero button,
 .cabinet-theme-proposal .proposal-workspace-hero button,
 .admin-panel-page > div:first-child button,
 .access-requests-page > div:first-child button,
-.order-requests-page > div:first-child button { border-color: #bdc9c8 !important; background: #26343a !important; color: #fff !important; }
+.order-requests-page > div:first-child button,
+.sales-page > div:first-child button { border-color: #bdc9c8 !important; background: #26343a !important; color: #fff !important; }
 .cabinet-theme-farms .farm-workspace-hero button:hover,
 .cabinet-theme-proposal .proposal-workspace-hero button:hover,
 .admin-panel-page > div:first-child button:hover,
 .access-requests-page > div:first-child button:hover,
-.order-requests-page > div:first-child button:hover { background: #34474e !important; color: #fff !important; }
+.order-requests-page > div:first-child button:hover,
+.sales-page > div:first-child button:hover { background: #34474e !important; color: #fff !important; }
 
 /* Admin, access, orders and support: same light card language. */
 .admin-panel-page > div:not(:first-child),
