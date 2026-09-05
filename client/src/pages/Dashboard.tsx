@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Briefcase, Building2, ClipboardList, FileText, HelpCircle, Layers3, Sprout, Trophy } from "lucide-react";
+import { Bell, Briefcase, Building2, ClipboardList, FileText, HelpCircle, Layers3, Sprout, Trophy } from "lucide-react";
 import { SupportModal } from "@/components/SupportModal";
+import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 
 export const dashboardTitle = "Рабочий кабинет";
 export const dashboardSubtitle = "Хозяйства, схемы защиты, КП и заявки — в одном рабочем кабинете.";
@@ -72,9 +73,13 @@ export default function Dashboard() {
   return (
     <div className="dashboard-home">
       <section className="dashboard-intro" aria-labelledby="dashboard-title">
-        <div className="dashboard-intro-copy">
-          <h1 id="dashboard-title">{dashboardTitle}</h1>
-          <p className="dashboard-intro-text">{dashboardSubtitle}</p>
+        <div className="dashboard-intro-topline">
+          <DoctorFarmerLogo className="dashboard-intro-logo" clickable={false} monochrome />
+          <div className="dashboard-intro-copy">
+            <h1 id="dashboard-title">{dashboardTitle}</h1>
+            <p className="dashboard-intro-text">{dashboardSubtitle}</p>
+          </div>
+          <span className="dashboard-intro-notification" aria-hidden="true"><Bell className="h-5 w-5" /></span>
         </div>
         <div className="dashboard-quick-actions" aria-label="Быстрые действия">
           <Link href="/farms" className="dashboard-quick-action dashboard-quick-action-primary">Новое хозяйство</Link>
