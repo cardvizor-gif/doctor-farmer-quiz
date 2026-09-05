@@ -1308,3 +1308,27 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   .cabinet-topbar-actions { gap: 8px !important; }
   .cabinet-search-hint { display: none !important; }
 }
+
+/* iPhone/Safari short viewport: fit the complete launcher above the browser-safe bottom area. */
+@media (max-width: 767px) and (max-height: 760px) {
+  .cabinet-topbar { min-height: 52px !important; padding: 4px 8px !important; }
+  .cabinet-menu-trigger { width: 36px !important; height: 36px !important; border-radius: 10px !important; }
+  .cabinet-mobile-topbar-brand svg { height: 24px !important; }
+  .cabinet-content { padding-top: 4px !important; padding-bottom: calc(62px + env(safe-area-inset-bottom)) !important; }
+  .dashboard-intro { padding: 1px 4px 7px !important; }
+  .dashboard-intro h1 { font-size: 18px !important; }
+  .dashboard-intro-text { margin-top: 3px !important; font-size: 10px !important; }
+  .dashboard-quick-actions { margin-top: 6px !important; gap: 6px !important; }
+  .dashboard-quick-action { min-height: 34px !important; border-radius: 10px !important; font-size: 11px !important; }
+  .dashboard-section-heading { margin-bottom: 4px !important; }
+  .dashboard-section-heading h2 { font-size: 15px !important; }
+  .dashboard-module-grid { gap: 5px !important; }
+  .dashboard-module-card { aspect-ratio: 1.36 / 1 !important; border-radius: 12px !important; padding: 7px !important; }
+  .dashboard-module-icon { width: 36px !important; height: 36px !important; border-radius: 10px !important; }
+  .dashboard-module-icon svg { width: 29px !important; height: 29px !important; }
+  .dashboard-module-copy { margin-top: 3px !important; }
+  .dashboard-module-copy strong { font-size: 12px !important; }
+  .cabinet-mobile-bottom-nav { min-height: 58px !important; padding: 4px 4px calc(4px + env(safe-area-inset-bottom)) !important; }
+  .cabinet-mobile-bottom-nav-item { gap: 2px !important; border-radius: 10px !important; font-size: 9px !important; }
+  .cabinet-mobile-bottom-nav-item svg { width: 18px !important; height: 18px !important; }
+}
