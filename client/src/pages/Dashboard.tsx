@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Briefcase, Building2, ClipboardList, FileText, HelpCircle, Layers3, Sprout, Trophy } from "lucide-react";
-import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
 
 export const dashboardTitle = "Рабочий кабинет";
@@ -72,10 +71,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-home">
-      <div className="dashboard-mobile-brand">
-        <DoctorFarmerLogo className="h-9 w-auto" clickable={false} />
-      </div>
-
       <section className="dashboard-intro" aria-labelledby="dashboard-title">
         <div className="dashboard-intro-copy">
           <h1 id="dashboard-title">{dashboardTitle}</h1>

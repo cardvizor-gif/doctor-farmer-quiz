@@ -195,9 +195,10 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
         </aside>
         <div className={`cabinet-workspace cabinet-theme-${pageTheme}`}>
           <header className="cabinet-topbar">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
               <button type="button" className="cabinet-menu-trigger" onClick={() => setIsMobileMenuOpen(true)} aria-label="Открыть меню"><Menu className="h-5 w-5" /></button>
-              <div><p className="cabinet-page-kicker">Doctor Farmer · рабочий кабинет</p>{location !== "/" && <h1>{pageTitle}</h1>}</div>
+              <Link href="/" className="cabinet-mobile-topbar-brand" aria-label="Doctor Farmer — обзор"><DoctorFarmerLogo className="h-7 w-auto" clickable={false} /></Link>
+              <div className="min-w-0"><p className="cabinet-page-kicker">Doctor Farmer · рабочий кабинет</p>{location !== "/" && <h1 className="cabinet-topbar-page-title">{pageTitle}</h1>}</div>
             </div>
             <div className="cabinet-topbar-actions">
               <button type="button" className="cabinet-search-hint" onClick={() => setIsSearchOpen(true)} aria-label="Открыть поиск по кабинету"><Search className="h-4 w-4" /><span>Поиск по кабинету</span><kbd>⌘ K</kbd></button>

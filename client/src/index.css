@@ -47,6 +47,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .cabinet-sidebar-top { display: flex; align-items: center; justify-content: space-between; padding: 0 9px; }
 .cabinet-brand { display: inline-flex; align-items: center; }
 .cabinet-mobile-close, .cabinet-menu-trigger { display: none; border: 0; background: transparent; color: #403d5e; }
+.cabinet-mobile-topbar-brand { display: none; align-items: center; flex: 0 0 auto; }
 .cabinet-nav { display: grid; gap: 5px; margin-top: 40px; }
 .cabinet-nav-item { display: flex; align-items: center; gap: 12px; min-height: 42px; border-radius: 12px; padding: 0 12px; color: #858498; font-size: 12px; font-weight: 700; text-decoration: none; transition: background .18s var(--ease-out), color .18s var(--ease-out), transform .18s var(--ease-out); }
 .cabinet-nav-item:hover { color: #2d2a50; background: #f0eff5; transform: translateX(2px); }
@@ -132,6 +133,10 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .cabinet-sidebar { position: fixed; z-index: 60; top: 0; bottom: 0; left: 0; width: min(290px, 86vw); transform: translateX(-105%); box-shadow: 24px 0 48px rgba(33,31,57,.16); transition: transform .24s var(--ease-out); }
   .cabinet-sidebar.is-open { transform: translateX(0); }
   .cabinet-mobile-close, .cabinet-menu-trigger { display: grid; place-items: center; }
+  .cabinet-menu-trigger { width: 40px; height: 40px; flex: 0 0 auto; border: 1px solid #26343a; border-radius: 12px; background: #26343a; color: #fff; box-shadow: 0 5px 12px rgba(38,52,58,.18); }
+  .cabinet-menu-trigger:hover, .cabinet-menu-trigger:focus-visible { background: #17252b; color: #fff; }
+  .cabinet-menu-trigger:active { transform: scale(.96); }
+  .cabinet-mobile-topbar-brand { display: inline-flex; }
   .cabinet-topbar { min-height: 68px; padding: 12px 16px; }
   .cabinet-content { padding: 18px 14px; }
   .cabinet-account-copy { display: none; }
@@ -643,9 +648,9 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 .quiz-workspace .hero-overlay { background: linear-gradient(100deg, rgba(246,250,235,.97), rgba(246,250,235,.80) 54%, rgba(246,250,235,.26)) !important; }
 .quiz-workspace .hero-copy h1, .quiz-workspace .hero-copy h1 em { color: var(--field-deep) !important; }
 .quiz-workspace .section-kicker, .quiz-workspace .mode-section-heading, .quiz-workspace .selected-counter, .quiz-workspace .quiz-score strong { color: var(--field-mid) !important; }
-.quiz-workspace .mode-tile { --mode-color: var(--field-mid) !important; --mode-tint: #eff5e5 !important; border-color: #dce6d5 !important; color: var(--field-deep) !important; }
-.quiz-workspace .mode-tile.is-active { border-color: var(--field-mid) !important; background: #edf5df !important; }
-.quiz-workspace .mode-icon, .quiz-workspace .mode-tile.is-active .mode-icon { background: #f2f6e9 !important; color: var(--field-mid) !important; }
+.quiz-workspace .mode-tile { border-color: var(--mode-color) !important; background: var(--mode-tint) !important; color: var(--mode-color) !important; }
+.quiz-workspace .mode-tile.is-active { border-color: var(--mode-color) !important; background: var(--mode-tint) !important; }
+.quiz-workspace .mode-icon, .quiz-workspace .mode-tile.is-active .mode-icon { background: rgba(255,255,255,.72) !important; color: var(--mode-color) !important; }
 .quiz-workspace .action-primary { background: var(--field-deep) !important; box-shadow: 0 8px 18px rgba(37,67,28,.18) !important; }
 .quiz-workspace .action-primary:hover { background: #355a27 !important; }
 .quiz-workspace .rules-strip { border-color: #e0e7d8; background: #f5f7ef; }
@@ -726,6 +731,7 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 
 @media (max-width: 767px) {
   .cabinet-topbar { border-bottom: 0; }
+  .cabinet-topbar-page-title { display: none; }
   .cabinet-content { padding: 12px 10px calc(92px + env(safe-area-inset-bottom)); }
   .dashboard-mobile-brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 2px 4px 16px; }
   .dashboard-mobile-brand span { color: var(--field-muted); font-size: 12px; font-weight: 700; }
