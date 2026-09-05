@@ -1541,3 +1541,21 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 
 /* Hero rows must stack: brand/title first, quick actions below, matching the reference composition. */
 .cabinet-theme-overview .dashboard-intro { grid-template-columns: minmax(0,1fr); }
+
+/* The overview topbar is part of the same hero surface, not a separate white strip. */
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-topbar {
+  border-bottom: 0 !important;
+  background: linear-gradient(118deg, #079d91 0%, #2cae76 48%, #75bd3c 100%) !important;
+  color: #fff !important;
+}
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-page-kicker,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-topbar h1 { color: rgba(255,255,255,.9) !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-search-hint { background: rgba(255,255,255,.16) !important; color: rgba(255,255,255,.9) !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-admin-panel-link,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-access-requests-link,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-trigger { border-color: rgba(255,255,255,.34) !important; background: rgba(255,255,255,.13) !important; color: #fff !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-copy strong,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-copy small { color: rgba(255,255,255,.92) !important; }
+@media (max-width: 767px) {
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-topbar { min-height: 60px !important; }
+}
