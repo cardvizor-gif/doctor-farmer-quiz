@@ -13,7 +13,7 @@ export type PriceRecord = {
 };
 
 export const SPK_URAL_PRICE_SOURCE = {
-  title: "Актуальный прайс Doctor Farmer",
+  title: "Актуальный прайс АгроПомощник DF",
   sheet: "актуальная версия",
   priceNote: "Цены определяются выбранным условием оплаты",
 } as const;

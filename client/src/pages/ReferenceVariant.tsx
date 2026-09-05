@@ -69,7 +69,7 @@ const highlightCards = [
 const workItems = [
   { label: "Подобрать схему защиты", detail: "Культура · технология · площадь", state: "Открыть" },
   { label: "Подготовить коммерческое предложение", detail: "Расчёт по выбранной схеме", state: "Открыть" },
-  { label: "Проверить регламенты препаратов", detail: "База знаний Doctor Farmer", state: "Открыть" },
+  { label: "Проверить регламенты препаратов", detail: "База знаний АгроПомощник DF", state: "Открыть" },
 ];
 
 export function resolveReferenceTarget(title: string): NavigationItem["id"] {
@@ -93,7 +93,7 @@ export default function ReferenceVariant() {
       <aside className={`reference-rail ${menuOpen ? "is-open" : ""}`} aria-label="Навигация демонстрационного варианта">
         <div className="reference-brand-row">
           <div className="reference-brand-mark" aria-hidden="true">DF</div>
-          <span className="reference-brand-wordmark">Doctor<br />Farmer</span>
+          <span className="reference-brand-wordmark">АгроПомощник<br />DF</span>
           <button className="reference-mobile-close" type="button" onClick={() => setMenuOpen(false)} aria-label="Закрыть меню">
             <X size={19} />
           </button>
@@ -280,7 +280,7 @@ export default function ReferenceVariant() {
 
             <section className="reference-support-card">
               <span className="reference-support-icon"><Sparkles size={17} /></span>
-              <div><strong>Поддержка Doctor Farmer</strong><p>Подготовьте обращение в один клик.</p></div>
+              <div><strong>Поддержка АгроПомощник DF</strong><p>Подготовьте обращение в один клик.</p></div>
               <a href="/knowledge-base" aria-label="Открыть базу знаний"><Search size={17} /></a>
             </section>
           </aside>

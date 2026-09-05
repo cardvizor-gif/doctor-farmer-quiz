@@ -63,7 +63,7 @@ export async function downloadFarmImportTemplate() {
   const template = XLSX.utils.aoa_to_sheet([[...FARM_IMPORT_COLUMNS], Array(FARM_IMPORT_COLUMNS.length).fill("")]);
   setSheetLayout(template, [32, 20, 20, 24, 20, 18, 28, 14, 42, 20, 18, 18, 34, 22, 48]);
   const guide = XLSX.utils.aoa_to_sheet([
-    ["Шаблон импорта хозяйств Doctor Farmer"],
+    ["Шаблон импорта хозяйств АгроПомощник DF"],
     ["Заполните первую вкладку «Хозяйства» и загрузите её в рабочем кабинете."],
     ["Обязательная колонка", "Название хозяйства *"],
     ["Поддерживаемые статусы", "Новый контакт; Диагностика; КП готовится; Согласование; Клиент"],
@@ -74,7 +74,7 @@ export async function downloadFarmImportTemplate() {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, template, "Хозяйства");
   XLSX.utils.book_append_sheet(workbook, guide, "Как заполнить");
-  downloadWorkbook(XLSX, workbook, "Doctor-Farmer-шаблон-импорта-хозяйств.xlsx");
+  downloadWorkbook(XLSX, workbook, "АгроПомощник-DF-шаблон-импорта-хозяйств.xlsx");
 }
 
 export async function readFarmImportFile(file: File): Promise<ImportFilePreview> {
@@ -116,7 +116,7 @@ export async function downloadFarmsWorkbook(farms: Farm[]) {
   setSheetLayout(sheet, [32, 20, 20, 24, 20, 18, 28, 14, 42, 20, 18, 18, 34, 22, 48]);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, "Хозяйства");
-  downloadWorkbook(XLSX, workbook, "Doctor-Farmer-реестр-хозяйств.xlsx");
+  downloadWorkbook(XLSX, workbook, "АгроПомощник-DF-реестр-хозяйств.xlsx");
 }
 
 export function teamFarmExportRows(farms: TeamFarmExport[]) {
@@ -141,7 +141,7 @@ export function teamFarmExportRows(farms: TeamFarmExport[]) {
   }));
 }
 
-export async function downloadTeamFarmsWorkbook(farms: TeamFarmExport[], fileName = "Doctor-Farmer-реестр-хозяйств-команды.xlsx") {
+export async function downloadTeamFarmsWorkbook(farms: TeamFarmExport[], fileName = "АгроПомощник-DF-реестр-хозяйств-команды.xlsx") {
   const XLSX = await loadXlsx();
   const rows = teamFarmExportRows(farms);
   const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ "Менеджер": "Нет сохранённых хозяйств" }]);
@@ -188,7 +188,7 @@ export async function downloadProposalWorkbook(proposal: ProposalSource, farm?: 
   const XLSX = await loadXlsx();
   const stored = parseStoredScheme(proposal.schemeJson);
   const overview = XLSX.utils.aoa_to_sheet([
-    ["Коммерческое предложение Doctor Farmer"],
+    ["Коммерческое предложение АгроПомощник DF"],
     ["Хозяйство", farm?.name ?? "Не указано"],
     ["Название КП", proposal.title],
     ["Культура", proposal.crop],
@@ -199,7 +199,7 @@ export async function downloadProposalWorkbook(proposal: ProposalSource, farm?: 
     ["Скидка, %", stored.discountPercent ?? 0],
     ["Стоимость на гектар, ₽", Number(proposal.costPerHectare)],
     ["Итоговая стоимость, ₽", Number(proposal.totalCost)],
-    ["Основание цены", stored.priceSource?.title ?? "Актуальный прайс Doctor Farmer"],
+    ["Основание цены", stored.priceSource?.title ?? "Актуальный прайс АгроПомощник DF"],
     ["Ручные цены", stored.pricing?.lines?.some((line) => line.isManualPrice) ? "Есть" : "Нет"],
     ["Примечание", proposal.notes ?? ""],
     ["Логистика требует уточнения", stored.pricing?.unconfirmedLogisticsProducts?.join(", ") ?? ""],
@@ -228,7 +228,7 @@ export function printProposalAsPdf(proposal: ProposalSource, farm?: Farm | null)
     ? rows.map((row) => `<tr><td>${escapeHtml(row["Этап"])}</td><td>${escapeHtml(row["Препарат"])}</td><td>${escapeHtml(row["Норма"])}</td><td>${escapeHtml(row["Потребность"])}</td><td>${escapeHtml(row["К отгрузке"])}</td><td>${escapeHtml(row["Тип цены"])}</td><td>${escapeHtml(row["Сумма, ₽"] ? `${money(row["Сумма, ₽"])} ₽` : "")}</td></tr>`).join("")
     : "<tr><td colspan=7>Состав схемы не сохранён</td></tr>";
   const hasManualPrices = stored.pricing?.lines?.some((line) => line.isManualPrice) ?? false;
-  printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"/><title>${escapeHtml(proposal.title)}</title><style>body{font-family:Arial,sans-serif;color:#15211c;margin:28px;font-size:12px}h1{color:#194f38;font-size:24px;margin:0 0 8px}.label{color:#527060;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:bold}.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:18px 0}.item{background:#f4f8f3;border:1px solid #dce8dc;border-radius:8px;padding:9px}.value{font-weight:bold;font-size:14px;margin-top:3px}table{width:100%;border-collapse:collapse;margin-top:14px}th{background:#194f38;color:white;text-align:left;font-size:10px;padding:8px}td{border-bottom:1px solid #dce8dc;padding:8px;vertical-align:top}.note{margin-top:18px;padding:10px;background:#f5f8f4;white-space:pre-line}@media print{body{margin:12mm}.no-print{display:none}}</style></head><body><p class="label">Doctor Farmer · коммерческое предложение</p><h1>${escapeHtml(proposal.title)}</h1><div class="summary"><div class="item"><span class="label">Хозяйство</span><div class="value">${escapeHtml(farm?.name ?? "Не указано")}</div></div><div class="item"><span class="label">Культура и технология</span><div class="value">${escapeHtml(`${proposal.crop} · ${proposal.technology ?? "—"}`)}</div></div><div class="item"><span class="label">Площадь</span><div class="value">${escapeHtml(proposal.area)} га</div></div>${stored.seedTons ? `<div class="item"><span class="label">Семена для протравливания</span><div class="value">${money(stored.seedTons)} т</div></div>` : ""}<div class="item"><span class="label">Итог по КП</span><div class="value">${money(proposal.totalCost)} ₽</div></div><div class="item"><span class="label">Условие оплаты</span><div class="value">${escapeHtml(stored.paymentTerm ?? "Не указано")}</div></div><div class="item"><span class="label">Ручные цены</span><div class="value">${hasManualPrices ? "Есть" : "Нет"}</div></div></div><h2>Состав схемы и расчёт</h2><table><thead><tr><th>Этап</th><th>Препарат</th><th>Норма</th><th>Источник нормы</th><th>Потребность</th><th>К отгрузке</th><th>Тип цены</th><th>Сумма</th></tr></thead><tbody>${rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["Этап"])}</td><td>${escapeHtml(row["Препарат"])}</td><td>${escapeHtml(row["Норма"])}</td><td>${escapeHtml(row["Источник нормы"])}</td><td>${escapeHtml(row["Потребность"])}</td><td>${escapeHtml(row["К отгрузке"])}</td><td>${escapeHtml(row["Тип цены"])}</td><td>${escapeHtml(row["Сумма, ₽"] ? `${money(row["Сумма, ₽"])} ₽` : "")}</td></tr>`).join("") : "<tr><td colspan=8>Состав схемы не сохранён</td></tr>"}</tbody></table>${proposal.notes ? `<div class="note"><strong>Примечание</strong><br/>${escapeHtml(proposal.notes)}</div>` : ""}<p class="no-print" style="margin-top:24px;color:#527060">В диалоге печати выберите «Сохранить как PDF».</p><script>window.onload=()=>window.print()</script></body></html>`);
+  printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"/><title>${escapeHtml(proposal.title)}</title><style>body{font-family:Arial,sans-serif;color:#15211c;margin:28px;font-size:12px}h1{color:#194f38;font-size:24px;margin:0 0 8px}.label{color:#527060;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:bold}.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:18px 0}.item{background:#f4f8f3;border:1px solid #dce8dc;border-radius:8px;padding:9px}.value{font-weight:bold;font-size:14px;margin-top:3px}table{width:100%;border-collapse:collapse;margin-top:14px}th{background:#194f38;color:white;text-align:left;font-size:10px;padding:8px}td{border-bottom:1px solid #dce8dc;padding:8px;vertical-align:top}.note{margin-top:18px;padding:10px;background:#f5f8f4;white-space:pre-line}@media print{body{margin:12mm}.no-print{display:none}}</style></head><body><p class="label">АгроПомощник DF · коммерческое предложение</p><h1>${escapeHtml(proposal.title)}</h1><div class="summary"><div class="item"><span class="label">Хозяйство</span><div class="value">${escapeHtml(farm?.name ?? "Не указано")}</div></div><div class="item"><span class="label">Культура и технология</span><div class="value">${escapeHtml(`${proposal.crop} · ${proposal.technology ?? "—"}`)}</div></div><div class="item"><span class="label">Площадь</span><div class="value">${escapeHtml(proposal.area)} га</div></div>${stored.seedTons ? `<div class="item"><span class="label">Семена для протравливания</span><div class="value">${money(stored.seedTons)} т</div></div>` : ""}<div class="item"><span class="label">Итог по КП</span><div class="value">${money(proposal.totalCost)} ₽</div></div><div class="item"><span class="label">Условие оплаты</span><div class="value">${escapeHtml(stored.paymentTerm ?? "Не указано")}</div></div><div class="item"><span class="label">Ручные цены</span><div class="value">${hasManualPrices ? "Есть" : "Нет"}</div></div></div><h2>Состав схемы и расчёт</h2><table><thead><tr><th>Этап</th><th>Препарат</th><th>Норма</th><th>Источник нормы</th><th>Потребность</th><th>К отгрузке</th><th>Тип цены</th><th>Сумма</th></tr></thead><tbody>${rows.length ? rows.map((row) => `<tr><td>${escapeHtml(row["Этап"])}</td><td>${escapeHtml(row["Препарат"])}</td><td>${escapeHtml(row["Норма"])}</td><td>${escapeHtml(row["Источник нормы"])}</td><td>${escapeHtml(row["Потребность"])}</td><td>${escapeHtml(row["К отгрузке"])}</td><td>${escapeHtml(row["Тип цены"])}</td><td>${escapeHtml(row["Сумма, ₽"] ? `${money(row["Сумма, ₽"])} ₽` : "")}</td></tr>`).join("") : "<tr><td colspan=8>Состав схемы не сохранён</td></tr>"}</tbody></table>${proposal.notes ? `<div class="note"><strong>Примечание</strong><br/>${escapeHtml(proposal.notes)}</div>` : ""}<p class="no-print" style="margin-top:24px;color:#527060">В диалоге печати выберите «Сохранить как PDF».</p><script>window.onload=()=>window.print()</script></body></html>`);
   printWindow.document.close();
 }
 

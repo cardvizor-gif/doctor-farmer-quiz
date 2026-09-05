@@ -1559,3 +1559,24 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 @media (max-width: 767px) {
   .cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-topbar { min-height: 60px !important; }
 }
+
+/* АгроПомощник DF: a compact product mark replaces the former company lockup. */
+.df-product-mark { display: inline-grid; place-items: center; aspect-ratio: 1; border: 2px solid currentColor; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-weight: 900; letter-spacing: -.08em; line-height: 1; }
+.df-product-mark-sidebar { width: 52px; color: #f4f8eb; background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.7); font-size: 17px; box-shadow: 0 8px 18px rgba(0,0,0,.12); }
+.df-product-mark-topbar { width: 28px; color: currentColor; font-size: 10px; }
+.cabinet-theme-overview .dashboard-intro-topline { grid-template-columns: minmax(0,1fr) auto !important; align-items: center; }
+.dashboard-product-title { display: inline-flex; align-items: center; gap: 12px; color: #fff !important; letter-spacing: -.045em; }
+.dashboard-product-mark { display: inline-grid; flex: 0 0 auto; width: 1.12em; height: 1.12em; place-items: center; border: 2px solid rgba(255,255,255,.92); border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; font-size: .48em; letter-spacing: -.08em; line-height: 1; vertical-align: middle; box-shadow: 0 4px 12px rgba(8,91,72,.18); }
+.dashboard-intro-text { color: rgba(255,255,255,.88) !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-mobile-topbar-brand { display: inline-flex; color: #fff; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-mobile-topbar-brand .df-product-mark { border-color: rgba(255,255,255,.8); }
+@media (max-width: 767px) {
+  .cabinet-theme-overview .dashboard-intro-topline { grid-template-columns: minmax(0,1fr) auto !important; gap: 8px !important; }
+  .dashboard-product-title { gap: 8px; font-size: clamp(20px, 6vw, 27px) !important; }
+  .dashboard-product-mark { width: 1.06em; height: 1.06em; border-width: 2px; }
+  .dashboard-intro-text { margin-top: 3px !important; font-size: 12px !important; }
+  .df-product-mark-sidebar { width: 44px; font-size: 14px; }
+}
+
+.df-product-mark-page { width: 38px; color: #194f38; background: #eef7db; border-color: #75bd3c; font-size: 12px; }
+@media (max-width: 640px) { .df-product-mark-page { width: 34px; font-size: 11px; } }

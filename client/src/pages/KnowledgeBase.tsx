@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +41,7 @@ export default function KnowledgeBase() {
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#dde5dc] px-3 py-2.5 sm:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <Link href="/" className="flex items-center cursor-pointer shrink-0">
-            <DoctorFarmerLogo className="h-7 sm:h-9 w-auto" clickable={false} />
+            <span className="df-product-mark df-product-mark-page" aria-label="АгроПомощник DF">DF</span>
           </Link>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -224,8 +223,8 @@ export default function KnowledgeBase() {
       <footer className="bg-white border-t border-[#dde5dc] py-6 px-4 text-center text-xs text-[#6f7a73]">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <DoctorFarmerLogo className="h-6 w-auto" />
-            <span className="font-semibold text-[#12352a]">Doctor Farmer • Кабинет команды</span>
+            <span className="df-product-mark df-product-mark-page" aria-hidden="true">DF</span>
+            <span className="font-semibold text-[#12352a]">АгроПомощник DF • База знаний</span>
           </div>
           <div className="flex items-center gap-4">
             <span onClick={() => window.location.href = "/"} className="cursor-pointer hover:text-[#2e7d52] transition-colors">Главная</span>

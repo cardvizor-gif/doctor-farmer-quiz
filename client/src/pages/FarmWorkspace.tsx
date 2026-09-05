@@ -1,4 +1,3 @@
-import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -313,7 +312,7 @@ export default function FarmWorkspace() {
     <div className="farm-workspace min-h-screen bg-[#f4f7f1] text-[#15211c]" data-mobile-view={mobileView}>
       <header className="sticky top-0 z-30 border-b border-[#dde5dc] bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href="/" className="shrink-0"><DoctorFarmerLogo className="h-9 w-auto" clickable={false} /></Link>
+          <Link href="/" className="shrink-0" aria-label="АгроПомощник DF — главная"><span className="df-product-mark df-product-mark-page" aria-hidden="true">DF</span></Link>
           <nav className="hidden items-center gap-2 sm:flex">
             <Link href="/agro-helper"><Button variant="outline" size="sm">АгроПомощник</Button></Link>
             <Link href="/knowledge-base"><Button variant="outline" size="sm">База знаний</Button></Link>

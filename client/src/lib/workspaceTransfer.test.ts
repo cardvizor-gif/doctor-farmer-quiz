@@ -31,7 +31,7 @@ describe("proposal PDF print document", () => {
     });
 
     expect(open).toHaveBeenCalledWith("", "_blank");
-    expect(write).toHaveBeenCalledWith(expect.stringContaining("Doctor Farmer · коммерческое предложение"));
+    expect(write).toHaveBeenCalledWith(expect.stringContaining("АгроПомощник DF · коммерческое предложение"));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Тайсон, КС"));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Ручная"));
     expect(write).toHaveBeenCalledWith(expect.stringContaining("Ручные цены"));

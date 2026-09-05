@@ -1,4 +1,3 @@
-import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import CabinetSearchDialog from "@/components/CabinetSearchDialog";
 import CabinetSupportDialog from "@/components/CabinetSupportDialog";
 import AccessPortalDialog from "@/components/AccessPortalDialog";
@@ -37,7 +36,7 @@ export function filterCabinetNavigation(user: NavigationUser) {
 
 export function cabinetPageTitle(pathname: string) {
   if (pathname.startsWith("/support")) return "Обращения";
-  return cabinetNavigation.find((item) => item.href === pathname)?.label ?? "Рабочий кабинет";
+  return cabinetNavigation.find((item) => item.href === pathname)?.label ?? "АгроПомощник";
 }
 
 export function cabinetTheme(pathname: string) {
@@ -173,8 +172,8 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
       <div className="cabinet-frame">
         <aside className={`cabinet-sidebar ${isMobileMenuOpen ? "is-open" : ""}`} aria-label="Навигация рабочего кабинета">
           <div className="cabinet-sidebar-top">
-            <Link href="/" className="cabinet-brand" onClick={() => setIsMobileMenuOpen(false)} aria-label="Doctor Farmer — обзор">
-              <DoctorFarmerLogo className="h-10 w-auto" clickable={false} monochrome={pageTheme !== "knowledge"} />
+            <Link href="/" className="cabinet-brand" onClick={() => setIsMobileMenuOpen(false)} aria-label="АгроПомощник DF — обзор">
+              <span className="df-product-mark df-product-mark-sidebar" aria-hidden="true">DF</span>
             </Link>
             <button type="button" className="cabinet-mobile-close" onClick={() => setIsMobileMenuOpen(false)} aria-label="Закрыть меню"><X className="h-5 w-5" /></button>
           </div>
@@ -190,15 +189,15 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
           </nav>
           <button type="button" className="cabinet-sidebar-footer w-full text-left" onClick={() => setIsSupportOpen(true)}>
             <div className="cabinet-help-mark"><Headphones className="h-4 w-4" /></div>
-            <div><strong>Поддержка</strong><span>Doctor Farmer</span></div>
+            <div><strong>Поддержка</strong><span>Внутренняя поддержка</span></div>
           </button>
         </aside>
         <div className={`cabinet-workspace cabinet-theme-${pageTheme}`}>
           <header className="cabinet-topbar">
             <div className="flex min-w-0 items-center gap-2.5">
               <button type="button" className="cabinet-menu-trigger" onClick={() => setIsMobileMenuOpen(true)} aria-label="Открыть меню"><Menu className="h-5 w-5" /></button>
-              <Link href="/" className="cabinet-mobile-topbar-brand" aria-label="Doctor Farmer — обзор"><DoctorFarmerLogo className="h-7 w-auto" clickable={false} /></Link>
-              <div className="min-w-0"><p className="cabinet-page-kicker">Doctor Farmer · рабочий кабинет</p>{location !== "/" && <h1 className="cabinet-topbar-page-title">{pageTitle}</h1>}</div>
+              <Link href="/" className="cabinet-mobile-topbar-brand" aria-label="АгроПомощник DF — обзор"><span className="df-product-mark df-product-mark-topbar" aria-hidden="true">DF</span></Link>
+              <div className="min-w-0"><p className="cabinet-page-kicker">АгроПомощник DF</p>{location !== "/" && <h1 className="cabinet-topbar-page-title">{pageTitle}</h1>}</div>
             </div>
             <div className="cabinet-topbar-actions">
               <button type="button" className="cabinet-search-hint" onClick={() => setIsSearchOpen(true)} aria-label="Открыть поиск по кабинету"><Search className="h-4 w-4" /><span>Поиск по кабинету</span><kbd>⌘ K</kbd></button>

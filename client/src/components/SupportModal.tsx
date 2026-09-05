@@ -39,7 +39,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
           to_email: "vildanov_sf@doctorfarmer.ru",
           employee_name: name,
           employee_contact: contact,
-          subject: subject || "Обращение в поддержку Doctor Farmer",
+          subject: subject || "Обращение в поддержку АгроПомощник DF",
           message: message,
           timestamp: new Date().toLocaleString("ru-RU"),
         },
@@ -78,7 +78,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
             <HelpCircle className="w-6 h-6" />
           </div>
           <DialogTitle className="text-xl font-bold text-center text-slate-900">
-            Поддержка Doctor Farmer
+            Поддержка АгроПомощник DF
           </DialogTitle>
           <DialogDescription className="text-center text-slate-600 text-sm">
             Возникли вопросы по работе Тестирования или АгроПомощника? Опишите проблему, и ответственное лицо свяжется с вами.

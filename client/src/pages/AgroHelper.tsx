@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ShieldCheck, Droplet, Filter, Download, Award, BookmarkCheck, Thermometer, Clock, Info, FileText } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { SupportModal } from "@/components/SupportModal";
 import { buildProposalContextQuery, parseProposalContext } from "@/lib/proposal";
 import { HelpCircle } from "lucide-react";
@@ -148,7 +147,7 @@ export default function AgroHelper() {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-auto sm:h-20 py-3 sm:py-0 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-start">
             <div className="flex items-center gap-2.5">
-              <DoctorFarmerLogo className="h-10 w-auto" />
+              <span className="df-product-mark df-product-mark-page" aria-label="АгроПомощник DF">DF</span>
             </div>
             {/* Кнопки для мобильных */}
             <div className="flex sm:hidden items-center gap-2">
@@ -513,7 +512,7 @@ export default function AgroHelper() {
       {/* Футер */}
       <footer className="bg-[#fbfcf9] border-t border-[#dde5dc] py-6 sm:py-8 text-[#6f7a73] no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-center sm:text-left">
-          <div>© Doctor Farmer. Все права защищены.</div>
+          <div>© АгроПомощник DF. Все права защищены.</div>
           <div className="flex items-center space-x-6">
             <span className="cursor-pointer hover:text-[#15211c]">Политика конфиденциальности</span>
             <span 

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { referenceNavigation, resolveReferenceTarget } from "./ReferenceVariant";
 
 describe("демонстрационный вариант по референсу", () => {
-  it("сохраняет шесть основных точек входа Doctor Farmer без дублирования", () => {
+  it("сохраняет шесть основных точек входа АгроПомощник DF без дублирования", () => {
     expect(referenceNavigation.map((item) => item.id)).toEqual([
       "overview",
       "agro",

@@ -22,7 +22,7 @@ export function DoctorFarmerLogo({ className = "h-11 w-auto", clickable = true, 
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`${className} cursor-pointer transition-opacity hover:opacity-90`}
-      aria-label="Doctor Farmer"
+      aria-label="АгроПомощник DF"
       role="img"
     >
       {monochrome && (

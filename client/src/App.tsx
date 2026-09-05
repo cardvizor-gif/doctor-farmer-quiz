@@ -25,7 +25,7 @@ const ReferenceVariant = lazy(() => import("./pages/ReferenceVariant"));
 function RouteFallback() {
   return (
     <main className="min-h-screen bg-[#f4f7f1] px-4 py-16 text-center text-sm font-medium text-[#194f38]">
-      Загружаем материалы Doctor Farmer…
+      Загружаем АгроПомощник DF…
     </main>
   );
 }

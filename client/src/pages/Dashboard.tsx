@@ -2,10 +2,8 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Bell, Briefcase, Building2, ClipboardList, FileText, HelpCircle, Layers3, Sprout, Trophy } from "lucide-react";
 import { SupportModal } from "@/components/SupportModal";
-import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
-
-export const dashboardTitle = "Рабочий кабинет";
-export const dashboardSubtitle = "Хозяйства, схемы защиты, КП и заявки — в одном рабочем кабинете.";
+export const dashboardTitle = "АгроПомощник";
+export const dashboardSubtitle = "Схемы защиты";
 
 export const dashboardModules = [
   {
@@ -74,9 +72,11 @@ export default function Dashboard() {
     <div className="dashboard-home">
       <section className="dashboard-intro" aria-labelledby="dashboard-title">
         <div className="dashboard-intro-topline">
-          <DoctorFarmerLogo className="dashboard-intro-logo" clickable={false} monochrome />
           <div className="dashboard-intro-copy">
-            <h1 id="dashboard-title">{dashboardTitle}</h1>
+            <h1 id="dashboard-title" className="dashboard-product-title">
+              {dashboardTitle}
+              <span className="dashboard-product-mark" aria-label="DF">DF</span>
+            </h1>
             <p className="dashboard-intro-text">{dashboardSubtitle}</p>
           </div>
           <span className="dashboard-intro-notification" aria-hidden="true"><Bell className="h-5 w-5" /></span>

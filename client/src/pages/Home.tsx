@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useTransition, useMemo } from "react";
 import { Link } from "wouter";
-import { DoctorFarmerLogo } from "@/components/DoctorFarmerLogo";
 import { Button } from "@/components/ui/button";
 import emailjs from "@emailjs/browser";
 import {
@@ -374,7 +373,7 @@ export default function Home() {
         <header className="site-header flex items-center justify-between gap-2 py-1 mb-4">
           <div className="flex items-center">
             <Link href="/">
-              <DoctorFarmerLogo className="h-7 sm:h-11 w-auto cursor-pointer" clickable={false} />
+              <span className="df-product-mark df-product-mark-page" aria-hidden="true">DF</span>
             </Link>
           </div>
           <div className="flex items-center gap-1.5">
@@ -444,7 +443,7 @@ export default function Home() {
           </div>
           <div className="quiz-brand flex items-center gap-1">
             <Link href="/">
-              <DoctorFarmerLogo className="h-6 sm:h-9 w-auto cursor-pointer" clickable={false} />
+              <span className="df-product-mark df-product-mark-page" aria-hidden="true">DF</span>
             </Link>
           </div>
           <div className="quiz-score"><span>Счёт</span><strong>{score}</strong></div>
@@ -490,7 +489,7 @@ export default function Home() {
         </div>
         <div className="quiz-brand flex items-center gap-2">
           <Link href="/">
-            <DoctorFarmerLogo className="h-7 sm:h-9 w-auto cursor-pointer" clickable={false} />
+            <span className="df-product-mark df-product-mark-page" aria-hidden="true">DF</span>
           </Link>
         </div>
         <div className="quiz-score"><span>Сотрудник</span><strong className="score-name">{name}</strong></div>

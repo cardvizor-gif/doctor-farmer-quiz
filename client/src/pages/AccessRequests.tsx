@@ -54,7 +54,7 @@ export default function AccessRequests() {
 
   const copyCode = async (code: string, name: string) => {
     try {
-      await navigator.clipboard.writeText(`Doctor Farmer — код доступа для ${name}: ${code}`);
+      await navigator.clipboard.writeText(`АгроПомощник DF — код доступа для ${name}: ${code}`);
       toast.success("Код скопирован");
     } catch {
       toast.error("Не удалось скопировать код");

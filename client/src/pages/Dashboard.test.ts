@@ -3,8 +3,8 @@ import { dashboardModules, dashboardSubtitle, dashboardTitle } from "./Dashboard
 
 describe("главная страница рабочего кабинета", () => {
   it("использует утверждённую формулировку заголовка и подзаголовка", () => {
-    expect(dashboardTitle).toBe("Рабочий кабинет");
-    expect(dashboardSubtitle).toBe("Хозяйства, схемы защиты, КП и заявки — в одном рабочем кабинете.");
+    expect(dashboardTitle).toBe("АгроПомощник");
+    expect(dashboardSubtitle).toBe("Схемы защиты");
   });
 
   it("сохраняет шесть основных модулей в согласованном порядке", () => {
