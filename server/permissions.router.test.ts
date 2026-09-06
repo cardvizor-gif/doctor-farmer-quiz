@@ -6,7 +6,8 @@ vi.mock("./db", () => ({
   getUserByOpenId: vi.fn(),
   listFarms: vi.fn(),
   updateUserAccess: vi.fn(),
-  transferAndArchiveUser: vi.fn(),
+  transferUserData: vi.fn(),
+  archiveUser: vi.fn(),
   restoreArchivedUser: vi.fn(),
   deleteUserAccount: vi.fn(),
 }));
@@ -61,12 +62,21 @@ describe("user permissions", () => {
     expect(db.updateUserAccess).toHaveBeenCalledWith(baseUser.openId, "user", ["farms.read"], ENV.ownerOpenId);
   });
 
-  it("allows an administrator to transfer a base and archive an employee", async () => {
+  it("transfers a base without archiving the employee", async () => {
     const admin = { ...baseUser, openId: ENV.ownerOpenId, role: "admin" as const };
-    vi.mocked(db.transferAndArchiveUser).mockResolvedValue({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2", archivedAt: new Date() });
+    vi.mocked(db.transferUserData).mockResolvedValue({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2", transferredByOpenId: ENV.ownerOpenId, transferredAt: new Date() });
     const caller = appRouter.createCaller(context(admin));
-    await expect(caller.admin.transferAndArchive({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2" })).resolves.toMatchObject({ targetOpenId: "employee-2" });
-    expect(db.transferAndArchiveUser).toHaveBeenCalledWith(baseUser.openId, "employee-2", ENV.ownerOpenId);
+    await expect(caller.admin.transferData({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2" })).resolves.toMatchObject({ targetOpenId: "employee-2" });
+    expect(db.transferUserData).toHaveBeenCalledWith(baseUser.openId, "employee-2", ENV.ownerOpenId);
+    expect(db.archiveUser).not.toHaveBeenCalled();
+  });
+
+  it("keeps archiving as a separate superuser-only action", async () => {
+    const admin = { ...baseUser, openId: ENV.ownerOpenId, role: "admin" as const, isSuperuser: 1 };
+    vi.mocked(db.archiveUser).mockResolvedValue({ openId: baseUser.openId, archivedByOpenId: ENV.ownerOpenId, archivedAt: new Date() });
+    const caller = appRouter.createCaller(context(admin));
+    await expect(caller.admin.archiveUser({ openId: baseUser.openId })).resolves.toMatchObject({ openId: baseUser.openId });
+    expect(db.archiveUser).toHaveBeenCalledWith(baseUser.openId, ENV.ownerOpenId);
   });
 
   it("allows only the superuser to restore and delete employee accounts", async () => {
@@ -88,9 +98,9 @@ describe("user permissions", () => {
   it("does not allow a regular user to change roles or transfer a base", async () => {
     const caller = appRouter.createCaller(context(baseUser));
     await expect(caller.admin.updateAccess({ openId: "another-user", role: "admin", permissions: [] })).rejects.toMatchObject({ code: "FORBIDDEN" });
-    await expect(caller.admin.transferAndArchive({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.admin.transferData({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2" })).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(db.updateUserAccess).not.toHaveBeenCalled();
-    expect(db.transferAndArchiveUser).not.toHaveBeenCalled();
+    expect(db.transferUserData).not.toHaveBeenCalled();
   });
 });
 

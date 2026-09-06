@@ -352,32 +352,40 @@ export async function updateUserAccess(openId: string, role: "user" | "admin", p
   return getUserByOpenId(openId);
 }
 
-export async function transferAndArchiveUser(sourceOpenId: string, targetOpenId: string, archivedByOpenId: string) {
+export async function transferUserData(sourceOpenId: string, targetOpenId: string, transferredByOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
   if (sourceOpenId === targetOpenId) throw new Error("Нельзя передать базу самому себе");
-
-  const [source, target, archivedBy] = await Promise.all([getUserByOpenId(sourceOpenId), getUserByOpenId(targetOpenId), getUserByOpenId(archivedByOpenId)]);
+  const [source, target, transferredBy] = await Promise.all([getUserByOpenId(sourceOpenId), getUserByOpenId(targetOpenId), getUserByOpenId(transferredByOpenId)]);
   if (!source) throw new Error("Сотрудник-источник не найден");
   if (!target) throw new Error("Сотрудник-получатель не найден");
+  if (!transferredBy) throw new Error("Администратор-инициатор не найден");
+  if (source.status === "archived") throw new Error("Сначала восстановите сотрудника");
+  if (target.status === "archived") throw new Error("Нельзя передать базу архивированному сотруднику");
+  if (source.isSuperuser) throw new Error("Нельзя передать базу владельца кабинета");
+
+  await db.transaction(async tx => {
+    await tx.update(farms).set({ ownerOpenId: targetOpenId }).where(eq(farms.ownerOpenId, sourceOpenId));
+    await tx.update(orderRequests).set({ ownerOpenId: targetOpenId }).where(eq(orderRequests.ownerOpenId, sourceOpenId));
+  });
+  return { sourceOpenId, targetOpenId, transferredByOpenId, transferredAt: new Date() };
+}
+
+export async function archiveUser(openId: string, archivedByOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  const [source, archivedBy] = await Promise.all([getUserByOpenId(openId), getUserByOpenId(archivedByOpenId)]);
+  if (!source) throw new Error("Сотрудник не найден");
   if (!archivedBy) throw new Error("Администратор-инициатор не найден");
   if (source.status === "archived") throw new Error("Сотрудник уже архивирован");
-  if (target.status === "archived") throw new Error("Нельзя передать базу архивированному сотруднику");
   if (source.isSuperuser) throw new Error("Нельзя архивировать владельца кабинета");
   if (source.role === "admin" && !archivedBy.isSuperuser && archivedByOpenId !== ENV.ownerOpenId) throw new Error("Только суперпользователь может архивировать администратора");
   if (source.role === "admin") {
     const admins = await db.select({ id: users.id }).from(users).where(and(eq(users.role, "admin"), eq(users.status, "active")));
     if (admins.length <= 1) throw new Error("Нельзя архивировать последнего администратора");
   }
-
-  await db.transaction(async tx => {
-    await tx.update(farms).set({ ownerOpenId: targetOpenId }).where(eq(farms.ownerOpenId, sourceOpenId));
-    await tx.update(orderRequests).set({ ownerOpenId: targetOpenId }).where(eq(orderRequests.ownerOpenId, sourceOpenId));
-    await tx.delete(userPermissions).where(eq(userPermissions.userOpenId, sourceOpenId));
-    await tx.update(users).set({ status: "archived", archivedAt: new Date(), archivedByOpenId }).where(and(eq(users.openId, sourceOpenId), eq(users.status, "active")));
-  });
-
-  return { sourceOpenId, targetOpenId, archivedAt: new Date() };
+  await db.update(users).set({ status: "archived", archivedAt: new Date(), archivedByOpenId }).where(and(eq(users.openId, openId), eq(users.status, "active")));
+  return { openId, archivedByOpenId, archivedAt: new Date() };
 }
 
 export async function getTeamMemberWorkspace(openId: string) {

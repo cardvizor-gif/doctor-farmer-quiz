@@ -257,14 +257,22 @@ export const appRouter = router({
       if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Сотрудник не найден" });
       return updated;
     }),
-    transferAndArchive: teamProcedure("team.transfer").input(z.object({
+    transferData: teamProcedure("team.transfer").input(z.object({
       sourceOpenId: z.string().trim().min(1).max(64),
       targetOpenId: z.string().trim().min(1).max(64),
     })).mutation(async ({ input, ctx }) => {
       try {
-        return await db.transferAndArchiveUser(input.sourceOpenId, input.targetOpenId, ctx.user.openId);
+        return await db.transferUserData(input.sourceOpenId, input.targetOpenId, ctx.user.openId);
       } catch (error) {
         throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Не удалось передать базу сотрудника" });
+      }
+    }),
+    archiveUser: adminProcedure.input(z.object({ openId: z.string().trim().min(1).max(64) })).mutation(async ({ input, ctx }) => {
+      if (!isSuperuser(ctx.user)) throw new TRPCError({ code: "FORBIDDEN", message: "Архивировать сотрудников может только суперпользователь" });
+      try {
+        return await db.archiveUser(input.openId, ctx.user.openId);
+      } catch (error) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Не удалось архивировать сотрудника" });
       }
     }),
     restoreUser: adminProcedure.input(z.object({ openId: z.string().trim().min(1).max(64) })).mutation(async ({ input, ctx }) => {
