@@ -6,7 +6,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { countPendingAccessRequests } from "@/lib/accessRequests";
 import { trpc } from "@/lib/trpc";
 import { Briefcase, Building2, ChevronDown, ClipboardList, FilePlus2, Headphones, Home, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import type { PermissionCode } from "@shared/permissions";
 
@@ -61,6 +61,15 @@ export function accountIdentity(user: AccountIdentityInput) {
   return { name, email, initials };
 }
 
+export function isOutsideAccountMenu(target: EventTarget | null, root: { contains: (node: Node) => boolean } | null) {
+  if (!root || !target) return false;
+  try {
+    return !root.contains(target as Node);
+  } catch {
+    return false;
+  }
+}
+
 export default function CabinetShell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -71,6 +80,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAccessOpen, setIsAccessOpen] = useState(false);
   const [displayNameDraft, setDisplayNameDraft] = useState("");
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const { user, loading: isAuthLoading, logout } = useAuth();
   const utils = trpc.useUtils();
   const activityPing = trpc.activity.ping.useMutation();
@@ -141,8 +151,16 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setIsAccountMenuOpen(false);
     };
+    const handleOutsidePointer = (event: PointerEvent) => {
+      const target = event.target;
+      if (isOutsideAccountMenu(target, accountMenuRef.current)) setIsAccountMenuOpen(false);
+    };
     window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
+    document.addEventListener("pointerdown", handleOutsidePointer);
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("pointerdown", handleOutsidePointer);
+    };
   }, [isAccountMenuOpen]);
 
   const handleLogout = async () => {
@@ -208,7 +226,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
               {canCreateSupport && <Link href="/support" className="cabinet-access-requests-link" aria-label={newSupportTickets > 0 ? `Обращения: ${newSupportTickets} новых` : "Открыть обращения"}>
                 <MessageSquareText className="h-4 w-4" aria-hidden="true" /><span>Обращения</span>{newSupportTickets > 0 && <strong aria-hidden="true">{newSupportTickets}</strong>}
               </Link>}
-              {!isAuthLoading && (user ? <div className="cabinet-account-wrap">
+              {!isAuthLoading && (user ? <div ref={accountMenuRef} className="cabinet-account-wrap">
                 <button type="button" className="cabinet-account-trigger" onClick={() => setIsAccountMenuOpen((open) => !open)} aria-expanded={isAccountMenuOpen} aria-haspopup="menu">
                   <span className="cabinet-account-avatar" aria-hidden="true">{account.initials}</span>
                   <span className="cabinet-account-copy"><strong>{account.name}</strong><small>{account.email}</small></span>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountIdentity, cabinetPageTitle, cabinetTheme, filterCabinetNavigation, mobileNavigation } from "./CabinetShell";
+import { accountIdentity, cabinetPageTitle, cabinetTheme, filterCabinetNavigation, isOutsideAccountMenu, mobileNavigation } from "./CabinetShell";
 
 describe("accountIdentity", () => {
   it("uses the authenticated name and email in the account menu", () => {
@@ -53,5 +53,15 @@ describe("accountIdentity", () => {
       ["/proposals/new", "КП"],
       ["/sales", "Продажи"],
     ]);
+  });
+
+  it("closes the account menu only for a pointer target outside its root", () => {
+    const inside = { id: "inside" } as unknown as EventTarget;
+    const outside = { id: "outside" } as unknown as EventTarget;
+    const root = { contains: (target: object) => target === inside };
+
+    expect(isOutsideAccountMenu(inside, root)).toBe(false);
+    expect(isOutsideAccountMenu(outside, root)).toBe(true);
+    expect(isOutsideAccountMenu(null, root)).toBe(false);
   });
 });
