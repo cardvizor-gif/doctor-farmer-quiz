@@ -36,6 +36,7 @@ export function filterCabinetNavigation(user: NavigationUser) {
 
 export function cabinetPageTitle(pathname: string) {
   if (pathname.startsWith("/support")) return "Обращения";
+  if (pathname.startsWith("/news")) return "Новости";
   return cabinetNavigation.find((item) => item.href === pathname)?.label ?? "АгроПомощник";
 }
 
@@ -252,7 +253,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
                 </button>
                 {isNotificationsOpen && <div className="cabinet-notifications-menu" role="menu" aria-label="Уведомления">
                   <div className="cabinet-notifications-heading"><div><strong>Уведомления</strong><span>{unreadNotifications > 0 ? `${unreadNotifications} непрочитанных` : "Всё прочитано"}</span></div>{unreadNotifications > 0 && <button type="button" onClick={() => markAllNotificationsRead.mutate()} disabled={markAllNotificationsRead.isPending}>Прочитать всё</button>}</div>
-                  {notifications.length === 0 ? <p className="cabinet-notifications-empty">Новых заданий и новостей пока нет.</p> : <div className="cabinet-notifications-list">{notifications.map((notification) => <a key={notification.id} href={notification.href || "/"} className={`cabinet-notification-item ${notification.isRead ? "is-read" : "is-unread"}`} onClick={() => { if (!notification.isRead) markNotificationRead.mutate({ id: notification.id }); setIsNotificationsOpen(false); }}><span className="cabinet-notification-dot" aria-hidden="true" /><span className="min-w-0 flex-1"><small>{notificationKindLabels[notification.kind]}</small><strong>{notification.title}</strong><span>{notification.body}</span><time>{new Date(notification.createdAt).toLocaleString("ru-RU")}</time></span><ExternalLink className="h-3.5 w-3.5 shrink-0" /></a>)}</div>}
+                  {notifications.length === 0 ? <p className="cabinet-notifications-empty">Новых заданий и новостей пока нет.</p> : <div className="cabinet-notifications-list">{notifications.map((notification) => <a key={notification.id} href={notification.kind === "news" ? `/news?notificationId=${notification.id}` : (notification.href || "/")} className={`cabinet-notification-item ${notification.isRead ? "is-read" : "is-unread"}`} onClick={() => { if (!notification.isRead) markNotificationRead.mutate({ id: notification.id }); setIsNotificationsOpen(false); }}><span className="cabinet-notification-dot" aria-hidden="true" /><span className="min-w-0 flex-1"><small>{notificationKindLabels[notification.kind]}</small><strong>{notification.title}</strong><span>{notification.body}</span><time>{new Date(notification.createdAt).toLocaleString("ru-RU")}</time></span><ExternalLink className="h-3.5 w-3.5 shrink-0" /></a>)}</div>}
                 </div>}
               </div>}
               {!isAuthLoading && (user ? <div ref={accountMenuRef} className="cabinet-account-wrap">

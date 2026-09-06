@@ -239,7 +239,7 @@ export async function markAllNotificationsRead(openId: string) {
   return { openId };
 }
 
-export async function publishNewsNotification(title: string, body: string, href = "/") {
+export async function publishNewsNotification(title: string, body: string, href = "/news") {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
   const recipients = await db.select({ openId: users.openId }).from(users).where(eq(users.status, "active"));
