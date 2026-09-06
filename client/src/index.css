@@ -1806,3 +1806,31 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
     padding-block: 8px !important;
   }
 }
+
+/* Mobile schemes: use the available width and avoid nested side gutters. */
+@media (max-width: 767px) {
+  .cabinet-theme-agro .cabinet-content {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+  .cabinet-theme-agro .agro-helper-workspace > main {
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+  }
+  .cabinet-theme-agro .agro-helper-workspace > main > section {
+    min-width: 0 !important;
+  }
+  .cabinet-theme-agro .agro-helper-main-card {
+    padding: 10px !important;
+    border-radius: 13px !important;
+    box-shadow: 0 5px 14px rgba(22, 111, 83, .07) !important;
+  }
+  .cabinet-theme-agro .agro-helper-step-card {
+    padding: 10px !important;
+    border-radius: 11px !important;
+  }
+  .cabinet-theme-agro .agro-helper-product-card {
+    padding: 10px !important;
+    border-radius: 10px !important;
+  }
+}
