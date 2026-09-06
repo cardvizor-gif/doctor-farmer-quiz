@@ -1613,3 +1613,47 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 @media (max-width: 380px) {
   .cabinet-topbar-product-name { max-width: 112px; font-size: 12px; }
 }
+
+/* Module color themes: each workspace continues the tone of its dashboard tile. */
+.cabinet-theme-agro .cabinet-content { background: linear-gradient(180deg, #e7f7ef 0%, #f4fbf7 46%, #ffffff 100%) !important; }
+.cabinet-theme-agro .agro-helper-workspace { background: transparent !important; }
+.cabinet-theme-agro .agro-helper-workspace > header { background: linear-gradient(100deg, #10a88a, #5fc044) !important; border-color: rgba(255,255,255,.24) !important; color: #fff !important; }
+.cabinet-theme-agro .agro-helper-filter-card,
+.cabinet-theme-agro .agro-helper-main-card,
+.cabinet-theme-agro .agro-helper-step-card,
+.cabinet-theme-agro .agro-helper-product-card { border-color: rgba(16, 136, 105, .22) !important; box-shadow: 0 10px 26px rgba(22, 111, 83, .08) !important; }
+.cabinet-theme-agro .agro-helper-filter-card { background: #f4fbf7 !important; }
+.cabinet-theme-agro .agro-helper-filter-card select,
+.cabinet-theme-agro .agro-helper-filter-card input,
+.cabinet-theme-agro .agro-helper-filter-card [data-slot="select-trigger"] { background: #e1f4e9 !important; border-color: #8bd1a8 !important; color: #174c3d !important; }
+.cabinet-theme-agro .agro-helper-filter-card button:not(.bg-\[\#d5a642\]),
+.cabinet-theme-agro .agro-helper-scheme-header button { border-color: #159d79 !important; color: #087052 !important; }
+.cabinet-theme-agro .agro-helper-filter-card .bg-\[\#d5a642\] { background: #159d79 !important; color: #fff !important; }
+.cabinet-theme-agro .agro-helper-recommendations { background: #e5f7ed !important; border-color: #9bd8b2 !important; }
+.cabinet-theme-agro .agro-helper-step-card { background: #f7fcf8 !important; }
+.cabinet-theme-agro .agro-helper-product-card { background: #ffffff !important; }
+
+.cabinet-theme-farms .cabinet-content { background: linear-gradient(180deg, #f2f8d9 0%, #fbfdea 52%, #ffffff 100%) !important; }
+.cabinet-theme-farms .cabinet-content .farm-workspace { background: transparent !important; }
+.cabinet-theme-farms .cabinet-content .farm-workspace-hero,
+.cabinet-theme-farms .cabinet-content .farm-workspace-panel { border-color: rgba(126, 157, 33, .28) !important; }
+.cabinet-theme-farms .cabinet-content button[class*="bg-[#194f38]"],
+.cabinet-theme-farms .cabinet-content button[class*="bg-[#12352a]"] { background: #89b82d !important; color: #1c331b !important; }
+
+.cabinet-theme-proposal .cabinet-content { background: linear-gradient(180deg, #fff5d8 0%, #fffaf0 52%, #ffffff 100%) !important; }
+.cabinet-theme-proposal .cabinet-content .proposal-workspace { background: transparent !important; }
+.cabinet-theme-proposal .cabinet-content button[class*="bg-[#26343a]"],
+.cabinet-theme-proposal .cabinet-content button[class*="bg-[#194f38]"] { background: #e7a51f !important; color: #452d09 !important; }
+
+.cabinet-theme-orders .cabinet-content { background: linear-gradient(180deg, #fff0e8 0%, #fff8f3 52%, #ffffff 100%) !important; }
+.cabinet-theme-orders .cabinet-content button[class*="bg-[#26343a]"],
+.cabinet-theme-orders .cabinet-content button[class*="bg-[#194f38]"] { background: #ec7045 !important; color: #fff !important; }
+
+.cabinet-theme-sales .cabinet-content { background: linear-gradient(180deg, #e8f5fb 0%, #f5fbfe 52%, #ffffff 100%) !important; }
+.cabinet-theme-sales .cabinet-content button[class*="bg-[#26343a]"],
+.cabinet-theme-sales .cabinet-content button[class*="bg-[#194f38]"] { background: #168fc1 !important; color: #fff !important; }
+
+.cabinet-theme-quiz .cabinet-content { background: linear-gradient(180deg, #f2eafa 0%, #faf6fd 52%, #ffffff 100%) !important; }
+.cabinet-theme-quiz .cabinet-content .quiz-workspace { background: transparent !important; }
+.cabinet-theme-quiz .cabinet-content button[class*="bg-[#26343a]"],
+.cabinet-theme-quiz .cabinet-content button[class*="bg-[#194f38]"] { background: #9550ba !important; color: #fff !important; }

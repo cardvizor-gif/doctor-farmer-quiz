@@ -7,8 +7,8 @@ export const dashboardSubtitle = "Схемы защиты";
 
 export const dashboardModules = [
   {
-    title: "АгроПомощник",
-    hint: "Схемы защиты",
+    title: "Схемы защиты",
+    hint: "АгроПомощник",
     action: "Открыть",
     href: "/agro-helper",
     icon: Layers3,

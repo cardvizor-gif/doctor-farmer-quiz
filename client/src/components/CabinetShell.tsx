@@ -12,7 +12,7 @@ import type { PermissionCode } from "@shared/permissions";
 
 export const cabinetNavigation = [
   { href: "/", label: "Обзор", icon: LayoutDashboard, permission: undefined },
-  { href: "/agro-helper", label: "АгроПомощник", icon: Sprout, permission: "agro.use" as PermissionCode },
+  { href: "/agro-helper", label: "Схемы защиты", icon: Sprout, permission: "agro.use" as PermissionCode },
   { href: "/farms", label: "Хозяйства", icon: Building2, permission: "farms.read" as PermissionCode },
   { href: "/proposals/new", label: "Генератор КП", icon: FilePlus2, permission: "proposals.read" as PermissionCode },
   { href: "/order-requests", label: "Заявки", icon: ClipboardList, permission: "orders.read" as PermissionCode },
@@ -44,7 +44,8 @@ export function cabinetTheme(pathname: string) {
   if (pathname.startsWith("/agro-helper")) return "agro";
   if (pathname.startsWith("/farms")) return "farms";
   if (pathname.startsWith("/proposals")) return "proposal";
-  if (pathname.startsWith("/order-requests")) return "proposal";
+  if (pathname.startsWith("/order-requests")) return "orders";
+  if (pathname.startsWith("/sales")) return "sales";
   if (pathname.startsWith("/support")) return "overview";
   if (pathname.startsWith("/knowledge-base")) return "knowledge";
   if (pathname.startsWith("/quiz")) return "quiz";
