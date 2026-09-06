@@ -11,7 +11,7 @@ import {
   type TreatmentCategory,
 } from "@/data/schemeProductCatalog";
 import { PAYMENT_TERMS, SPK_URAL_PRICE_SOURCE, type PaymentTerm } from "@/data/spkUralPrice";
-import { addProductToScheme, applyRateOverrides, buildProposalTitle, calculateSchemePricing, getSchemeForProposal, parseProposalContext, type ManualRateOverrides } from "@/lib/proposal";
+import { addProductToScheme, applyRateOverrides, buildProposalTitle, calculateSchemePricing, getSchemeForProposal, parseAreaInput, parseProposalContext, type ManualRateOverrides } from "@/lib/proposal";
 import { trpc } from "@/lib/trpc";
 import { downloadProposalWorkbook, printProposalAsPdf, type ProposalSource } from "@/lib/workspaceTransfer";
 import { ArrowLeft, CheckCircle2, CircleDollarSign, FileDown, FileText, Layers3, Plus, Printer, Save, Sprout } from "lucide-react";
@@ -61,7 +61,7 @@ export default function ProposalBuilder() {
     return applyRateOverrides(schemeWithAddedProducts, manualRateOverrides);
   }, [baseScheme, addedProductsByStep, manualRateOverrides]);
 
-  const numericArea = Number(area || 0);
+  const numericArea = parseAreaInput(area);
   const hasSeedTreatment = Boolean(editableScheme?.steps.some((step) => /(протрав|семян)/i.test(`${step.stage} ${step.task}`)));
   const numericSeedTons = Number(seedTons);
   const validSeedTonnage = !hasSeedTreatment || (Number.isFinite(numericSeedTons) && numericSeedTons > 0);
@@ -79,9 +79,6 @@ export default function ProposalBuilder() {
     }
   }, [farms, selectedFarm]);
 
-  useEffect(() => {
-    if (selectedFarm && !area) setArea(String(selectedFarm.totalArea ?? ""));
-  }, [selectedFarm, area]);
 
   const createProposal = trpc.proposals.create.useMutation({
     onSuccess: async (proposal) => {

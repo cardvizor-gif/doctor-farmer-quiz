@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { addProductToScheme, applyRateOverrides, buildAgroHelperContextQuery, buildProposalContextQuery, buildProposalTitle, calculateProductRequirement, calculateProposalTotal, calculateSchemePricing, getSchemeForProposal, parseProposalContext } from "./proposal";
+import { addProductToScheme, applyRateOverrides, buildAgroHelperContextQuery, buildProposalContextQuery, buildProposalTitle, calculateProductRequirement, calculateProposalTotal, calculateSchemePricing, getSchemeForProposal, parseAreaInput, parseProposalContext } from "./proposal";
 
 describe("proposal helpers", () => {
   it("calculates the total only from positive values", () => {
     expect(calculateProposalTotal(125, 4850)).toBe(606250);
     expect(calculateProposalTotal(-125, 4850)).toBe(0);
+  });
+
+  it("keeps an empty area editable and parses a decimal comma when calculating", () => {
+    expect(parseAreaInput("")).toBe(0);
+    expect(parseAreaInput("   ")).toBe(0);
+    expect(parseAreaInput("125,5")).toBe(125.5);
   });
 
   it("selects an exact scheme and builds a readable proposal title", () => {

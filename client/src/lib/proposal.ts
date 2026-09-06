@@ -36,6 +36,12 @@ export function applyRateOverrides(scheme: CropProtectionScheme, overrides: Manu
   };
 }
 
+export function parseAreaInput(rawValue: string) {
+  const normalized = rawValue.trim().replace(",", ".");
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
 export function calculateProposalTotal(area: number, costPerHectare: number) {
   const normalizedArea = Number.isFinite(area) && area > 0 ? area : 0;
   const normalizedCost = Number.isFinite(costPerHectare) && costPerHectare > 0 ? costPerHectare : 0;
