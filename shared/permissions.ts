@@ -43,3 +43,17 @@ export const permissionLabels: Record<PermissionCode, { title: string; descripti
 };
 
 export const allPermissionCodes = [...permissionCodes] as PermissionCode[];
+
+/** Рабочий пресет менеджера: без управления командой, передачей баз и рабочими пространствами. */
+export const defaultManagerPermissions: PermissionCode[] = [
+  "farms.read", "farms.write", "proposals.read", "proposals.write",
+  "orders.read", "orders.write", "support.create", "knowledge.read",
+  "agro.use", "quiz.use", "sales.read", "sales.write",
+];
+
+/** Расширенный пресет администратора: все permission-коды, но не флаг суперпользователя. */
+export const defaultAdminPermissions: PermissionCode[] = [...allPermissionCodes];
+
+export function defaultPermissionsForRole(role: "user" | "admin"): PermissionCode[] {
+  return role === "admin" ? [...defaultAdminPermissions] : [...defaultManagerPermissions];
+}

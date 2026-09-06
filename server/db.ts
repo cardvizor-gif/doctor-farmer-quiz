@@ -345,7 +345,7 @@ export async function updateUserAccess(openId: string, role: "user" | "admin", p
   await db.transaction(async tx => {
     await tx.update(users).set({ role }).where(eq(users.openId, openId));
     await tx.delete(userPermissions).where(eq(userPermissions.userOpenId, openId));
-    if (role === "user" && permissions.length > 0) {
+    if (permissions.length > 0) {
       await tx.insert(userPermissions).values(permissions.map(permission => ({ userOpenId: openId, permission, grantedByOpenId })));
     }
   });
