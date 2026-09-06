@@ -1724,3 +1724,50 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   .cabinet-theme-proposal .proposal-field-select { display: block !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
   .cabinet-theme-proposal .proposal-selected-value { display: block !important; max-width: 100% !important; white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important; }
 }
+
+/* Contrast pass: deep petrol navigation, graphite overview actions, and richer working surfaces. */
+.cabinet-sidebar {
+  background: linear-gradient(180deg, #124c52 0%, #0d3941 100%) !important;
+  box-shadow: inset -1px 0 0 rgba(255,255,255,.08), 10px 0 28px rgba(13,57,65,.12);
+}
+.cabinet-sidebar .cabinet-nav-item { color: rgba(248,255,246,.94) !important; }
+.cabinet-sidebar .cabinet-nav-item:hover { background: rgba(184,239,47,.2) !important; color: #fff !important; }
+.cabinet-sidebar .cabinet-nav-item.is-active { background: #b8ef2f !important; color: #12383e !important; box-shadow: 0 8px 20px rgba(11,41,44,.28) !important; }
+.cabinet-sidebar .cabinet-sidebar-footer { border-top-color: rgba(255,255,255,.22) !important; color: rgba(248,255,246,.84) !important; }
+
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-search-hint,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-admin-panel-link,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-access-requests-link,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-trigger {
+  border: 1px solid rgba(255,255,255,.52) !important;
+  background: rgba(18,48,54,.5) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(10,56,58,.14);
+}
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-search-hint:hover,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-admin-panel-link:hover,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-access-requests-link:hover,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-trigger:hover { background: rgba(18,48,54,.72) !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-copy strong,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-copy small { color: #fff !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-avatar { background: #173f43 !important; color: #efffd6 !important; border-color: rgba(255,255,255,.62) !important; }
+
+.cabinet-theme-agro .cabinet-content > main > div > section,
+.cabinet-theme-farms .cabinet-content > main > div > section,
+.cabinet-theme-proposal .cabinet-content .proposal-workspace > main > div > section,
+.cabinet-theme-orders .cabinet-content > main > div > section,
+.cabinet-theme-sales .cabinet-content > main > div > section,
+.cabinet-theme-quiz .cabinet-content > main > div > section {
+  border-color: #c3d1c7 !important;
+  box-shadow: 0 8px 22px rgba(35,67,50,.08) !important;
+}
+.cabinet-theme-proposal .proposal-workspace-hero { background: #e0ebe4 !important; border-color: #b4c9bc !important; }
+.cabinet-theme-proposal .proposal-workspace-hero > div:first-child { border-left-color: #7eaa28 !important; }
+.cabinet-theme-proposal .proposal-workspace > main > div > section:first-child { background: #fbfdf9 !important; }
+.cabinet-theme-proposal .proposal-workspace > main > div > section:nth-child(2) { background: #f7fbf4 !important; }
+.cabinet-theme-agro .cabinet-content,
+.cabinet-theme-farms .cabinet-content,
+.cabinet-theme-proposal .cabinet-content,
+.cabinet-theme-orders .cabinet-content,
+.cabinet-theme-sales .cabinet-content,
+.cabinet-theme-quiz .cabinet-content { color: #233f36; }

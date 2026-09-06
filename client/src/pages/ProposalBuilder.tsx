@@ -11,7 +11,7 @@ import {
   type TreatmentCategory,
 } from "@/data/schemeProductCatalog";
 import { PAYMENT_TERMS, SPK_URAL_PRICE_SOURCE, type PaymentTerm } from "@/data/spkUralPrice";
-import { addProductToScheme, applyRateOverrides, buildProposalTitle, calculateSchemePricing, getSchemeForProposal, parseAreaInput, parseProposalContext, type ManualRateOverrides } from "@/lib/proposal";
+import { addProductToScheme, applyRateOverrides, buildProposalSaveButtonLabel, buildProposalTitle, calculateSchemePricing, getSchemeForProposal, parseAreaInput, parseProposalContext, type ManualRateOverrides } from "@/lib/proposal";
 import { trpc } from "@/lib/trpc";
 import { downloadProposalWorkbook, printProposalAsPdf, type ProposalSource } from "@/lib/workspaceTransfer";
 import { ArrowLeft, CheckCircle2, CircleDollarSign, FileDown, FileText, Layers3, Plus, Printer, Save, Sprout } from "lucide-react";
@@ -106,17 +106,12 @@ export default function ProposalBuilder() {
   });
 
   const canSaveProposal = Boolean(editableScheme && selectedFarm && pricing?.complete && validSeedTonnage && !createProposal.isPending && !updateProposal.isPending);
-  const saveButtonLabel = createProposal.isPending
-    ? "Сохраняем КП…"
-    : !selectedFarm
-      ? "Выберите хозяйство для сохранения КП"
-      : !validSeedTonnage
-        ? "Укажите тоннаж семян для протравливания"
-      : !pricing?.complete
-        ? "Не все позиции имеют цену"
-        : pricing.lines.some((line) => line.isManualPrice)
-          ? "Сохранить КП с ручными ценами"
-          : "Сохранить КП";
+  const saveButtonLabel = buildProposalSaveButtonLabel({
+    isSaving: createProposal.isPending || updateProposal.isPending,
+    hasFarm: Boolean(selectedFarm),
+    pricingComplete: Boolean(pricing?.complete),
+    hasManualPrice: Boolean(pricing?.lines.some((line) => line.isManualPrice)),
+  });
 
   const resetSchemeEdits = () => {
     setExcludedLineKeys([]);

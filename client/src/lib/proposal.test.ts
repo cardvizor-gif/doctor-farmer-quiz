@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addProductToScheme, applyRateOverrides, buildAgroHelperContextQuery, buildProposalContextQuery, buildProposalTitle, calculateProductRequirement, calculateProposalTotal, calculateSchemePricing, getSchemeForProposal, parseAreaInput, parseProposalContext } from "./proposal";
+import { addProductToScheme, applyRateOverrides, buildAgroHelperContextQuery, buildProposalContextQuery, buildProposalSaveButtonLabel, buildProposalTitle, calculateProductRequirement, calculateProposalTotal, calculateSchemePricing, getSchemeForProposal, parseAreaInput, parseProposalContext } from "./proposal";
 
 describe("proposal helpers", () => {
   it("calculates the total only from positive values", () => {
@@ -11,6 +11,12 @@ describe("proposal helpers", () => {
     expect(parseAreaInput("")).toBe(0);
     expect(parseAreaInput("   ")).toBe(0);
     expect(parseAreaInput("125,5")).toBe(125.5);
+  });
+
+  it("keeps the save action generic when seed tonnage is incomplete", () => {
+    const label = buildProposalSaveButtonLabel({ isSaving: false, hasFarm: true, pricingComplete: true, hasManualPrice: false });
+    expect(label).toBe("Сохранить КП");
+    expect(label).not.toContain("тоннаж");
   });
 
   it("selects an exact scheme and builds a readable proposal title", () => {

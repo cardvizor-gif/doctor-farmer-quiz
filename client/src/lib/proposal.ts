@@ -36,6 +36,14 @@ export function applyRateOverrides(scheme: CropProtectionScheme, overrides: Manu
   };
 }
 
+export function buildProposalSaveButtonLabel(input: { isSaving: boolean; hasFarm: boolean; pricingComplete: boolean; hasManualPrice: boolean }) {
+  if (input.isSaving) return "Сохраняем КП…";
+  if (!input.hasFarm) return "Выберите хозяйство для сохранения КП";
+  if (!input.pricingComplete) return "Не все позиции имеют цену";
+  if (input.hasManualPrice) return "Сохранить КП с ручными ценами";
+  return "Сохранить КП";
+}
+
 export function parseAreaInput(rawValue: string) {
   const normalized = rawValue.trim().replace(",", ".");
   const parsed = Number(normalized);
