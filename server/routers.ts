@@ -267,6 +267,28 @@ export const appRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Не удалось передать базу сотрудника" });
       }
     }),
+    restoreUser: adminProcedure.input(z.object({ openId: z.string().trim().min(1).max(64) })).mutation(async ({ input, ctx }) => {
+      if (!isSuperuser(ctx.user)) throw new TRPCError({ code: "FORBIDDEN", message: "Восстанавливать сотрудников может только суперпользователь" });
+      try {
+        const restored = await db.restoreArchivedUser(input.openId, ctx.user.openId);
+        if (!restored) throw new TRPCError({ code: "NOT_FOUND", message: "Сотрудник не найден" });
+        return restored;
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Не удалось восстановить сотрудника" });
+      }
+    }),
+    deleteUser: adminProcedure.input(z.object({ openId: z.string().trim().min(1).max(64) })).mutation(async ({ input, ctx }) => {
+      if (!isSuperuser(ctx.user)) throw new TRPCError({ code: "FORBIDDEN", message: "Удалять сотрудников может только суперпользователь" });
+      try {
+        const deleted = await db.deleteUserAccount(input.openId);
+        if (!deleted) throw new TRPCError({ code: "NOT_FOUND", message: "Сотрудник не найден" });
+        return deleted;
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Не удалось удалить сотрудника" });
+      }
+    }),
   }),
   farms: router({
     list: permissionProcedure("farms.read").query(({ ctx }) => db.listFarms(ctx.user.openId)),

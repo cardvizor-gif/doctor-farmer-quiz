@@ -7,6 +7,8 @@ vi.mock("./db", () => ({
   listFarms: vi.fn(),
   updateUserAccess: vi.fn(),
   transferAndArchiveUser: vi.fn(),
+  restoreArchivedUser: vi.fn(),
+  deleteUserAccount: vi.fn(),
 }));
 
 import * as db from "./db";
@@ -65,6 +67,22 @@ describe("user permissions", () => {
     const caller = appRouter.createCaller(context(admin));
     await expect(caller.admin.transferAndArchive({ sourceOpenId: baseUser.openId, targetOpenId: "employee-2" })).resolves.toMatchObject({ targetOpenId: "employee-2" });
     expect(db.transferAndArchiveUser).toHaveBeenCalledWith(baseUser.openId, "employee-2", ENV.ownerOpenId);
+  });
+
+  it("allows only the superuser to restore and delete employee accounts", async () => {
+    const admin = { ...baseUser, openId: ENV.ownerOpenId, role: "admin" as const, isSuperuser: 1 };
+    vi.mocked(db.restoreArchivedUser).mockResolvedValue({ user: { ...baseUser, status: "active" }, restoredByOpenId: ENV.ownerOpenId } as never);
+    vi.mocked(db.deleteUserAccount).mockResolvedValue({ openId: baseUser.openId, deleted: true });
+    const caller = appRouter.createCaller(context(admin));
+    await expect(caller.admin.restoreUser({ openId: baseUser.openId })).resolves.toMatchObject({ restoredByOpenId: ENV.ownerOpenId });
+    await expect(caller.admin.deleteUser({ openId: baseUser.openId })).resolves.toMatchObject({ deleted: true });
+    expect(db.restoreArchivedUser).toHaveBeenCalledWith(baseUser.openId, ENV.ownerOpenId);
+    expect(db.deleteUserAccount).toHaveBeenCalledWith(baseUser.openId);
+
+    const delegatedAdmin = { ...baseUser, openId: "delegated-admin", role: "admin" as const, isSuperuser: 0 };
+    const delegatedCaller = appRouter.createCaller(context(delegatedAdmin));
+    await expect(delegatedCaller.admin.restoreUser({ openId: baseUser.openId })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(delegatedCaller.admin.deleteUser({ openId: baseUser.openId })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
   it("does not allow a regular user to change roles or transfer a base", async () => {

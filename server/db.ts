@@ -295,6 +295,40 @@ export async function listTeamMembers() {
   }));
 }
 
+export async function restoreArchivedUser(openId: string, restoredByOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  const target = await getUserByOpenId(openId);
+  if (!target) return undefined;
+  if (target.status !== "archived") throw new Error("Сотрудник уже активен");
+  await db.update(users).set({ status: "active", archivedAt: null, archivedByOpenId: null }).where(and(eq(users.openId, openId), eq(users.status, "archived")));
+  return { user: await getUserByOpenId(openId), restoredByOpenId };
+}
+
+export async function deleteUserAccount(openId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  const target = await getUserByOpenId(openId);
+  if (!target) return undefined;
+  if (target.isSuperuser || openId === ENV.ownerOpenId) throw new Error("Нельзя удалить владельца кабинета");
+  if (target.role === "admin") throw new Error("Сначала снимите роль администратора");
+  const [farmsCount, proposalsCount, ordersCount, supportCount, createdTasksCount, assignedTasksCount] = await Promise.all([
+    db.select({ count: count(farms.id) }).from(farms).where(eq(farms.ownerOpenId, openId)),
+    db.select({ count: count(proposals.id) }).from(proposals).innerJoin(farms, eq(proposals.farmId, farms.id)).where(eq(farms.ownerOpenId, openId)),
+    db.select({ count: count(orderRequests.id) }).from(orderRequests).where(eq(orderRequests.ownerOpenId, openId)),
+    db.select({ count: count(supportTickets.id) }).from(supportTickets).where(eq(supportTickets.ownerOpenId, openId)),
+    db.select({ count: count(salesTasks.id) }).from(salesTasks).where(eq(salesTasks.creatorOpenId, openId)),
+    db.select({ count: count(salesTasks.id) }).from(salesTasks).where(eq(salesTasks.assigneeOpenId, openId)),
+  ]);
+  const linked = [farmsCount[0]?.count, proposalsCount[0]?.count, ordersCount[0]?.count, supportCount[0]?.count, createdTasksCount[0]?.count, assignedTasksCount[0]?.count].map(Number).reduce((sum, value) => sum + value, 0);
+  if (linked > 0) throw new Error("Нельзя удалить сотрудника: у него есть связанные хозяйства, КП, заявки, обращения или задачи. Сначала передайте базу и завершите связанные задачи.");
+  await db.transaction(async tx => {
+    await tx.delete(userPermissions).where(eq(userPermissions.userOpenId, openId));
+    await tx.delete(users).where(eq(users.openId, openId));
+  });
+  return { openId, deleted: true };
+}
+
 export async function updateUserAccess(openId: string, role: "user" | "admin", permissions: PermissionCode[], grantedByOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
