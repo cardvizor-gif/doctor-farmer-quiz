@@ -1580,3 +1580,36 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 
 .df-product-mark-page { width: 38px; color: #194f38; background: #eef7db; border-color: #75bd3c; font-size: 12px; }
 @media (max-width: 640px) { .df-product-mark-page { width: 34px; font-size: 11px; } }
+
+/* Compact product naming: the dashboard modules are now the primary visual focus. */
+.cabinet-sidebar {
+  background: linear-gradient(180deg, #155f61 0%, #124f59 52%, #103f4c 100%) !important;
+  border-right-color: rgba(255,255,255,.14) !important;
+}
+.cabinet-sidebar-top { min-height: 52px; }
+.cabinet-sidebar-product-name {
+  display: block;
+  max-width: 190px;
+  color: #f6fff2;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.045em;
+  line-height: 1.05;
+}
+.cabinet-sidebar .cabinet-nav-item { color: rgba(246,255,242,.86); }
+.cabinet-sidebar .cabinet-nav-item:hover { background: rgba(186,239,47,.16); color: #fff; }
+.cabinet-sidebar .cabinet-nav-item.is-active { background: #b8ef2f; color: #173f43; box-shadow: 0 8px 18px rgba(0,0,0,.12); }
+.cabinet-sidebar .cabinet-sidebar-footer { color: rgba(246,255,242,.82); border-top-color: rgba(255,255,255,.18); }
+.cabinet-sidebar .cabinet-sidebar-footer strong { color: #fff; }
+.cabinet-sidebar .cabinet-sidebar-footer span { color: rgba(246,255,242,.62); }
+.cabinet-mobile-close { color: #f6fff2; }
+.cabinet-topbar-product-wrap { display: flex; min-width: 0; flex-direction: column; justify-content: center; gap: 2px; }
+.cabinet-topbar-product-name { display: block; max-width: 210px; overflow: hidden; color: var(--field-deep); font-size: 14px; font-weight: 800; letter-spacing: -.035em; line-height: 1.05; text-overflow: ellipsis; white-space: nowrap; }
+.cabinet-theme-overview .cabinet-topbar-product-name { color: #fff; }
+@media (max-width: 767px) {
+  .cabinet-topbar-product-name { max-width: 134px; overflow: visible; font-size: 13px; line-height: 1.05; white-space: normal; }
+  .cabinet-sidebar-product-name { max-width: 210px; font-size: 18px; }
+}
+@media (max-width: 380px) {
+  .cabinet-topbar-product-name { max-width: 112px; font-size: 12px; }
+}

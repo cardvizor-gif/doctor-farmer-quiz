@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Bell, Briefcase, Building2, ClipboardList, FileText, HelpCircle, Layers3, Sprout, Trophy } from "lucide-react";
+import { Briefcase, Building2, ClipboardList, FileText, HelpCircle, Layers3, Sprout, Trophy } from "lucide-react";
 import { SupportModal } from "@/components/SupportModal";
 export const dashboardTitle = "АгроПомощник";
 export const dashboardSubtitle = "Схемы защиты";
@@ -70,23 +70,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-home">
-      <section className="dashboard-intro" aria-labelledby="dashboard-title">
-        <div className="dashboard-intro-topline">
-          <div className="dashboard-intro-copy">
-            <h1 id="dashboard-title" className="dashboard-product-title">
-              {dashboardTitle}
-              <span className="dashboard-product-mark" aria-label="DF">DF</span>
-            </h1>
-            <p className="dashboard-intro-text">{dashboardSubtitle}</p>
-          </div>
-          <span className="dashboard-intro-notification" aria-hidden="true"><Bell className="h-5 w-5" /></span>
-        </div>
-        <div className="dashboard-quick-actions" aria-label="Быстрые действия">
-          <Link href="/farms" className="dashboard-quick-action dashboard-quick-action-primary">Новое хозяйство</Link>
-          <Link href="/proposals/new" className="dashboard-quick-action">Новое КП</Link>
-        </div>
-      </section>
-
       <section className="dashboard-section" aria-labelledby="dashboard-modules-title">
         <div className="dashboard-section-heading">
           <div>
