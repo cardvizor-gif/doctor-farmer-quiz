@@ -307,6 +307,25 @@ export const salesTasks = mysqlTable(
 export type SalesTask = typeof salesTasks.$inferSelect;
 export type InsertSalesTask = typeof salesTasks.$inferInsert;
 
+export const notifications = mysqlTable(
+  "notifications",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    recipientOpenId: varchar("recipientOpenId", { length: 64 }).notNull().references(() => users.openId, { onDelete: "cascade" }),
+    workspaceId: int("workspaceId").references(() => workspaces.id, { onDelete: "set null" }),
+    kind: mysqlEnum("kind", ["task", "news", "system"]).notNull().default("system"),
+    title: varchar("title", { length: 255 }).notNull(),
+    body: text("body").notNull(),
+    href: varchar("href", { length: 255 }),
+    isRead: int("isRead").default(0).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("notifications_recipient_read_created_idx").on(table.recipientOpenId, table.isRead, table.createdAt), index("notifications_workspace_idx").on(table.workspaceId)],
+);
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+
 export const inviteCodeHistory = mysqlTable(
   "inviteCodeHistory",
   {

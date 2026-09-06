@@ -1,6 +1,6 @@
 import { and, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, inviteCodeHistory, orderRequestItems, orderRequests, proposals, regions, salesTasks, shipmentItems, shipments, supportAttachments, supportTickets, userPermissions, users, workspaceMembers, workspaces } from "../drizzle/schema";
+import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, inviteCodeHistory, notifications, orderRequestItems, orderRequests, proposals, regions, salesTasks, shipmentItems, shipments, supportAttachments, supportTickets, userPermissions, users, workspaceMembers, workspaces } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
 import type { PermissionCode } from "../shared/permissions";
 import { creditedActiveSeconds } from "../shared/activity";
@@ -198,7 +198,55 @@ export async function createSalesTask(input: {
   if (!db) throw new Error("База данных недоступна");
   const result = await db.insert(salesTasks).values({ ...input, title: input.title.trim(), description: input.description?.trim() || null, dueAt: input.dueAt ?? null, farmId: input.farmId ?? null, proposalId: input.proposalId ?? null });
   const rows = await db.select().from(salesTasks).where(eq(salesTasks.id, Number(result[0].insertId))).limit(1);
-  return rows[0];
+  const task = rows[0];
+  if (task && task.assigneeOpenId !== task.creatorOpenId) {
+    await db.insert(notifications).values({
+      recipientOpenId: task.assigneeOpenId,
+      workspaceId: task.workspaceId,
+      kind: "task",
+      title: "Новое рабочее задание",
+      body: task.title,
+      href: "/sales",
+    });
+  }
+  return task;
+}
+
+export async function listNotificationsForUser(openId: string, limit = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(notifications).where(eq(notifications.recipientOpenId, openId)).orderBy(desc(notifications.createdAt)).limit(limit);
+}
+
+export async function countUnreadNotifications(openId: string) {
+  const db = await getDb();
+  if (!db) return 0;
+  const rows = await db.select({ count: count(notifications.id) }).from(notifications).where(and(eq(notifications.recipientOpenId, openId), eq(notifications.isRead, 0)));
+  return Number(rows[0]?.count ?? 0);
+}
+
+export async function markNotificationRead(openId: string, notificationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  await db.update(notifications).set({ isRead: 1 }).where(and(eq(notifications.id, notificationId), eq(notifications.recipientOpenId, openId)));
+  return { notificationId };
+}
+
+export async function markAllNotificationsRead(openId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  await db.update(notifications).set({ isRead: 1 }).where(and(eq(notifications.recipientOpenId, openId), eq(notifications.isRead, 0)));
+  return { openId };
+}
+
+export async function publishNewsNotification(title: string, body: string, href = "/") {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const recipients = await db.select({ openId: users.openId }).from(users).where(eq(users.status, "active"));
+  if (recipients.length > 0) {
+    await db.insert(notifications).values(recipients.map(({ openId }) => ({ recipientOpenId: openId, kind: "news" as const, title: title.trim(), body: body.trim(), href })));
+  }
+  return { recipients: recipients.length };
 }
 
 export async function getSalesTaskById(id: number) {

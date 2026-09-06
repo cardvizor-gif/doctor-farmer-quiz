@@ -102,6 +102,12 @@ const salesTaskPrioritySchema = z.enum(["low", "normal", "high"]);
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
+  notifications: router({
+    list: protectedProcedure.query(({ ctx }) => db.listNotificationsForUser(ctx.user.openId)),
+    unreadCount: protectedProcedure.query(({ ctx }) => db.countUnreadNotifications(ctx.user.openId)),
+    markRead: protectedProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ input, ctx }) => db.markNotificationRead(ctx.user.openId, input.id)),
+    markAllRead: protectedProcedure.mutation(({ ctx }) => db.markAllNotificationsRead(ctx.user.openId)),
+  }),
   auth: router({
     me: publicProcedure.query(async ({ ctx }) => {
       if (!ctx.user) return null;
@@ -234,6 +240,7 @@ export const appRouter = router({
     }),
   }),
   admin: router({
+    publishNews: superuserProcedure.input(z.object({ title: z.string().trim().min(2).max(255), body: z.string().trim().min(2).max(2_000), href: z.string().trim().max(255).optional() })).mutation(({ input }) => db.publishNewsNotification(input.title, input.body, input.href || "/")),
     team: teamProcedure("team.read").query(() => db.listTeamMembers()),
     teamFarms: teamProcedure("team.read").query(() => db.listTeamFarms()),
     memberWorkspace: teamProcedure("team.read").input(z.object({ openId: z.string().trim().min(1).max(64) })).query(async ({ input }) => {

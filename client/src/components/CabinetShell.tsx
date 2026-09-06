@@ -5,7 +5,7 @@ import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { countPendingAccessRequests } from "@/lib/accessRequests";
 import { trpc } from "@/lib/trpc";
-import { Briefcase, Building2, ChevronDown, ClipboardList, FilePlus2, Headphones, Home, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
+import { Bell, Briefcase, Building2, ChevronDown, ClipboardList, ExternalLink, FilePlus2, Headphones, Home, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import type { PermissionCode } from "@shared/permissions";
@@ -76,11 +76,13 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAccessOpen, setIsAccessOpen] = useState(false);
   const [displayNameDraft, setDisplayNameDraft] = useState("");
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
   const { user, loading: isAuthLoading, logout } = useAuth();
   const utils = trpc.useUtils();
   const activityPing = trpc.activity.ping.useMutation();
@@ -95,6 +97,14 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
     enabled: canAccessSupport,
     staleTime: 15_000,
   });
+  const { data: notifications = [] } = trpc.notifications.list.useQuery(undefined, { enabled: Boolean(user), staleTime: 15_000, refetchInterval: user ? 30_000 : false });
+  const { data: unreadNotifications = 0 } = trpc.notifications.unreadCount.useQuery(undefined, { enabled: Boolean(user), staleTime: 15_000, refetchInterval: user ? 30_000 : false });
+  const markNotificationRead = trpc.notifications.markRead.useMutation({
+    onSuccess: () => { void utils.notifications.list.invalidate(); void utils.notifications.unreadCount.invalidate(); },
+  });
+  const markAllNotificationsRead = trpc.notifications.markAllRead.useMutation({
+    onSuccess: () => { void utils.notifications.list.invalidate(); void utils.notifications.unreadCount.invalidate(); },
+  });
   const updateProfile = trpc.auth.updateProfile.useMutation({
     onSuccess: (updatedUser) => {
       void utils.auth.me.invalidate();
@@ -107,6 +117,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
   const account = accountIdentity(user);
   const pendingAccessRequests = countPendingAccessRequests(accessRequests);
   const newSupportTickets = (supportTickets ?? []).filter((ticket) => ticket.status === "new").length;
+  const notificationKindLabels = { task: "Задание", news: "Новость", system: "Система" } as const;
 
   useEffect(() => {
     if (!user?.openId) return;
@@ -145,6 +156,15 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
+
+  useEffect(() => {
+    if (!isNotificationsOpen) return;
+    const handleEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setIsNotificationsOpen(false); };
+    const handleOutsidePointer = (event: PointerEvent) => { if (!notificationsRef.current?.contains(event.target as Node)) setIsNotificationsOpen(false); };
+    window.addEventListener("keydown", handleEscape);
+    document.addEventListener("pointerdown", handleOutsidePointer);
+    return () => { window.removeEventListener("keydown", handleEscape); document.removeEventListener("pointerdown", handleOutsidePointer); };
+  }, [isNotificationsOpen]);
 
   useEffect(() => {
     if (!isAccountMenuOpen) return;
@@ -226,6 +246,15 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
               {canCreateSupport && <Link href="/support" className="cabinet-access-requests-link" aria-label={newSupportTickets > 0 ? `Обращения: ${newSupportTickets} новых` : "Открыть обращения"}>
                 <MessageSquareText className="h-4 w-4" aria-hidden="true" /><span>Обращения</span>{newSupportTickets > 0 && <strong aria-hidden="true">{newSupportTickets}</strong>}
               </Link>}
+              {!isAuthLoading && user && <div ref={notificationsRef} className="cabinet-account-wrap">
+                <button type="button" className="cabinet-notifications-trigger" onClick={() => setIsNotificationsOpen((open) => !open)} aria-expanded={isNotificationsOpen} aria-haspopup="menu" aria-label={unreadNotifications > 0 ? `Уведомления: ${unreadNotifications} непрочитанных` : "Уведомления"}>
+                  <Bell className="h-4 w-4" />{unreadNotifications > 0 && <strong aria-hidden="true">{unreadNotifications > 99 ? "99+" : unreadNotifications}</strong>}
+                </button>
+                {isNotificationsOpen && <div className="cabinet-notifications-menu" role="menu" aria-label="Уведомления">
+                  <div className="cabinet-notifications-heading"><div><strong>Уведомления</strong><span>{unreadNotifications > 0 ? `${unreadNotifications} непрочитанных` : "Всё прочитано"}</span></div>{unreadNotifications > 0 && <button type="button" onClick={() => markAllNotificationsRead.mutate()} disabled={markAllNotificationsRead.isPending}>Прочитать всё</button>}</div>
+                  {notifications.length === 0 ? <p className="cabinet-notifications-empty">Новых заданий и новостей пока нет.</p> : <div className="cabinet-notifications-list">{notifications.map((notification) => <a key={notification.id} href={notification.href || "/"} className={`cabinet-notification-item ${notification.isRead ? "is-read" : "is-unread"}`} onClick={() => { if (!notification.isRead) markNotificationRead.mutate({ id: notification.id }); setIsNotificationsOpen(false); }}><span className="cabinet-notification-dot" aria-hidden="true" /><span className="min-w-0 flex-1"><small>{notificationKindLabels[notification.kind]}</small><strong>{notification.title}</strong><span>{notification.body}</span><time>{new Date(notification.createdAt).toLocaleString("ru-RU")}</time></span><ExternalLink className="h-3.5 w-3.5 shrink-0" /></a>)}</div>}
+                </div>}
+              </div>}
               {!isAuthLoading && (user ? <div ref={accountMenuRef} className="cabinet-account-wrap">
                 <button type="button" className="cabinet-account-trigger" onClick={() => setIsAccountMenuOpen((open) => !open)} aria-expanded={isAccountMenuOpen} aria-haspopup="menu">
                   <span className="cabinet-account-avatar" aria-hidden="true">{account.initials}</span>
