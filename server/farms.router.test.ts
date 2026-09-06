@@ -12,6 +12,8 @@ vi.mock("./db", () => ({
   listProposals: vi.fn(),
   getProposalById: vi.fn(),
   createProposal: vi.fn(),
+  updateProposal: vi.fn(),
+  removeProposal: vi.fn(),
   updateProposalStatus: vi.fn(),
   listTeamMembers: vi.fn(),
   listTeamFarms: vi.fn(),
@@ -152,16 +154,32 @@ describe("farms and proposals privacy", () => {
     expect(found).toEqual(proposal);
   });
 
+  it("updates and removes only the authenticated user's proposal", async () => {
+    vi.mocked(db.getProposalById).mockResolvedValue(proposal);
+    vi.mocked(db.getFarmById).mockResolvedValue(farm);
+    vi.mocked(db.updateProposal).mockResolvedValue({ ...proposal, title: "Обновлённое КП" });
+    vi.mocked(db.removeProposal).mockResolvedValue(proposal);
+    const caller = appRouter.createCaller(createContext(ownerOpenId));
+    await expect(caller.proposals.update({ id: proposal.id, farmId: farm.id, title: "Обновлённое КП", crop: proposal.crop, area: 125, schemeJson: "{}" })).resolves.toMatchObject({ title: "Обновлённое КП" });
+    await expect(caller.proposals.remove({ id: proposal.id })).resolves.toMatchObject({ id: proposal.id });
+    expect(db.updateProposal).toHaveBeenCalledWith(proposal.id, expect.objectContaining({ title: "Обновлённое КП" }), ownerOpenId);
+    expect(db.removeProposal).toHaveBeenCalledWith(proposal.id, ownerOpenId);
+  });
+
   it("does not expose or mutate another user's farm or proposal", async () => {
     vi.mocked(db.getFarmById).mockResolvedValue(undefined);
     vi.mocked(db.getProposalById).mockResolvedValue(undefined);
     vi.mocked(db.updateFarm).mockResolvedValue(undefined);
+    vi.mocked(db.updateProposal).mockResolvedValue(undefined);
+    vi.mocked(db.removeProposal).mockResolvedValue(undefined);
     vi.mocked(db.updateProposalStatus).mockResolvedValue(undefined);
     const caller = appRouter.createCaller(createContext(otherOpenId));
 
     await expect(caller.farms.byId({ id: farm.id })).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(caller.farms.update({ id: farm.id, name: "Чужая запись", totalArea: 125 })).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(caller.proposals.byId({ id: proposal.id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(caller.proposals.update({ id: proposal.id, farmId: farm.id, title: proposal.title, crop: proposal.crop, area: 125, schemeJson: "{}" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(caller.proposals.remove({ id: proposal.id })).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(caller.proposals.updateStatus({ id: proposal.id, status: "sent" })).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(caller.proposals.create({ farmId: farm.id, title: proposal.title, crop: proposal.crop, area: 125, schemeJson: "{}" })).rejects.toMatchObject({ code: "NOT_FOUND" });
 

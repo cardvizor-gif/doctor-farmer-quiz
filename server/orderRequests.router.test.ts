@@ -5,6 +5,7 @@ vi.mock("./db", () => ({
   getOrderRequestById: vi.fn(),
   createOrderRequest: vi.fn(),
   updateOrderRequest: vi.fn(),
+  removeOrderRequest: vi.fn(),
   createShipment: vi.fn(),
   getUserPermissions: vi.fn().mockResolvedValue(["orders.read", "orders.write"]),
 }));
@@ -70,6 +71,17 @@ describe("order requests privacy", () => {
 
     await expect(caller.orderRequests.byId({ id: 77 })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(db.getOrderRequestById).toHaveBeenCalledWith(77, otherOpenId);
+  });
+
+  it("updates and removes a draft only through the current manager owner scope", async () => {
+    const updated = { id: 77, ...input, status: "draft", items: [], shipments: [] };
+    vi.mocked(db.updateOrderRequest).mockResolvedValue(updated as never);
+    vi.mocked(db.removeOrderRequest).mockResolvedValue(updated as never);
+    const caller = appRouter.createCaller(createContext());
+    await expect(caller.orderRequests.update({ id: 77, ...input, status: "draft" })).resolves.toEqual(updated);
+    await expect(caller.orderRequests.remove({ id: 77 })).resolves.toEqual(updated);
+    expect(db.updateOrderRequest).toHaveBeenCalledWith(77, expect.objectContaining({ status: "draft" }), ownerOpenId, { name: "Иван Менеджер", email: "manager@example.com" });
+    expect(db.removeOrderRequest).toHaveBeenCalledWith(77, ownerOpenId);
   });
 
   it("records a shipment only against the current manager request", async () => {

@@ -91,8 +91,24 @@ export default function ProposalBuilder() {
     },
     onError: (error) => toast.error(error.message),
   });
+  const updateProposal = trpc.proposals.update.useMutation({
+    onSuccess: async (proposal) => {
+      if (proposal) setSavedProposalId(proposal.id);
+      await utils.proposals.list.invalidate();
+      toast.success("Коммерческое предложение обновлено");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const removeProposal = trpc.proposals.remove.useMutation({
+    onSuccess: async () => {
+      setSavedProposalId(null);
+      await utils.proposals.list.invalidate();
+      toast.success("Коммерческое предложение удалено");
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
-  const canSaveProposal = Boolean(editableScheme && selectedFarm && pricing?.complete && validSeedTonnage && !createProposal.isPending);
+  const canSaveProposal = Boolean(editableScheme && selectedFarm && pricing?.complete && validSeedTonnage && !createProposal.isPending && !updateProposal.isPending);
   const saveButtonLabel = createProposal.isPending
     ? "Сохраняем КП…"
     : !selectedFarm
@@ -208,7 +224,7 @@ export default function ProposalBuilder() {
     if (numericArea <= 0) return toast.error("Укажите площадь обработки больше нуля");
     if (!validSeedTonnage) return toast.error("Укажите фактический тоннаж семян для расчёта протравителей");
     if (!pricing?.complete) return toast.error("В схеме есть позиции без подтверждённой цены из актуального прайса");
-    createProposal.mutate({
+    const payload = {
       farmId: selectedFarm.id,
       title: buildProposalTitle(editableScheme, selectedFarm.name),
       crop: selectedCrop.name,
@@ -231,7 +247,9 @@ export default function ProposalBuilder() {
         priceSource: pricing.lines.some((line) => line.isManualPrice) ? { ...SPK_URAL_PRICE_SOURCE, hasManualOverrides: true } : SPK_URAL_PRICE_SOURCE,
       }),
       notes: notes || null,
-    });
+    };
+    if (savedProposalId) updateProposal.mutate({ id: savedProposalId, ...payload });
+    else createProposal.mutate(payload);
   };
 
   const buildCurrentExportProposal = (): ProposalSource | null => {
@@ -279,6 +297,28 @@ export default function ProposalBuilder() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Не удалось подготовить печатный макет");
     }
+  };
+
+  const editSavedProposal = (proposal: NonNullable<typeof proposalsQuery.data>[number]) => {
+    setSavedProposalId(proposal.id);
+    setArea(String(proposal.area));
+    const matchingCrop = CROP_OPTIONS.find((crop) => crop.name === proposal.crop);
+    if (matchingCrop) setCropId(matchingCrop.id);
+    if (proposal.technology) setTechnology(proposal.technology);
+    setNotes(proposal.notes ?? "");
+    try {
+      const context = JSON.parse(proposal.schemeJson) as Record<string, unknown>;
+      setSeedTons(context.seedTons ? String(context.seedTons) : "");
+      setDiscountPercent(typeof context.discountPercent === "number" ? context.discountPercent : 0);
+      setPaymentTerm((context.paymentTerm as PaymentTerm | undefined) ?? "deferred");
+      setExcludedLineKeys(Array.isArray(context.excludedLineKeys) ? context.excludedLineKeys.filter((value): value is string => typeof value === "string") : []);
+      setManualPriceOverrides(typeof context.manualPriceOverrides === "object" && context.manualPriceOverrides ? context.manualPriceOverrides as Record<string, number> : {});
+      setManualRateOverrides(typeof context.manualRateOverrides === "object" && context.manualRateOverrides ? context.manualRateOverrides as ManualRateOverrides : {});
+      setAddedProductsByStep(typeof context.addedProductsByStep === "object" && context.addedProductsByStep ? context.addedProductsByStep as Record<number, CatalogProduct[]> : {});
+    } catch {
+      toast.error("Не удалось восстановить отдельные настройки КП; базовая схема загружена");
+    }
+    toast.success("КП загружено в форму — внесите изменения и сохраните");
   };
 
   return (
@@ -386,7 +426,7 @@ export default function ProposalBuilder() {
           </section>
         </div>
 
-        {selectedFarmId && proposalsQuery.data && proposalsQuery.data.length > 0 && <section className="mt-6 rounded-2xl border border-[#dde5dc] bg-white p-5 shadow-sm sm:p-6"><div className="mb-4 flex items-center gap-2"><FileDown className="h-5 w-5 text-[#2e7d52]" /><h2 className="font-bold text-[#12352a]">Сохранённые КП по хозяйству</h2></div><div className="grid gap-3 md:grid-cols-2">{proposalsQuery.data.map((proposal) => <div key={proposal.id} className="rounded-xl border border-[#e0eadf] p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-[#12352a]">{proposal.title}</p><p className="mt-1 text-xs text-[#6f7a73]">{proposal.crop} · {proposal.area} га · {formatMoney(Number(proposal.totalCost))}</p></div><span className="rounded-full bg-[#e8efe5] px-2.5 py-1 text-[10px] font-bold text-[#194f38]">{proposal.status === "draft" ? "Черновик" : proposal.status}</span></div><div className="mt-4 flex flex-wrap gap-2"><Button type="button" size="sm" variant="outline" className="border-[#2e7d52] text-[#194f38]" onClick={() => void downloadProposalWorkbook(proposal, selectedFarm).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Не удалось сформировать Excel-фাইল"))}><FileDown className="mr-1.5 h-4 w-4" />Excel</Button><Button type="button" size="sm" variant="outline" onClick={() => { try { flushSync(() => setPrintNotice("Печатный макет открыт. В системном окне выберите «Сохранить как PDF».")); printProposalAsPdf(proposal, selectedFarm); toast.success("Печатный макет открыт. В системном окне выберите «Сохранить как PDF»."); } catch (error) { toast.error(error instanceof Error ? error.message : "Не удалось подготовить печатный макет"); } }}><Printer className="mr-1.5 h-4 w-4" />PDF</Button></div></div>)}</div></section>}
+        {selectedFarmId && proposalsQuery.data && proposalsQuery.data.length > 0 && <section className="mt-6 rounded-2xl border border-[#dde5dc] bg-white p-5 shadow-sm sm:p-6"><div className="mb-4 flex items-center gap-2"><FileDown className="h-5 w-5 text-[#2e7d52]" /><h2 className="font-bold text-[#12352a]">Сохранённые КП по хозяйству</h2></div><div className="grid gap-3 md:grid-cols-2">{proposalsQuery.data.map((proposal) => <div key={proposal.id} className="rounded-xl border border-[#e0eadf] p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-[#12352a]">{proposal.title}</p><p className="mt-1 text-xs text-[#6f7a73]">{proposal.crop} · {proposal.area} га · {formatMoney(Number(proposal.totalCost))}</p></div><span className="rounded-full bg-[#e8efe5] px-2.5 py-1 text-[10px] font-bold text-[#194f38]">{proposal.status === "draft" ? "Черновик" : proposal.status}</span></div><div className="mt-4 flex flex-wrap gap-2"><Button type="button" size="sm" variant="outline" className="border-[#2e7d52] text-[#194f38]" onClick={() => void downloadProposalWorkbook(proposal, selectedFarm).catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Не удалось сформировать Excel-фাইল"))}><FileDown className="mr-1.5 h-4 w-4" />Excel</Button><Button type="button" size="sm" variant="outline" onClick={() => { try { flushSync(() => setPrintNotice("Печатный макет открыт. В системном окне выберите «Сохранить как PDF».")); printProposalAsPdf(proposal, selectedFarm); toast.success("Печатный макет открыт. В системном окне выберите «Сохранить как PDF»."); } catch (error) { toast.error(error instanceof Error ? error.message : "Не удалось подготовить печатный макет"); } }}><Printer className="mr-1.5 h-4 w-4" />PDF</Button><Button type="button" size="sm" variant="outline" onClick={() => editSavedProposal(proposal)}>Изменить</Button><Button type="button" size="sm" variant="outline" className="border-red-200 text-red-700 hover:bg-red-50" disabled={removeProposal.isPending} onClick={() => { if (window.confirm("Удалить это коммерческое предложение?")) removeProposal.mutate({ id: proposal.id }); }}>Удалить</Button></div></div>)}</div></section>}
       </main>
     </div>
   );

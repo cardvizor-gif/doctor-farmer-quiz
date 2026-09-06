@@ -553,6 +553,16 @@ export async function updateOrderRequest(id: number, input: OrderRequestInput, o
   return getOrderRequestById(id, ownerOpenId);
 }
 
+export async function removeOrderRequest(id: number, ownerOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const existing = await getOrderRequestById(id, ownerOpenId);
+  if (!existing || existing.status !== "draft" || existing.shipments.length > 0) return undefined;
+  await db.delete(orderRequestItems).where(eq(orderRequestItems.requestId, id));
+  await db.delete(orderRequests).where(and(eq(orderRequests.id, id), eq(orderRequests.ownerOpenId, ownerOpenId), eq(orderRequests.status, "draft")));
+  return existing;
+}
+
 export async function createShipment(requestId: number, input: ShipmentInput, ownerOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
@@ -729,6 +739,26 @@ export async function createProposal(input: ProposalInput, ownerOpenId: string) 
   if (!db) throw new Error("База данных недоступна");
   const result = await db.insert(proposals).values(toProposalValues(input));
   return getProposalById(Number(result[0].insertId), ownerOpenId);
+}
+
+export async function updateProposal(id: number, input: ProposalInput, ownerOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const existingProposal = await getProposalById(id, ownerOpenId);
+  if (!existingProposal) return undefined;
+  const farm = await getFarmById(input.farmId, ownerOpenId);
+  if (!farm) return undefined;
+  await db.update(proposals).set(toProposalValues(input)).where(eq(proposals.id, id));
+  return getProposalById(id, ownerOpenId);
+}
+
+export async function removeProposal(id: number, ownerOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const existingProposal = await getProposalById(id, ownerOpenId);
+  if (!existingProposal) return undefined;
+  await db.delete(proposals).where(eq(proposals.id, id));
+  return existingProposal;
 }
 
 export async function updateProposalStatus(id: number, status: ProposalInput["status"], ownerOpenId: string) {

@@ -306,6 +306,17 @@ export const appRouter = router({
       if (!proposal) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Не удалось сохранить коммерческое предложение" });
       return proposal;
     }),
+    update: permissionProcedure("proposals.write").input(proposalInputSchema.safeExtend({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+      const { id, ...payload } = input;
+      const proposal = await db.updateProposal(id, payload, ctx.user.openId);
+      if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено или недоступно" });
+      return proposal;
+    }),
+    remove: permissionProcedure("proposals.write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+      const proposal = await db.removeProposal(input.id, ctx.user.openId);
+      if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено или недоступно" });
+      return proposal;
+    }),
     updateStatus: permissionProcedure("proposals.write").input(z.object({ id: z.number().int().positive(), status: z.enum(proposalStatuses) })).mutation(async ({ input, ctx }) => {
       const proposal = await db.updateProposalStatus(input.id, input.status, ctx.user.openId);
       if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено" });
@@ -342,6 +353,11 @@ export const appRouter = router({
       const { id, ...payload } = input;
       const request = await db.updateOrderRequest(id, payload, ctx.user.openId, managerIdentity(ctx.user));
       if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Черновик заявки не найден или уже передан в бухгалтерию" });
+      return request;
+    }),
+    remove: permissionProcedure("orders.write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+      const request = await db.removeOrderRequest(input.id, ctx.user.openId);
+      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Удалять можно только свои черновики без отгрузок" });
       return request;
     }),
     createShipment: permissionProcedure("orders.write").input(shipmentInputSchema).mutation(async ({ input, ctx }) => {

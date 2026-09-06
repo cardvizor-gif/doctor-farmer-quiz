@@ -197,7 +197,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
           <header className="cabinet-topbar">
             <div className="flex min-w-0 items-center gap-2.5">
               <button type="button" className="cabinet-menu-trigger" onClick={() => setIsMobileMenuOpen(true)} aria-label="Открыть меню"><Menu className="h-5 w-5" /></button>
-              <div className="min-w-0 cabinet-topbar-product-wrap"><Link href="/" className="cabinet-topbar-product-name" aria-label="АгроПомощник — обзор">АгроПомощник</Link>{location !== "/" && <h1 className="cabinet-topbar-page-title">{pageTitle}</h1>}</div>
+              <div className="min-w-0 cabinet-topbar-product-wrap"><Link href="/" className="cabinet-topbar-product-name" aria-label="АгроПомощник — обзор"><span>Агро</span><span>Помощник</span></Link>{location !== "/" && <h1 className="cabinet-topbar-page-title">{pageTitle}</h1>}</div>
             </div>
             <div className="cabinet-topbar-actions">
               <button type="button" className="cabinet-search-hint" onClick={() => setIsSearchOpen(true)} aria-label="Открыть поиск по кабинету"><Search className="h-4 w-4" /><span>Поиск по кабинету</span><kbd>⌘ K</kbd></button>

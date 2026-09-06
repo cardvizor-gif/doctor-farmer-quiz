@@ -71,11 +71,7 @@ export default function Dashboard() {
   return (
     <div className="dashboard-home">
       <section className="dashboard-section" aria-labelledby="dashboard-modules-title">
-        <div className="dashboard-section-heading">
-          <div>
-            <h2 id="dashboard-modules-title">Инструменты</h2>
-          </div>
-        </div>
+        <h2 id="dashboard-modules-title" className="sr-only">Модули кабинета</h2>
 
         <div className="dashboard-module-grid">
           {dashboardModules.map((module) => {

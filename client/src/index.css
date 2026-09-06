@@ -1657,3 +1657,30 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 .cabinet-theme-quiz .cabinet-content .quiz-workspace { background: transparent !important; }
 .cabinet-theme-quiz .cabinet-content button[class*="bg-[#26343a]"],
 .cabinet-theme-quiz .cabinet-content button[class*="bg-[#194f38]"] { background: #9550ba !important; color: #fff !important; }
+
+/* Current compact pass: balance the home workspace and reduce mobile-only vertical density. */
+@media (max-width: 767px) {
+  .dashboard-home { padding-top: 12px; padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .dashboard-section { margin-top: 0 !important; }
+  .dashboard-module-grid { margin-top: 0 !important; }
+  .agro-helper-filter-card { padding: 10px !important; }
+  .agro-helper-filter-card > div:first-child { padding-bottom: 8px !important; }
+  .agro-helper-filter-card [data-slot="select-trigger"] { height: 38px !important; }
+  .agro-helper-workspace > main { padding-top: 8px !important; }
+  .sales-workspace form { max-height: calc(100dvh - 28px); overflow-y: auto; padding: 16px !important; border-radius: 18px !important; }
+  .sales-workspace form .mt-5 { margin-top: 12px !important; }
+  .sales-workspace form textarea { min-height: 64px; }
+}
+
+@media (min-width: 768px) {
+  .dashboard-home { padding-top: 10px; padding-bottom: 18px; }
+}
+
+.cabinet-topbar-product-name > span { display: inline; }
+@media (max-width: 767px) {
+  .cabinet-topbar-product-name { max-width: 150px !important; font-size: 18px !important; line-height: .95 !important; white-space: normal !important; }
+  .cabinet-topbar-product-name > span { display: block; }
+}
+@media (min-width: 768px) {
+  .cabinet-topbar-product-name > span + span::before { content: " "; }
+}
