@@ -194,16 +194,16 @@ export default function AgroHelper() {
         <aside className="lg:col-span-4 space-y-6 no-print">
           
           <Card className="agro-helper-filter-card bg-[#ffffff] border border-[#dde5dc] shadow-sm rounded-2xl">
-            <CardHeader className="pb-4 border-b border-[#dde5dc]">
+            <CardHeader className="pb-2 border-b border-[#b7d4c0]">
               <CardTitle className="text-base font-bold text-[#12352a] flex items-center gap-2">
                 <Filter className="w-4 h-4 text-[#2e7d52]" /> Выбор культуры и технологии
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5 pt-5">
+            <CardContent className="space-y-4 pt-3">
               
               {/* Выбор культуры */}
               <div>
-                <label htmlFor="crop-select" className="block text-xs font-semibold uppercase tracking-wider text-[#6f7a73] mb-2">
+                <label htmlFor="crop-select" className="block text-xs font-semibold uppercase tracking-wider text-[#315443] mb-1.5">
                   Сельхозкультура
                 </label>
                 <Select
@@ -217,7 +217,7 @@ export default function AgroHelper() {
                     }
                   }}
                 >
-                  <SelectTrigger id="crop-select" className="h-11 w-full rounded-xl border-[#dde5dc] bg-[#f4f7f1] px-3 text-sm font-semibold text-[#15211c] shadow-none focus:border-[#2e7d52] focus:ring-[#2e7d52]/20">
+                  <SelectTrigger id="crop-select" className="h-10 w-full rounded-xl border-[#8bc5a0] bg-[#dff2e5] px-3 text-sm font-semibold text-[#123f35] shadow-none focus:border-[#159d79] focus:ring-[#159d79]/20">
                     <SelectValue placeholder="Выберите культуру" />
                   </SelectTrigger>
                   <SelectContent className="border-[#dde5dc] bg-white text-[#15211c]">
@@ -228,7 +228,7 @@ export default function AgroHelper() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="mt-1.5 text-[11px] text-[#6f7a73]">Доступно культур: {CROP_OPTIONS.length}</p>
+                <p className="mt-1 text-[11px] text-[#4c7560]">Доступно культур: {CROP_OPTIONS.length}</p>
               </div>
 
               {/* Выбор технологии */}

@@ -1771,3 +1771,38 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 .cabinet-theme-orders .cabinet-content,
 .cabinet-theme-sales .cabinet-content,
 .cabinet-theme-quiz .cabinet-content { color: #233f36; }
+
+/* Compact crop selector: reduce the empty top area and strengthen the selected surface. */
+.cabinet-theme-agro .agro-helper-filter-card {
+  background: #eef8f0 !important;
+  border-color: #8fc9a4 !important;
+}
+.cabinet-theme-agro .agro-helper-filter-card > [data-slot="card-header"] {
+  padding-bottom: 10px !important;
+  border-bottom-color: #afd5bb !important;
+}
+.cabinet-theme-agro .agro-helper-filter-card > [data-slot="card-content"] {
+  padding-top: 12px !important;
+}
+.cabinet-theme-agro .agro-helper-filter-card #crop-select {
+  min-height: 40px !important;
+  background: #d9f0df !important;
+  border-color: #7fbe97 !important;
+  color: #123f35 !important;
+}
+@media (max-width: 767px) {
+  .cabinet-theme-agro .agro-helper-filter-card > [data-slot="card-header"] { padding-bottom: 8px !important; }
+  .cabinet-theme-agro .agro-helper-filter-card > [data-slot="card-content"] { padding-top: 9px !important; }
+  .cabinet-theme-agro .agro-helper-filter-card #crop-select { min-height: 38px !important; }
+}
+
+.cabinet-theme-agro .agro-helper-filter-card {
+  gap: 8px !important;
+  padding-block: 12px !important;
+}
+@media (max-width: 767px) {
+  .cabinet-theme-agro .agro-helper-filter-card {
+    gap: 4px !important;
+    padding-block: 8px !important;
+  }
+}
