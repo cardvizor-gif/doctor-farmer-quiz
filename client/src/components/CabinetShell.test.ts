@@ -25,8 +25,10 @@ describe("accountIdentity", () => {
     });
   });
 
-  it("uses a dedicated page title for the internal support ticket list", () => {
+  it("uses dedicated page titles for internal sections", () => {
     expect(cabinetPageTitle("/support")).toBe("Обращения");
+    expect(cabinetPageTitle("/admin")).toBe("Команда");
+    expect(cabinetPageTitle("/news")).toBe("Новости");
   });
 
   it("shows only assigned workspace sections to a regular employee", () => {

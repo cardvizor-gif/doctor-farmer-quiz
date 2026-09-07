@@ -37,6 +37,7 @@ export function filterCabinetNavigation(user: NavigationUser) {
 export function cabinetPageTitle(pathname: string) {
   if (pathname.startsWith("/support")) return "Обращения";
   if (pathname.startsWith("/news")) return "Новости";
+  if (pathname.startsWith("/admin")) return "Команда";
   return cabinetNavigation.find((item) => item.href === pathname)?.label ?? "АгроПомощник";
 }
 
