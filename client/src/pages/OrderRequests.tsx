@@ -155,7 +155,7 @@ export default function OrderRequests() {
   };
   const patchItem = (id: string, patch: Partial<ItemDraft>) => setDraft((current) => ({ ...current, items: current.items.map((item) => item.id === id ? { ...item, ...patch } : item) }));
   const requestTotal = draft.items.reduce((sum, item) => sum + asNumber(item.quantity) * asNumber(item.unitPrice), 0);
-  const canModifySelected = Boolean(details && details.shipments.length === 0 && (details.status === "draft" || details.status === "submitted"));
+  const canModifySelected = Boolean(details && details.shipments.length === 0);
 
   const createRequest = (printAfterSave: boolean) => {
     const validItems = draft.items.filter((item) => item.productName.trim() && asNumber(item.quantity) > 0);
