@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, inviteCodeHistory, notifications, orderRequestItems, orderRequests, proposals, regions, salesTasks, shipmentItems, shipments, supportAttachments, supportTickets, userPermissions, users, workspaceMembers, workspaces } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
@@ -632,11 +632,12 @@ export async function updateOrderRequest(id: number, input: OrderRequestInput, o
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
   const existing = await getOrderRequestById(id, ownerOpenId);
-  if (!existing || existing.status !== "draft") return undefined;
+  const editableStatus = existing?.status === "draft" || existing?.status === "submitted";
+  if (!existing || !editableStatus || existing.shipments.length > 0) return undefined;
   const farm = await getFarmById(input.farmId, ownerOpenId);
   if (!farm) return undefined;
   await db.transaction(async (tx) => {
-    await tx.update(orderRequests).set(requestValues(input, ownerOpenId, manager)).where(and(eq(orderRequests.id, id), eq(orderRequests.ownerOpenId, ownerOpenId), eq(orderRequests.status, "draft")));
+    await tx.update(orderRequests).set(requestValues(input, ownerOpenId, manager)).where(and(eq(orderRequests.id, id), eq(orderRequests.ownerOpenId, ownerOpenId), or(eq(orderRequests.status, "draft"), eq(orderRequests.status, "submitted"))));
     await tx.delete(orderRequestItems).where(eq(orderRequestItems.requestId, id));
     await tx.insert(orderRequestItems).values(requestItemsValues(id, input.items));
   });
@@ -647,9 +648,10 @@ export async function removeOrderRequest(id: number, ownerOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
   const existing = await getOrderRequestById(id, ownerOpenId);
-  if (!existing || existing.status !== "draft" || existing.shipments.length > 0) return undefined;
+  const removableStatus = existing?.status === "draft" || existing?.status === "submitted";
+  if (!existing || !removableStatus || existing.shipments.length > 0) return undefined;
   await db.delete(orderRequestItems).where(eq(orderRequestItems.requestId, id));
-  await db.delete(orderRequests).where(and(eq(orderRequests.id, id), eq(orderRequests.ownerOpenId, ownerOpenId), eq(orderRequests.status, "draft")));
+  await db.delete(orderRequests).where(and(eq(orderRequests.id, id), eq(orderRequests.ownerOpenId, ownerOpenId), or(eq(orderRequests.status, "draft"), eq(orderRequests.status, "submitted"))));
   return existing;
 }
 

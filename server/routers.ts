@@ -389,12 +389,12 @@ export const appRouter = router({
     update: permissionProcedure("orders.write").input(orderRequestInputSchema.safeExtend({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
       const { id, ...payload } = input;
       const request = await db.updateOrderRequest(id, payload, ctx.user.openId, managerIdentity(ctx.user));
-      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Черновик заявки не найден или уже передан в бухгалтерию" });
+      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Заявка не найдена, имеет отгрузки или недоступна для изменения" });
       return request;
     }),
     remove: permissionProcedure("orders.write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
       const request = await db.removeOrderRequest(input.id, ctx.user.openId);
-      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Удалять можно только свои черновики без отгрузок" });
+      if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "Удалять можно только свою сохранённую заявку без отгрузок" });
       return request;
     }),
     createShipment: permissionProcedure("orders.write").input(shipmentInputSchema).mutation(async ({ input, ctx }) => {

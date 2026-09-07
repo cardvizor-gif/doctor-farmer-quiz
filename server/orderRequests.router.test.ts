@@ -73,14 +73,14 @@ describe("order requests privacy", () => {
     expect(db.getOrderRequestById).toHaveBeenCalledWith(77, otherOpenId);
   });
 
-  it("updates and removes a draft only through the current manager owner scope", async () => {
-    const updated = { id: 77, ...input, status: "draft", items: [], shipments: [] };
+  it("updates and removes a saved request only through the current manager owner scope", async () => {
+    const updated = { id: 77, ...input, status: "submitted", items: [], shipments: [] };
     vi.mocked(db.updateOrderRequest).mockResolvedValue(updated as never);
     vi.mocked(db.removeOrderRequest).mockResolvedValue(updated as never);
     const caller = appRouter.createCaller(createContext());
-    await expect(caller.orderRequests.update({ id: 77, ...input, status: "draft" })).resolves.toEqual(updated);
+    await expect(caller.orderRequests.update({ id: 77, ...input, status: "submitted" })).resolves.toEqual(updated);
     await expect(caller.orderRequests.remove({ id: 77 })).resolves.toEqual(updated);
-    expect(db.updateOrderRequest).toHaveBeenCalledWith(77, expect.objectContaining({ status: "draft" }), ownerOpenId, { name: "Иван Менеджер", email: "manager@example.com" });
+    expect(db.updateOrderRequest).toHaveBeenCalledWith(77, expect.objectContaining({ status: "submitted" }), ownerOpenId, { name: "Иван Менеджер", email: "manager@example.com" });
     expect(db.removeOrderRequest).toHaveBeenCalledWith(77, ownerOpenId);
   });
 
