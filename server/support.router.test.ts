@@ -5,6 +5,7 @@ vi.mock("./db", () => ({
   getSupportTicketById: vi.fn(),
   listSupportTickets: vi.fn(),
   updateSupportTicketStatus: vi.fn(),
+  replySupportTicket: vi.fn(),
   getUserPermissions: vi.fn().mockResolvedValue(["support.create"]),
 }));
 
@@ -26,7 +27,10 @@ function createContext(role: "admin" | "user" = "user", openId = "manager-one"):
 const input = { subject: "Не загружается Excel", message: "Не загружается Excel-файл в реестре хозяйств.", pagePath: "/farms", attachments: [] };
 
 describe("support ticket privacy", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(db.getUserPermissions).mockResolvedValue(["support.create"]);
+  });
 
   it("creates an in-app ticket only for the authenticated employee", async () => {
     const created = { id: 15, ...input, ownerOpenId: "manager-one", status: "new" };
@@ -41,6 +45,31 @@ describe("support ticket privacy", () => {
 
     await expect(appRouter.createCaller(createContext("user", "manager-two")).support.byId({ id: 15 })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(db.getSupportTicketById).toHaveBeenCalledWith(15, "manager-two", false);
+  });
+
+  it("uses support.manage permission to open the common queue", async () => {
+    vi.mocked(db.getUserPermissions).mockResolvedValue(["support.create", "support.manage"]);
+    vi.mocked(db.listSupportTickets).mockResolvedValue([] as never);
+    const caller = appRouter.createCaller(createContext("user", "manager-one"));
+
+    await expect(caller.support.list()).resolves.toEqual([]);
+    expect(db.listSupportTickets).toHaveBeenCalledWith("manager-one", true);
+  });
+
+  it("allows a support manager to reply to the ticket owner", async () => {
+    const reply = { id: 15, ownerOpenId: "manager-one", message: "Ответ готов", messages: [] };
+    vi.mocked(db.replySupportTicket).mockResolvedValue(reply as never);
+    const admin = appRouter.createCaller(createContext("admin", ENV.ownerOpenId));
+
+    await expect(admin.support.reply({ id: 15, message: "Ответ готов" })).resolves.toEqual(reply);
+    expect(db.replySupportTicket).toHaveBeenCalledWith({ ticketId: 15, message: "Ответ готов", responderOpenId: ENV.ownerOpenId });
+  });
+
+  it("does not allow a regular employee to reply without support.manage", async () => {
+    const caller = appRouter.createCaller(createContext("user", "manager-one"));
+
+    await expect(caller.support.reply({ id: 15, message: "Ответ сотруднику" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(db.replySupportTicket).not.toHaveBeenCalled();
   });
 
   it("allows only an administrator to see the common queue and change ticket status", async () => {

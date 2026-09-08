@@ -258,6 +258,21 @@ export const supportAttachments = mysqlTable(
   table => [index("support_attachments_ticket_idx").on(table.ticketId)],
 );
 
+export const supportMessages = mysqlTable(
+  "supportMessages",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    ticketId: int("ticketId").notNull().references(() => supportTickets.id, { onDelete: "cascade" }),
+    authorOpenId: varchar("authorOpenId", { length: 64 }).notNull().references(() => users.openId, { onDelete: "restrict" }),
+    message: text("message").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("support_messages_ticket_created_idx").on(table.ticketId, table.createdAt), index("support_messages_author_idx").on(table.authorOpenId)],
+);
+
+export type SupportMessage = typeof supportMessages.$inferSelect;
+export type InsertSupportMessage = typeof supportMessages.$inferInsert;
+
 export const accessRequests = mysqlTable(
   "accessRequests",
   {

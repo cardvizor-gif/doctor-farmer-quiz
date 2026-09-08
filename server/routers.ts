@@ -361,13 +361,22 @@ export const appRouter = router({
     }),
   }),
   support: router({
-    list: permissionProcedure("support.create").query(({ ctx }) => db.listSupportTickets(ctx.user.openId, ctx.user.role === "admin")),
+    list: permissionProcedure("support.create").query(async ({ ctx }) => {
+      const permissions = await getEffectivePermissions(ctx.user);
+      return db.listSupportTickets(ctx.user.openId, isSuperuser(ctx.user) || permissions.includes("support.manage"));
+    }),
     byId: permissionProcedure("support.create").input(z.object({ id: z.number().int().positive() })).query(async ({ input, ctx }) => {
-      const ticket = await db.getSupportTicketById(input.id, ctx.user.openId, ctx.user.role === "admin");
+      const permissions = await getEffectivePermissions(ctx.user);
+      const ticket = await db.getSupportTicketById(input.id, ctx.user.openId, isSuperuser(ctx.user) || permissions.includes("support.manage"));
       if (!ticket) throw new TRPCError({ code: "NOT_FOUND", message: "Обращение не найдено" });
       return ticket;
     }),
     create: permissionProcedure("support.create").input(supportTicketInputSchema).mutation(({ input, ctx }) => db.createSupportTicket(input, ctx.user.openId)),
+    reply: permissionProcedure("support.manage").input(z.object({ id: z.number().int().positive(), message: z.string().trim().min(1, "Введите текст ответа").max(10_000, "Ответ не должен превышать 10 000 символов") })).mutation(async ({ input, ctx }) => {
+      const ticket = await db.replySupportTicket({ ticketId: input.id, message: input.message, responderOpenId: ctx.user.openId });
+      if (!ticket) throw new TRPCError({ code: "NOT_FOUND", message: "Обращение не найдено" });
+      return ticket;
+    }),
     updateStatus: permissionProcedure("support.manage").input(z.object({ id: z.number().int().positive(), status: z.enum(["new", "in_progress", "resolved"]) })).mutation(async ({ input }) => {
       const ticket = await db.updateSupportTicketStatus(input.id, input.status);
       if (!ticket) throw new TRPCError({ code: "NOT_FOUND", message: "Обращение не найдено" });

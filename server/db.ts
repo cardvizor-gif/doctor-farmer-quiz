@@ -1,6 +1,6 @@
 import { and, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, inviteCodeHistory, notifications, orderRequestItems, orderRequests, proposals, regions, salesTasks, shipmentItems, shipments, supportAttachments, supportTickets, userPermissions, users, workspaceMembers, workspaces } from "../drizzle/schema";
+import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, inviteCodeHistory, notifications, orderRequestItems, orderRequests, proposals, regions, salesTasks, shipmentItems, shipments, supportAttachments, supportMessages, supportTickets, userPermissions, users, workspaceMembers, workspaces } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
 import type { PermissionCode } from "../shared/permissions";
 import { creditedActiveSeconds } from "../shared/activity";
@@ -538,6 +538,7 @@ export type ShipmentInput = {
 
 export type SupportAttachmentInput = { fileName: string; mimeType: string; dataBase64: string };
 export type SupportTicketInput = { subject?: string | null; message: string; pagePath: string; attachments?: SupportAttachmentInput[] };
+export type SupportReplyInput = { ticketId: number; message: string; responderOpenId: string };
 
 function safeAttachmentName(fileName: string) {
   const normalized = fileName.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-+/g, "-").replace(/^[-.]+|[-.]+$/g, "");
@@ -723,12 +724,24 @@ export async function getSupportTicketById(id: number, viewerOpenId: string, inc
     .limit(1);
   const entry = rows[0];
   if (!entry) return undefined;
-  const attachments = await db.select().from(supportAttachments).where(eq(supportAttachments.ticketId, id)).orderBy(supportAttachments.id);
+  const [attachments, messages] = await Promise.all([
+    db.select().from(supportAttachments).where(eq(supportAttachments.ticketId, id)).orderBy(supportAttachments.id),
+    db.select({ message: supportMessages, author: users })
+      .from(supportMessages)
+      .leftJoin(users, eq(supportMessages.authorOpenId, users.openId))
+      .where(eq(supportMessages.ticketId, id))
+      .orderBy(supportMessages.createdAt, supportMessages.id),
+  ]);
   return {
     ...entry.ticket,
     senderName: entry.sender?.displayName?.trim() || entry.sender?.name?.trim() || entry.sender?.email?.split("@")[0] || "Сотрудник",
     senderEmail: entry.sender?.email ?? null,
     attachments: attachments.map((attachment) => ({ ...attachment, url: `/manus-storage/${attachment.storageKey}` })),
+    messages: messages.map(({ message, author }) => ({
+      ...message,
+      authorName: author?.displayName?.trim() || author?.name?.trim() || author?.email?.split("@")[0] || "Сотрудник",
+      authorEmail: author?.email ?? null,
+    })),
   };
 }
 
@@ -752,6 +765,29 @@ export async function createSupportTicket(input: SupportTicketInput, ownerOpenId
     return id;
   });
   return getSupportTicketById(ticketId, ownerOpenId);
+}
+
+export async function replySupportTicket(input: SupportReplyInput) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  const ticketRows = await db.select().from(supportTickets).where(eq(supportTickets.id, input.ticketId)).limit(1);
+  const ticket = ticketRows[0];
+  if (!ticket) return undefined;
+  const message = input.message.trim();
+  await db.transaction(async (tx) => {
+    await tx.insert(supportMessages).values({ ticketId: input.ticketId, authorOpenId: input.responderOpenId, message });
+    await tx.update(supportTickets).set({ status: "in_progress", updatedAt: new Date() }).where(eq(supportTickets.id, input.ticketId));
+    if (ticket.ownerOpenId !== input.responderOpenId) {
+      await tx.insert(notifications).values({
+        recipientOpenId: ticket.ownerOpenId,
+        kind: "system",
+        title: "Ответ на обращение",
+        body: message,
+        href: `/support?ticketId=${input.ticketId}`,
+      });
+    }
+  });
+  return getSupportTicketById(input.ticketId, input.responderOpenId, true);
 }
 
 export async function updateSupportTicketStatus(id: number, status: "new" | "in_progress" | "resolved") {
