@@ -116,6 +116,10 @@ export async function getRegionById(id: number) {
   return rows[0];
 }
 
+/**
+ * Returns only explicit workspace memberships. A user's registration/primary region
+ * is deliberately not used as a fallback membership source.
+ */
 export async function listWorkspacesForUser(openId: string) {
   const db = await getDb();
   if (!db) return [];
@@ -127,6 +131,10 @@ export async function listWorkspacesForUser(openId: string) {
     .orderBy(regions.name);
 }
 
+/**
+ * The member list is sourced exclusively from workspaceMembers. Do not infer
+ * membership from users.primaryRegionId: an employee must be assigned explicitly.
+ */
 export async function listWorkspaces() {
   const db = await getDb();
   if (!db) return [];

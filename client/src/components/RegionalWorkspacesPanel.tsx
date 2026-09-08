@@ -1,8 +1,9 @@
 import { trpc } from "@/lib/trpc";
 import { Layers3, MapPin, Plus, UserPlus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { regionalMembershipRoleLabels, regionalMembershipRoles, type RegionalMembershipRole } from "@shared/regions";
+import { groupWorkspaceAssignments, workspaceAssignmentLabel } from "@/lib/regionalWorkspace";
 
 type TeamMember = {
   openId: string;
@@ -25,6 +26,7 @@ export default function RegionalWorkspacesPanel({ team, canManage }: { team: Tea
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
   const [memberOpenId, setMemberOpenId] = useState("");
   const [memberRole, setMemberRole] = useState<RegionalMembershipRole>("manager");
+  const workspaceAssignments = useMemo(() => groupWorkspaceAssignments(workspaces.flatMap((item) => item.members.map(({ user }) => ({ userOpenId: user.openId, workspaceName: item.workspace.name, regionName: item.region.name })))), [workspaces]);
 
   useEffect(() => {
     if (!selectedWorkspaceId && workspaces[0]) setSelectedWorkspaceId(String(workspaces[0].workspace.id));
@@ -92,9 +94,10 @@ export default function RegionalWorkspacesPanel({ team, canManage }: { team: Tea
 
       <form onSubmit={submitMember} className="rounded-2xl bg-[#f5f7f4] p-4">
         <p className="text-sm font-extrabold text-[#26343a]">Назначить сотрудника</p>
+        <p className="mt-1 text-xs leading-5 text-[#66777b]">В карточке РЦ сотрудник появляется только после явного сохранения назначения. Регион регистрации сам по себе не создаёт членство.</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block"><span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#607174]">Пространство</span><select required value={selectedWorkspaceId} onChange={(event) => setSelectedWorkspaceId(event.target.value)} className="h-10 w-full rounded-xl border border-[#d5dfd9] bg-white px-3 text-sm text-[#26343a] outline-none focus:border-[#a9d13c] focus:ring-4 focus:ring-[#eaf4ca]"><option value="" disabled>Выберите пространство</option>{workspaces.map((item) => <option key={item.workspace.id} value={item.workspace.id}>{item.workspace.name}</option>)}</select></label>
-          <label className="block"><span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#607174]">Сотрудник</span><select required value={memberOpenId} onChange={(event) => setMemberOpenId(event.target.value)} className="h-10 w-full rounded-xl border border-[#d5dfd9] bg-white px-3 text-sm text-[#26343a] outline-none focus:border-[#a9d13c] focus:ring-4 focus:ring-[#eaf4ca]"><option value="" disabled>Выберите сотрудника</option>{team.filter((member) => member.status !== "archived").map((member) => <option key={member.openId} value={member.openId}>{displayMember(member)}</option>)}</select></label>
+          <label className="block"><span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#607174]">Сотрудник</span><select required value={memberOpenId} onChange={(event) => setMemberOpenId(event.target.value)} className="h-10 w-full rounded-xl border border-[#d5dfd9] bg-white px-3 text-sm text-[#26343a] outline-none focus:border-[#a9d13c] focus:ring-4 focus:ring-[#eaf4ca]"><option value="" disabled>Выберите сотрудника</option>{team.filter((member) => member.status !== "archived").map((member) => <option key={member.openId} value={member.openId}>{displayMember(member)} · {workspaceAssignmentLabel(member.openId, workspaceAssignments)}</option>)}</select></label>
           <label className="block sm:col-span-2"><span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#607174]">Роль в пространстве</span><select value={memberRole} onChange={(event) => setMemberRole(event.target.value as RegionalMembershipRole)} className="h-10 w-full rounded-xl border border-[#d5dfd9] bg-white px-3 text-sm text-[#26343a] outline-none focus:border-[#a9d13c] focus:ring-4 focus:ring-[#eaf4ca]">{regionalMembershipRoles.map((role) => <option key={role} value={role}>{regionalMembershipRoleLabels[role]}</option>)}</select></label>
         </div>
         <button type="submit" disabled={assignMember.isPending || workspacesLoading} className="mt-3 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#26343a] px-4 text-sm font-bold text-white transition hover:bg-[#17252b] disabled:cursor-wait disabled:opacity-60"><UserPlus className="h-4 w-4" />{assignMember.isPending ? "Сохраняем…" : "Сохранить назначение"}</button>
