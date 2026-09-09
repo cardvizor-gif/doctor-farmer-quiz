@@ -59,6 +59,23 @@ const supportAttachmentSchema = z.object({
   if (!decodedSize || decodedSize > 5 * 1024 * 1024) ctx.addIssue({ code: "custom", path: ["dataBase64"], message: "Размер каждого вложения не должен превышать 5 МБ" });
 });
 
+const catalogImportRowSchema = z.object({
+  catalogId: z.string().trim().min(1).max(80),
+  name: z.string().trim().min(1).max(255),
+  preparativeForm: z.string().trim().max(80).nullable().optional(),
+  category: z.string().trim().max(120).nullable().optional(),
+  productGroup: z.string().trim().max(120).nullable().optional(),
+  active: z.number().int().min(0).max(1).nullable().optional(),
+  registrationStatus: z.string().trim().max(80).nullable().optional(),
+  effectiveFrom: z.date().nullable().optional(),
+  effectiveTo: z.date().nullable().optional(),
+  pricePrepayment: z.number().nonnegative().nullable().optional(),
+  price5050: z.number().nonnegative().nullable().optional(),
+  price7030: z.number().nonnegative().nullable().optional(),
+  priceDeferred: z.number().nonnegative().nullable().optional(),
+  fullData: z.record(z.string(), z.unknown()),
+});
+
 const supportTicketInputSchema = z.object({
   subject: z.string().trim().max(255).nullable().optional(),
   message: z.string().trim().min(5, "Опишите вопрос подробнее").max(10_000),
@@ -75,6 +92,19 @@ function managerIdentity(user: { displayName?: string | null; name?: string | nu
 
 const isSuperuser = (user: { openId: string; isSuperuser?: number | boolean | null }) => Boolean(user.isSuperuser) || user.openId === ENV.ownerOpenId;
 const getEffectivePermissions = async (user: { openId: string; isSuperuser?: number | boolean | null }) => isSuperuser(user) ? allPermissionCodes : await db.getUserPermissions(user.openId);
+const maxDiscountByPaymentTerm = { prepayment: 2, payment5050: 2, payment7030: 3, deferred: 5 } as const;
+function assertProposalDiscountLimit(schemeJson: string) {
+  let context: Record<string, unknown>;
+  try { context = JSON.parse(schemeJson) as Record<string, unknown>; } catch { return; }
+  const rawTerm = String(context.paymentTerm ?? "");
+  const term = rawTerm === "payment3070" ? "payment7030" : rawTerm;
+  if (!(term in maxDiscountByPaymentTerm)) return;
+  const discount = Number(context.discountPercent ?? 0);
+  if (!Number.isFinite(discount) || discount < 0 || discount > maxDiscountByPaymentTerm[term as keyof typeof maxDiscountByPaymentTerm]) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: `Скидка превышает допустимый лимит для выбранного условия оплаты (максимум ${maxDiscountByPaymentTerm[term as keyof typeof maxDiscountByPaymentTerm]}%)` });
+  }
+}
+
 const permissionProcedure = (permission: PermissionCode) => protectedProcedure.use(async ({ ctx, next }) => {
   const permissions = await getEffectivePermissions(ctx.user);
   if (!permissions.includes(permission)) throw new TRPCError({ code: "FORBIDDEN", message: "Недостаточно прав для этого раздела" });
@@ -337,6 +367,7 @@ export const appRouter = router({
       return proposal;
     }),
     create: permissionProcedure("proposals.write").input(proposalInputSchema).mutation(async ({ input, ctx }) => {
+      assertProposalDiscountLimit(input.schemeJson);
       const farm = await db.getFarmById(input.farmId, ctx.user.openId);
       if (!farm) throw new TRPCError({ code: "NOT_FOUND", message: "Сначала выберите существующее хозяйство" });
       const proposal = await db.createProposal(input, ctx.user.openId);
@@ -344,6 +375,7 @@ export const appRouter = router({
       return proposal;
     }),
     update: permissionProcedure("proposals.write").input(proposalInputSchema.safeExtend({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+      assertProposalDiscountLimit(input.schemeJson);
       const { id, ...payload } = input;
       const proposal = await db.updateProposal(id, payload, ctx.user.openId);
       if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено или недоступно" });
@@ -359,6 +391,12 @@ export const appRouter = router({
       if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Коммерческое предложение не найдено" });
       return proposal;
     }),
+  }),
+  catalog: router({
+    active: protectedProcedure.query(() => db.listCatalogProducts(false)),
+    list: permissionProcedure("catalog.manage").query(() => db.listCatalogProducts(true)),
+    history: permissionProcedure("catalog.manage").query(() => db.listCatalogImportBatches()),
+    import: permissionProcedure("catalog.manage").input(z.object({ fileName: z.string().trim().max(255).optional(), rows: z.array(catalogImportRowSchema).min(1, "Файл не содержит строк").max(2_000) })).mutation(({ input, ctx }) => db.applyCatalogImport(input.rows, input.fileName ?? "Номенклатура.xlsx", ctx.user.openId)),
   }),
   support: router({
     list: permissionProcedure("support.create").query(async ({ ctx }) => {

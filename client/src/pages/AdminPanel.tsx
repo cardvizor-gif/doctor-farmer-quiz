@@ -38,7 +38,7 @@ function activityStatus(lastActivityAt: Date | string | null | undefined) {
 }
 
 const permissionGroup = (permission: PermissionCode) => {
-  if (["team.read", "team.manage", "team.transfer", "workspace.manage"].includes(permission)) return "admin" as const;
+  if (["team.read", "team.manage", "team.transfer", "workspace.manage", "catalog.manage"].includes(permission)) return "admin" as const;
   if (["support.manage", "sales.assign"].includes(permission)) return "management" as const;
   return "work" as const;
 };
@@ -46,13 +46,13 @@ const permissionGroup = (permission: PermissionCode) => {
 const permissionGroupMeta = {
   work: { title: "Рабочие разделы менеджера", hint: "Хозяйства, КП, заявки, схемы, тестирование и свои задачи", card: "border-[#cfe7b8] bg-[#f4faec]", icon: "text-[#4d7f2e]", titleText: "text-[#315d2b]" },
   management: { title: "Расширенные рабочие права", hint: "Обработка обращений и постановка задач сотрудникам", card: "border-[#b9d8ee] bg-[#eff7fc]", icon: "text-[#2f6f9f]", titleText: "text-[#24567d]" },
-  admin: { title: "Административные права", hint: "Команда, передача данных и рабочие пространства", card: "border-[#ead0a7] bg-[#fff8e9]", icon: "text-[#a56820]", titleText: "text-[#7d501c]" },
+  admin: { title: "Административные права", hint: "Команда, передача данных, рабочие пространства и номенклатура", card: "border-[#ead0a7] bg-[#fff8e9]", icon: "text-[#a56820]", titleText: "text-[#7d501c]" },
 } as const;
 
 const permissionGroups: Array<{ key: keyof typeof permissionGroupMeta; codes: PermissionCode[] }> = [
   { key: "work", codes: ["farms.read", "farms.write", "proposals.read", "proposals.write", "orders.read", "orders.write", "knowledge.read", "agro.use", "quiz.use", "sales.read", "sales.write"] },
   { key: "management", codes: ["support.create", "support.manage", "sales.assign"] },
-  { key: "admin", codes: ["team.read", "team.manage", "team.transfer", "workspace.manage"] },
+  { key: "admin", codes: ["team.read", "team.manage", "team.transfer", "workspace.manage", "catalog.manage"] },
 ];
 
 export default function AdminPanel() {

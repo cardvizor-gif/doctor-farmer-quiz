@@ -96,7 +96,8 @@ export default function OrderRequests() {
   const [shipmentLines, setShipmentLines] = useState<Array<{ requestItemId: number; quantity: string; unitPrice: string }>>([]);
   const detailsQuery = useRequestDetails(selectedId);
   const details = detailsQuery.data;
-  const productNames = useMemo(() => Array.from(new Set(PRICE_CATALOG.filter((item) => !item.name.includes("*")).map((item) => item.name))).sort((a, b) => a.localeCompare(b, "ru")), []);
+  const activeCatalogQuery = trpc.catalog.active.useQuery(undefined, { staleTime: 30_000 });
+  const productNames = useMemo(() => Array.from(new Set((activeCatalogQuery.data?.length ? activeCatalogQuery.data.map((item) => item.name) : PRICE_CATALOG.map((item) => item.name)).filter((name) => !name.includes("*")))).sort((a, b) => a.localeCompare(b, "ru")), [activeCatalogQuery.data]);
 
   useEffect(() => {
     if (!details) return;

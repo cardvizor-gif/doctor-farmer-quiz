@@ -13,6 +13,8 @@ import { ArrowLeft, ShieldCheck, Droplet, Filter, Download, Award, BookmarkCheck
 import { Link, useLocation } from "wouter";
 import { SupportModal } from "@/components/SupportModal";
 import { buildProposalContextQuery, parseProposalContext } from "@/lib/proposal";
+import { trpc } from "@/lib/trpc";
+import { catalogProductToPriceItem } from "@/lib/catalog";
 import { HelpCircle } from "lucide-react";
 
 export default function AgroHelper() {
@@ -22,6 +24,8 @@ export default function AgroHelper() {
   const [selectedTech, setSelectedTech] = useState<string>("Классическая");
   const [selectedProblemCategory, setSelectedProblemCategory] = useState<string>("all");
   const [fieldArea, setFieldArea] = useState<number>(initialContext.area ?? 100); // га
+  const activeCatalogQuery = trpc.catalog.active.useQuery(undefined, { staleTime: 30_000 });
+  const catalog = activeCatalogQuery.data?.length ? activeCatalogQuery.data.map(catalogProductToPriceItem) : PRICE_CATALOG;
 
   // Заменители препаратов (ключ: cropId-stepIndex-productIndex)
   const [customReplacements, setCustomReplacements] = useState<Record<string, PriceItem>>({});
@@ -90,7 +94,7 @@ export default function AgroHelper() {
     const cropId = selectedCrop?.id ?? '';
     const isBinaryBilingualGroup = lower.includes('гербицид') && (currentProductName.includes('КлопЭфир') || currentProductName.includes('Триатлон') || currentProductName.includes('Биогем') || currentProductName.includes('Магнум') || currentProductName.includes('Интенсив'));
 
-    return PRICE_CATALOG.filter(item => {
+    return catalog.filter(item => {
       const itemName = item.name.toLowerCase();
 
       if (isBinaryBilingualGroup) {

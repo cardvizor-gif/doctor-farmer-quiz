@@ -1,4 +1,4 @@
-export type PaymentTerm = "prepayment" | "payment3070" | "deferred";
+export type PaymentTerm = "prepayment" | "payment5050" | "payment7030" | "deferred";
 export type PriceUnit = "unit" | "package";
 
 export type PriceRecord = {
@@ -8,7 +8,10 @@ export type PriceRecord = {
   sourceRate: string;
   priceUnit: PriceUnit;
   prepayment: number;
+  /** Legacy 30/70 price kept for old static records; dynamic imports use payment7030. */
   payment3070: number;
+  payment5050?: number | null;
+  payment7030?: number | null;
   deferred: number;
 };
 
@@ -20,8 +23,9 @@ export const SPK_URAL_PRICE_SOURCE = {
 
 export const PAYMENT_TERMS: Record<PaymentTerm, { label: string; description: string }> = {
   prepayment: { label: "100% предоплата", description: "Цена по колонке «100% / предоплата»" },
-  payment3070: { label: "Оплата 30/70", description: "Цена по колонке «30/70»" },
-  deferred: { label: "Отсрочка / под урожай", description: "Цена по колонке «Отсрочка / под урожай»" },
+  payment5050: { label: "Оплата 50/50", description: "Цена по колонке «50/50»" },
+  payment7030: { label: "Оплата 70/30", description: "Цена по колонке «70/30»" },
+  deferred: { label: "100% отсрочка", description: "Цена по колонке «100% отсрочка»" },
 };
 
 export const EXCLUDED_FROM_AUTO_PRICING = ["Агроника, КС"] as const;
@@ -55,7 +59,7 @@ export const SPK_URAL_PRICE: PriceRecord[] = [
 
 const normalize = (value: string) => value.toLocaleLowerCase("ru-RU").replace(/ё/g, "е").replace(/\*/g, "").replace(/[^a-zа-я0-9]+/gi, " ").trim();
 
-export function findSpkUralPrice(productName: string) {
+export function findSpkUralPrice(productName: string, records: PriceRecord[] = SPK_URAL_PRICE) {
   const normalized = normalize(productName);
-  return SPK_URAL_PRICE.find(item => normalize(item.productName) === normalized) ?? null;
+  return records.find(item => normalize(item.productName) === normalized) ?? null;
 }

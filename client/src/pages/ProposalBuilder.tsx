@@ -11,8 +11,9 @@ import {
   type TreatmentCategory,
 } from "@/data/schemeProductCatalog";
 import { PAYMENT_TERMS, SPK_URAL_PRICE_SOURCE, type PaymentTerm } from "@/data/spkUralPrice";
-import { addProductToScheme, applyRateOverrides, buildProposalSaveButtonLabel, buildProposalTitle, calculateSchemePricing, getSchemeForProposal, parseAreaInput, parseProposalContext, type ManualRateOverrides } from "@/lib/proposal";
+import { addProductToScheme, applyRateOverrides, buildProposalSaveButtonLabel, buildProposalTitle, calculateSchemePricing, getSchemeForProposal, maxDiscountForPaymentTerm, parseAreaInput, parseProposalContext, type ManualRateOverrides } from "@/lib/proposal";
 import { trpc } from "@/lib/trpc";
+import { catalogProductToPriceRecord } from "@/lib/catalog";
 import { downloadProposalWorkbook, printProposalAsPdf, type ProposalSource } from "@/lib/workspaceTransfer";
 import { ArrowLeft, CheckCircle2, CircleDollarSign, FileDown, FileText, Layers3, Plus, Printer, Save, Sprout } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -61,13 +62,15 @@ export default function ProposalBuilder() {
     return applyRateOverrides(schemeWithAddedProducts, manualRateOverrides);
   }, [baseScheme, addedProductsByStep, manualRateOverrides]);
 
+  const activeCatalogQuery = trpc.catalog.active.useQuery(undefined, { staleTime: 30_000 });
+  const dynamicPriceRecords = useMemo(() => activeCatalogQuery.data?.length ? activeCatalogQuery.data.map(catalogProductToPriceRecord) : undefined, [activeCatalogQuery.data]);
   const numericArea = parseAreaInput(area);
   const hasSeedTreatment = Boolean(editableScheme?.steps.some((step) => /(протрав|семян)/i.test(`${step.stage} ${step.task}`)));
   const numericSeedTons = Number(seedTons);
   const validSeedTonnage = !hasSeedTreatment || (Number.isFinite(numericSeedTons) && numericSeedTons > 0);
   const pricing = useMemo(
-    () => editableScheme ? calculateSchemePricing(editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides, hasSeedTreatment && validSeedTonnage ? numericSeedTons : undefined) : null,
-    [editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides, hasSeedTreatment, validSeedTonnage, numericSeedTons],
+    () => editableScheme ? calculateSchemePricing(editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides, hasSeedTreatment && validSeedTonnage ? numericSeedTons : undefined, dynamicPriceRecords) : null,
+    [editableScheme, numericArea, paymentTerm, discountPercent, excludedLineKeys, manualPriceOverrides, hasSeedTreatment, validSeedTonnage, numericSeedTons, dynamicPriceRecords],
   );
   const proposalsQuery = trpc.proposals.list.useQuery(selectedFarmId ? { farmId: selectedFarmId } : undefined);
 
@@ -302,7 +305,8 @@ export default function ProposalBuilder() {
       const context = JSON.parse(proposal.schemeJson) as Record<string, unknown>;
       setSeedTons(context.seedTons ? String(context.seedTons) : "");
       setDiscountPercent(typeof context.discountPercent === "number" ? context.discountPercent : 0);
-      setPaymentTerm((context.paymentTerm as PaymentTerm | undefined) ?? "deferred");
+      const savedPaymentTerm = context.paymentTerm === "payment3070" ? "payment7030" : context.paymentTerm;
+      setPaymentTerm((savedPaymentTerm as PaymentTerm | undefined) ?? "deferred");
       setExcludedLineKeys(Array.isArray(context.excludedLineKeys) ? context.excludedLineKeys.filter((value): value is string => typeof value === "string") : []);
       setManualPriceOverrides(typeof context.manualPriceOverrides === "object" && context.manualPriceOverrides ? context.manualPriceOverrides as Record<string, number> : {});
       setManualRateOverrides(typeof context.manualRateOverrides === "object" && context.manualRateOverrides ? context.manualRateOverrides as ManualRateOverrides : {});
@@ -350,9 +354,9 @@ export default function ProposalBuilder() {
             <div className="grid gap-3 sm:grid-cols-[.8fr_1.2fr_1fr]">
               <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Площадь, га *</span><Input type="number" min="0" value={area} onChange={(event) => { setArea(event.target.value); setSavedProposalId(null); }} /></label>
               <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Условие оплаты</span><select value={paymentTerm} onChange={(event) => { setPaymentTerm(event.target.value as PaymentTerm); setSavedProposalId(null); }} className="proposal-field-select flex h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{Object.entries(PAYMENT_TERMS).map(([value, term]) => <option key={value} value={value}>{term.label}</option>)}</select></label>
-              <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Скидка менеджера</span><select value={discountPercent} onChange={(event) => { setDiscountPercent(Number(event.target.value)); setSavedProposalId(null); }} className="proposal-field-select flex h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]"><option value={0}>Без скидки</option><option value={1}>1%</option><option value={2}>2%</option><option value={3}>3%</option></select></label>
+              <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Скидка менеджера</span><select value={discountPercent} onChange={(event) => { setDiscountPercent(Number(event.target.value)); setSavedProposalId(null); }} className="proposal-field-select flex h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]"><option value={0}>Без скидки</option>{Array.from({ length: maxDiscountForPaymentTerm[paymentTerm] }, (_, index) => index + 1).map((value) => <option key={value} value={value}>{value}%</option>)}</select></label>
             </div>
-            <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>Расчёт по норме, фасовке и площади.</strong> {PAYMENT_TERMS[paymentTerm].description}. Для каждой позиции можно задать ручную цену и норму применения; скидка ограничена 3%.</div>
+            <div className="rounded-xl border border-[#b9d7bd] bg-[#eef7ee] p-3 text-xs leading-relaxed text-[#285238]"><strong>Расчёт по норме, фасовке и площади.</strong> {PAYMENT_TERMS[paymentTerm].description}. Для каждой позиции можно задать ручную цену и норму применения; максимальная скидка для выбранного условия: {maxDiscountForPaymentTerm[paymentTerm]}%.</div>
             <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Примечание для КП</span><Textarea value={notes} onChange={(event) => { setNotes(event.target.value); setSavedProposalId(null); }} rows={4} placeholder="Условия, договорённости, срок действия предложения" /></label>
             <div className="rounded-xl bg-[#f5f8f4] p-4">
               <div className="flex items-center gap-2 text-[#194f38]"><CircleDollarSign className="h-5 w-5 text-[#2e7d52]" /><span className="text-xs font-bold uppercase tracking-wide">Итог по КП</span></div>

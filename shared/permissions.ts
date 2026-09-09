@@ -17,6 +17,7 @@ export const permissionCodes = [
   "sales.write",
   "sales.assign",
   "workspace.manage",
+  "catalog.manage",
 ] as const;
 
 export type PermissionCode = (typeof permissionCodes)[number];
@@ -40,6 +41,7 @@ export const permissionLabels: Record<PermissionCode, { title: string; descripti
   "sales.write": { title: "Продажи: свои задачи", description: "Создание личных задач и обновление их статуса." },
   "sales.assign": { title: "Продажи: постановка задач", description: "Постановка задач сотрудникам в доступных рабочих пространствах." },
   "workspace.manage": { title: "Рабочие пространства", description: "Управление регионами, пространствами и назначениями команды." },
+  "catalog.manage": { title: "Номенклатура и цены", description: "Импорт, экспорт и изменение справочника препаратов, регламентов и цен." },
 };
 
 export const allPermissionCodes = [...permissionCodes] as PermissionCode[];

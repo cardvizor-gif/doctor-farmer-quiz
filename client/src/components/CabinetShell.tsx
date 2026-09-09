@@ -5,7 +5,7 @@ import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { countPendingAccessRequests } from "@/lib/accessRequests";
 import { trpc } from "@/lib/trpc";
-import { Bell, Briefcase, Building2, ChevronDown, ClipboardList, ExternalLink, FilePlus2, Headphones, Home, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
+import { Bell, Briefcase, Building2, ChevronDown, ClipboardList, Database, ExternalLink, FilePlus2, Headphones, Home, LayoutDashboard, LogOut, Menu, MessageSquareText, PencilLine, Save, Search, ShieldCheck, Sprout, Trophy, UsersRound, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import type { PermissionCode } from "@shared/permissions";
@@ -17,6 +17,7 @@ export const cabinetNavigation = [
   { href: "/proposals/new", label: "Генератор КП", icon: FilePlus2, permission: "proposals.read" as PermissionCode },
   { href: "/order-requests", label: "Заявки", icon: ClipboardList, permission: "orders.read" as PermissionCode },
   { href: "/sales", label: "Продажи", icon: Briefcase, permission: "sales.read" as PermissionCode },
+  { href: "/catalog", label: "Номенклатура", icon: Database, permission: "catalog.manage" as PermissionCode },
   { href: "/quiz", label: "Тестирование", icon: Trophy, permission: "quiz.use" as PermissionCode },
 ] as const;
 
@@ -38,6 +39,7 @@ export function cabinetPageTitle(pathname: string) {
   if (pathname.startsWith("/support")) return "Обращения";
   if (pathname.startsWith("/news")) return "Новости";
   if (pathname.startsWith("/admin")) return "Команда";
+  if (pathname.startsWith("/catalog")) return "Номенклатура";
   return cabinetNavigation.find((item) => item.href === pathname)?.label ?? "АгроПомощник";
 }
 
@@ -48,6 +50,7 @@ export function cabinetTheme(pathname: string) {
   if (pathname.startsWith("/proposals")) return "proposal";
   if (pathname.startsWith("/order-requests")) return "orders";
   if (pathname.startsWith("/sales")) return "sales";
+  if (pathname.startsWith("/catalog")) return "knowledge";
   if (pathname.startsWith("/support")) return "overview";
   if (pathname.startsWith("/knowledge-base")) return "knowledge";
   if (pathname.startsWith("/quiz")) return "quiz";

@@ -258,6 +258,52 @@ export const supportAttachments = mysqlTable(
   table => [index("support_attachments_ticket_idx").on(table.ticketId)],
 );
 
+export const catalogProducts = mysqlTable(
+  "catalogProducts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    catalogId: varchar("catalogId", { length: 80 }).notNull().unique(),
+    name: varchar("name", { length: 255 }).notNull(),
+    preparativeForm: varchar("preparativeForm", { length: 80 }),
+    category: varchar("category", { length: 120 }),
+    productGroup: varchar("productGroup", { length: 120 }),
+    active: int("active").default(1).notNull(),
+    registrationStatus: varchar("registrationStatus", { length: 80 }),
+    effectiveFrom: timestamp("effectiveFrom"),
+    effectiveTo: timestamp("effectiveTo"),
+    pricePrepayment: decimal("pricePrepayment", { precision: 14, scale: 2 }),
+    price5050: decimal("price5050", { precision: 14, scale: 2 }),
+    price7030: decimal("price7030", { precision: 14, scale: 2 }),
+    priceDeferred: decimal("priceDeferred", { precision: 14, scale: 2 }),
+    fullDataJson: text("fullDataJson").notNull(),
+    updatedByOpenId: varchar("updatedByOpenId", { length: 64 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [index("catalog_products_active_idx").on(table.active), index("catalog_products_group_idx").on(table.productGroup), index("catalog_products_updated_idx").on(table.updatedAt)],
+);
+
+export type CatalogProduct = typeof catalogProducts.$inferSelect;
+export type InsertCatalogProduct = typeof catalogProducts.$inferInsert;
+
+export const catalogImportBatches = mysqlTable(
+  "catalogImportBatches",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    fileName: varchar("fileName", { length: 255 }).notNull(),
+    status: mysqlEnum("status", ["preview", "applied", "rejected"]).notNull().default("preview"),
+    rowCount: int("rowCount").notNull().default(0),
+    summaryJson: text("summaryJson").notNull(),
+    importedByOpenId: varchar("importedByOpenId", { length: 64 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    appliedAt: timestamp("appliedAt"),
+  },
+  table => [index("catalog_imports_created_idx").on(table.createdAt), index("catalog_imports_status_idx").on(table.status)],
+);
+
+export type CatalogImportBatch = typeof catalogImportBatches.$inferSelect;
+export type InsertCatalogImportBatch = typeof catalogImportBatches.$inferInsert;
+
 export const supportMessages = mysqlTable(
   "supportMessages",
   {

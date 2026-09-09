@@ -37,7 +37,7 @@ describe("accountIdentity", () => {
 
   it("shows all workspace sections only to the superuser", () => {
     expect(filterCabinetNavigation({ role: "admin", isSuperuser: true, permissions: [] }).map((item) => item.href)).toEqual([
-      "/", "/agro-helper", "/farms", "/proposals/new", "/order-requests", "/sales", "/quiz",
+      "/", "/agro-helper", "/farms", "/proposals/new", "/order-requests", "/sales", "/catalog", "/quiz",
     ]);
   });
 

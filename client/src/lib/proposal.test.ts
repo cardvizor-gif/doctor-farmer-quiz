@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { addProductToScheme, applyRateOverrides, buildAgroHelperContextQuery, buildProposalContextQuery, buildProposalSaveButtonLabel, buildProposalTitle, calculateProductRequirement, calculateProposalTotal, calculateSchemePricing, getSchemeForProposal, parseAreaInput, parseProposalContext } from "./proposal";
+import { addProductToScheme, applyRateOverrides, buildAgroHelperContextQuery, buildProposalContextQuery, buildProposalSaveButtonLabel, buildProposalTitle, calculateProductRequirement, calculateProposalTotal, calculateSchemePricing, getSchemeForProposal, maxDiscountForPaymentTerm, parseAreaInput, parseProposalContext } from "./proposal";
 
 describe("proposal helpers", () => {
+  it("uses the approved discount cap for each payment term", () => {
+    expect(maxDiscountForPaymentTerm.prepayment).toBe(2);
+    expect(maxDiscountForPaymentTerm.payment5050).toBe(2);
+    expect(maxDiscountForPaymentTerm.payment7030).toBe(3);
+    expect(maxDiscountForPaymentTerm.deferred).toBe(5);
+  });
+
   it("calculates the total only from positive values", () => {
     expect(calculateProposalTotal(125, 4850)).toBe(606250);
     expect(calculateProposalTotal(-125, 4850)).toBe(0);

@@ -11,6 +11,13 @@ export type AddedSchemeProduct = {
 
 export type ManualRateOverrides = Record<string, string>;
 
+export const maxDiscountForPaymentTerm: Record<PaymentTerm, number> = {
+  prepayment: 2,
+  payment5050: 2,
+  payment7030: 3,
+  deferred: 5,
+};
+
 export function addProductToScheme(scheme: CropProtectionScheme, stepIndex: number, product: AddedSchemeProduct): CropProtectionScheme {
   const step = scheme.steps[stepIndex];
   if (!step || step.products.some((item) => item.name === product.name)) return scheme;
@@ -212,13 +219,14 @@ export function calculateSchemePricing(
   excludedLineKeys: string[] = [],
   manualPriceOverrides: ManualPriceOverrides = {},
   seedTons?: number,
+  priceRecords?: PriceRecord[],
 ): SchemePricing {
   const lines: SchemePriceLine[] = [];
   const missingProducts: string[] = [];
   const excludedProducts: string[] = [];
   const managerExcludedProducts: string[] = [];
   const unconfirmedLogisticsProducts: string[] = [];
-  const safeDiscount = Math.max(0, Math.min(3, Number.isFinite(discountPercent) ? discountPercent : 0));
+  const safeDiscount = Math.max(0, Math.min(maxDiscountForPaymentTerm[paymentTerm], Number.isFinite(discountPercent) ? discountPercent : 0));
   let grossMinTotal = 0;
   let grossMaxTotal = 0;
   let minPallets = 0;
@@ -228,9 +236,9 @@ export function calculateSchemePricing(
     step.products.forEach((product, productIndex) => {
       const key = `${stageIndex}-${productIndex}`;
       const requirement = calculateProductRequirement(product.rate, area, seedTons);
-      const price = findSpkUralPrice(product.name);
+      const price = findSpkUralPrice(product.name, priceRecords);
       const logistics = findSpkUralLogistics(product.name);
-      const catalogPricePerUnit = price ? price[paymentTerm] : null;
+      const catalogPricePerUnit = price ? (price[paymentTerm] ?? (paymentTerm === "payment7030" ? price.payment3070 : null)) : null;
       const manualPrice = manualPriceOverrides[key];
       const isManualPrice = typeof manualPrice === "number" && Number.isFinite(manualPrice) && manualPrice >= 0;
       const pricePerUnit = isManualPrice ? manualPrice : catalogPricePerUnit;

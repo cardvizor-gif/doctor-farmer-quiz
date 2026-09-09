@@ -22,6 +22,7 @@ const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const SupportTickets = lazy(() => import("./pages/SupportTickets"));
 const News = lazy(() => import("./pages/News"));
 const ReferenceVariant = lazy(() => import("./pages/ReferenceVariant"));
+const CatalogManager = lazy(() => import("./pages/CatalogManager"));
 
 function RouteFallback() {
   return (
@@ -50,6 +51,7 @@ function Router() {
   const CabinetAdminPanel = privateCabinetPage(AdminPanel, "team.read");
   const CabinetSupportTickets = privateCabinetPage(SupportTickets, "support.create");
   const CabinetNews = cabinetPage(News);
+  const CabinetCatalogManager = privateCabinetPage(CatalogManager, "catalog.manage");
 
   return (
     <Switch>
@@ -65,6 +67,7 @@ function Router() {
       <Route path={"/admin"} component={CabinetAdminPanel} />
       <Route path={"/support"} component={CabinetSupportTickets} />
       <Route path={"/news"} component={CabinetNews} />
+      <Route path={"/catalog"} component={CabinetCatalogManager} />
       <Route path={"/visual-variant"} component={ReferenceVariant} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

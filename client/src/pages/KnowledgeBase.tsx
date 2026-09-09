@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { catalogProductToPriceItem } from "@/lib/catalog";
 import { Link } from "wouter";
 import { SupportModal } from "@/components/SupportModal";
 import { Button } from "@/components/ui/button";
@@ -13,15 +15,17 @@ export default function KnowledgeBase() {
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [selectedCulture, setSelectedCulture] = useState<string>("all");
   const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const activeCatalogQuery = trpc.catalog.active.useQuery(undefined, { staleTime: 30_000 });
+  const catalog = activeCatalogQuery.data?.length ? activeCatalogQuery.data.map(catalogProductToPriceItem) : PRICE_CATALOG;
 
-  const allGroups = Array.from(new Set(PRICE_CATALOG.map(item => item.group)));
+  const allGroups = Array.from(new Set(catalog.map(item => item.group)));
   const allCulturesSet = new Set<string>();
-  PRICE_CATALOG.forEach(item => {
+  catalog.forEach(item => {
     item.cultures.forEach(c => allCulturesSet.add(c));
   });
   const allCultures = Array.from(allCulturesSet).sort();
 
-  const filteredItems = PRICE_CATALOG.filter((item) => {
+  const filteredItems = catalog.filter((item) => {
     const matchesGroup = selectedGroup === "all" || item.group === selectedGroup;
     const matchesCulture = selectedCulture === "all" || item.cultures.includes(selectedCulture);
     const q = searchQuery.toLowerCase();
@@ -101,7 +105,7 @@ export default function KnowledgeBase() {
                   onChange={(e) => setSelectedGroup(e.target.value)}
                   className="w-full bg-[#f4f7f1] border border-[#dde5dc] rounded-xl px-3 py-2 text-xs font-semibold text-[#15211c] focus:outline-none focus:ring-2 focus:ring-[#2e7d52]"
                 >
-                  <option value="all">Все группы ({PRICE_CATALOG.length} позиций)</option>
+                  <option value="all">Все группы ({catalog.length} позиций)</option>
                   {allGroups.map((group) => (
                     <option key={group} value={group}>{group}</option>
                   ))}

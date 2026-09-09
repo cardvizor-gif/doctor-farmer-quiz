@@ -1,6 +1,6 @@
 import { and, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { accessRequests, farms, InsertFarm, InsertProposal, InsertUser, inviteCodeHistory, notifications, orderRequestItems, orderRequests, proposals, regions, salesTasks, shipmentItems, shipments, supportAttachments, supportMessages, supportTickets, userPermissions, users, workspaceMembers, workspaces } from "../drizzle/schema";
+import { accessRequests, catalogImportBatches, catalogProducts, farms, InsertCatalogProduct, InsertFarm, InsertProposal, InsertUser, inviteCodeHistory, notifications, orderRequestItems, orderRequests, proposals, regions, salesTasks, shipmentItems, shipments, supportAttachments, supportMessages, supportTickets, userPermissions, users, workspaceMembers, workspaces } from "../drizzle/schema";
 import type { FarmInput, ProposalInput } from "../shared/farm";
 import type { PermissionCode } from "../shared/permissions";
 import { creditedActiveSeconds } from "../shared/activity";
@@ -21,6 +21,78 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+export type CatalogImportRow = {
+  catalogId: string;
+  name: string;
+  preparativeForm?: string | null;
+  category?: string | null;
+  productGroup?: string | null;
+  active?: number | null;
+  registrationStatus?: string | null;
+  effectiveFrom?: Date | null;
+  effectiveTo?: Date | null;
+  pricePrepayment?: number | null;
+  price5050?: number | null;
+  price7030?: number | null;
+  priceDeferred?: number | null;
+  fullData: Record<string, unknown>;
+};
+
+export async function listCatalogProducts(includeArchived = true) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(catalogProducts).where(includeArchived ? undefined : eq(catalogProducts.active, 1)).orderBy(catalogProducts.name);
+}
+
+export async function listCatalogImportBatches(limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(catalogImportBatches).orderBy(desc(catalogImportBatches.createdAt)).limit(Math.min(Math.max(limit, 1), 100));
+}
+
+export async function applyCatalogImport(rows: CatalogImportRow[], fileName: string, importedByOpenId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  const normalizedRows = rows.map((row) => ({
+    ...row,
+    catalogId: row.catalogId.trim(),
+    name: row.name.trim(),
+    fullDataJson: JSON.stringify(row.fullData),
+    updatedByOpenId: importedByOpenId,
+    active: row.active === 0 ? 0 : 1,
+  }));
+  const duplicateIds = normalizedRows.map((row) => row.catalogId).filter((id, index, ids) => ids.indexOf(id) !== index);
+  if (duplicateIds.length || normalizedRows.some((row) => !row.catalogId || !row.name)) {
+    throw new Error("Импорт содержит пустые или дублирующиеся ID/названия препаратов");
+  }
+  const summaryJson = JSON.stringify({ count: normalizedRows.length, catalogIds: normalizedRows.map((row) => row.catalogId) });
+  const result = await db.transaction(async (tx) => {
+    const [batch] = await tx.insert(catalogImportBatches).values({ fileName: fileName || "Номенклатура.xlsx", status: "applied", rowCount: normalizedRows.length, summaryJson, importedByOpenId, appliedAt: new Date() }).$returningId();
+    for (const row of normalizedRows) {
+      const values: InsertCatalogProduct = {
+        catalogId: row.catalogId,
+        name: row.name,
+        preparativeForm: row.preparativeForm ?? null,
+        category: row.category ?? null,
+        productGroup: row.productGroup ?? null,
+        active: row.active,
+        registrationStatus: row.registrationStatus ?? null,
+        effectiveFrom: row.effectiveFrom ?? null,
+        effectiveTo: row.effectiveTo ?? null,
+        pricePrepayment: row.pricePrepayment == null ? null : String(row.pricePrepayment),
+        price5050: row.price5050 == null ? null : String(row.price5050),
+        price7030: row.price7030 == null ? null : String(row.price7030),
+        priceDeferred: row.priceDeferred == null ? null : String(row.priceDeferred),
+        fullDataJson: row.fullDataJson,
+        updatedByOpenId: importedByOpenId,
+      };
+      await tx.insert(catalogProducts).values(values).onDuplicateKeyUpdate({ set: { ...values, updatedAt: new Date() } });
+    }
+    return { batchId: batch?.id ?? null, imported: normalizedRows.length };
+  });
+  return result;
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
