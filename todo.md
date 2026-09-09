@@ -480,3 +480,7 @@
 - [x] Exact spec pass: implement six quick actions, task tabs/list, clients metrics/list, sales donut/chart, control clients and latest inquiries exactly in the specified order.
 - [x] Exact spec pass: preserve real AgroHelper data/RBAC and use empty states instead of fabricated financial or customer data.
 - [x] Exact spec pass: validate desktop/tablet/mobile with render-level tests, typecheck, full tests and production build.
+
+- [x] Dashboard recovery: устранить зависшее состояние «Формируем рабочий день…» и проверить причину на живом preview; API отвечает, loading был моментом первого запроса/HMR.
+- [x] Dashboard recovery: сохранить точную утверждённую композицию после исправления загрузки и проверить desktop/tablet/mobile.
+- [x] Dashboard recovery: обновить тесты, выполнить typecheck, полный набор тестов и production-сборку.
