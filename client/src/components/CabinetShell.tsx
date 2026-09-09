@@ -29,10 +29,23 @@ export const mobileNavigation = [
   { href: "/sales", label: "Продажи", icon: Briefcase, permission: "sales.read" as PermissionCode },
 ] as const;
 
+export const mobileUtilityNavigation = [
+  { href: "/admin", label: "Команда", icon: UsersRound, permission: "team.read" as PermissionCode },
+  { href: "/access-requests", label: "Заявки доступа", icon: ShieldCheck, superuserOnly: true },
+  { href: "/support", label: "Обращения", icon: MessageSquareText, permission: "support.create" as PermissionCode },
+] as const;
+
 type NavigationUser = { role?: "user" | "admin" | null; isSuperuser?: boolean | null; permissions?: readonly PermissionCode[] | null } | null | undefined;
 
 export function filterCabinetNavigation(user: NavigationUser) {
   return cabinetNavigation.filter((item) => !item.permission || Boolean(user?.isSuperuser) || user?.permissions?.includes(item.permission));
+}
+
+export function filterMobileUtilityNavigation(user: NavigationUser) {
+  return mobileUtilityNavigation.filter((item) => {
+    if ("superuserOnly" in item && item.superuserOnly) return Boolean(user?.isSuperuser);
+    return "permission" in item && (Boolean(user?.isSuperuser) || user?.permissions?.includes(item.permission));
+  });
 }
 
 export function cabinetPageTitle(pathname: string) {
@@ -117,6 +130,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
     },
   });
   const visibleNavigation = filterCabinetNavigation(user);
+  const visibleMobileUtilityNavigation = filterMobileUtilityNavigation(user);
   const pageTitle = cabinetPageTitle(location);
   const pageTheme = cabinetTheme(location);
   const account = accountIdentity(user);
@@ -231,6 +245,16 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
               </Link>;
             })}
           </nav>
+          {visibleMobileUtilityNavigation.length > 0 && <nav className="cabinet-sidebar-utility-nav" aria-label="Административные разделы">
+            {visibleMobileUtilityNavigation.map((item) => {
+              const Icon = item.icon;
+              const isActive = location === item.href || location.startsWith(`${item.href}/`);
+              return <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)} className={`cabinet-nav-item ${isActive ? "is-active" : ""}`}>
+                <Icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </Link>;
+            })}
+          </nav>}
           <button type="button" className="cabinet-sidebar-footer w-full text-left" onClick={() => setIsSupportOpen(true)}>
             <div className="cabinet-help-mark"><Headphones className="h-4 w-4" /></div>
             <div><strong>Поддержка</strong><span>Внутренняя поддержка</span></div>

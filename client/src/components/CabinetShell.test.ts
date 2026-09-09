@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountIdentity, cabinetPageTitle, cabinetTheme, filterCabinetNavigation, isOutsideAccountMenu, mobileNavigation } from "./CabinetShell";
+import { accountIdentity, cabinetPageTitle, cabinetTheme, filterCabinetNavigation, filterMobileUtilityNavigation, isOutsideAccountMenu, mobileNavigation } from "./CabinetShell";
 
 describe("accountIdentity", () => {
   it("uses the authenticated name and email in the account menu", () => {
@@ -45,6 +45,12 @@ describe("accountIdentity", () => {
     expect(cabinetTheme("/knowledge-base")).toBe("knowledge");
     expect(cabinetTheme("/admin")).toBe("overview");
     expect(cabinetTheme("/farms")).toBe("farms");
+  });
+
+  it("shows administrative links in the mobile menu only by permission", () => {
+    expect(filterMobileUtilityNavigation({ role: "admin", isSuperuser: true, permissions: [] }).map((item) => item.href)).toEqual(["/admin", "/access-requests", "/support"]);
+    expect(filterMobileUtilityNavigation({ role: "user", permissions: ["support.create"] }).map((item) => item.href)).toEqual(["/support"]);
+    expect(filterMobileUtilityNavigation({ role: "user", permissions: [] })).toEqual([]);
   });
 
   it("keeps five focused destinations in the mobile bottom navigation", () => {
