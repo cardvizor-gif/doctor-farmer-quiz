@@ -174,26 +174,28 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-workday dashboard-reference-workday">
-      <section
-        className="dashboard-workday-hero"
+      <div
+        className="dashboard-reference-hero-row"
         data-dashboard-region={dashboardColumnAttributes.hero}
-        aria-labelledby="workday-title"
+        data-testid="dashboard-reference-hero-row"
       >
-        <div className="dashboard-reference-hero-copy">
-          <p className="dashboard-workday-kicker">{data.roleLabel}</p>
-          <h1 id="workday-title">
-            {timeOfDayGreeting(new Date().getHours())},{" "}
-            {firstNameFromDisplayName(data.userName)}
-          </h1>
-          <p className="dashboard-workday-date">
-            {new Date().toLocaleDateString("ru-RU", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </p>
-          <p className="dashboard-workday-scope">{data.scopeLabel}</p>
-        </div>
+        <section className="dashboard-workday-hero" aria-labelledby="workday-title">
+          <div className="dashboard-reference-hero-copy">
+            <p className="dashboard-workday-kicker">{data.roleLabel}</p>
+            <h1 id="workday-title">
+              {timeOfDayGreeting(new Date().getHours())},{" "}
+              {firstNameFromDisplayName(data.userName)}
+            </h1>
+            <p className="dashboard-workday-date">
+              {new Date().toLocaleDateString("ru-RU", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+            <p className="dashboard-workday-scope">{data.scopeLabel}</p>
+          </div>
+        </section>
         <SalesPlanWidget
           isConfigured={data.sales.isConfigured}
           percent={data.sales.percent}
@@ -201,7 +203,7 @@ export default function Dashboard() {
           planTarget={data.sales.planTarget}
           planScopeLabel={data.sales.planScopeLabel}
         />
-      </section>
+      </div>
 
       <section
         className="dashboard-workday-summary"
@@ -254,7 +256,7 @@ export default function Dashboard() {
       </nav>
 
       <div className="dashboard-workday-layout">
-        <div className="dashboard-workday-main-grid">
+        <div className="dashboard-workday-main-grid" data-testid="dashboard-workday-main-grid">
           <section
             className="dashboard-workday-card dashboard-workday-tasks"
             data-dashboard-region={dashboardColumnAttributes.plan}
@@ -262,8 +264,13 @@ export default function Dashboard() {
           >
             <div className="dashboard-workday-card-heading">
               <div>
-                <p className="dashboard-workday-eyebrow">Фокус дня</p>
+                <p className="dashboard-workday-eyebrow">Мои задачи</p>
                 <h2 id="today-plan-title">План на сегодня</h2>
+                <div className="dashboard-task-filters" aria-label="Фильтры задач">
+                  <span>Сегодня <b>{data.summary.today}</b></span>
+                  <span className="is-overdue">Просрочены <b>{data.summary.overdue}</b></span>
+                  <span>Все <b>{data.summary.today + data.summary.overdue}</b></span>
+                </div>
               </div>
               <Link
                 href="/sales"
@@ -486,6 +493,7 @@ export default function Dashboard() {
         <aside
           className="dashboard-workday-side"
           data-dashboard-region="right-column"
+          data-testid="dashboard-workday-right-rail"
         >
           <section
             className="dashboard-workday-card"

@@ -1,5 +1,10 @@
 # Project TODO
 
+- [x] Dashboard exact reference: повторить вложенный образец без самостоятельных добавлений и изменений композиции.
+- [x] Dashboard exact reference: применить максимально близкие шрифт, размеры, пропорции, цвета, радиусы и отступы.
+- [x] Dashboard exact reference: сохранить реальные данные, маршруты, RBAC и честные пустые состояния.
+- [x] Dashboard exact reference: проверить desktop/tablet/mobile, render-тесты, typecheck, полный набор тестов и production-сборку.
+
 - [x] Dashboard approved design: воспроизвести desktop-композицию вложенного образца — dark sidebar, верхняя панель, hero, plan widget и рабочая сетка.
 - [x] Dashboard approved design: применить цветовую гамму, карточки и плотность образца без потери существующих маршрутов и данных.
 - [x] Dashboard approved design: добавить role-aware plan widget для менеджера, РОПа и директора кластера с честным пустым состоянием; добавлены planScope personal/region/cluster/company.
@@ -465,3 +470,7 @@
 - [x] Dashboard: сохранить проверенный checkpoint после завершения.
 
 Примечание: источник месячного плана и факта продаж в текущей БД отсутствует; интерфейс не должен показывать примерные суммы как реальные.
+
+- [x] Exact reference verification: зафиксировать измеряемое сравнение hero/plan row, sidebar, topbar, main grid и right rail с эталонным скриншотом; desktop 1280×720, tablet 768×1024 и mobile 390×844 проверены.
+- [x] Exact reference regression: добавить render-level проверки финальных DOM-регионов, split plan widget, скрытой summary row и main-grid/right-rail структуры; 162 теста пройдены.
+- [x] Exact reference final pass: повторно подтвердить desktop/tablet/mobile, типографику и палитру, затем обновить статус после полного test/build цикла.
