@@ -26,6 +26,12 @@ import { trpc } from "@/lib/trpc";
 export const dashboardTitle = "АгроПомощник";
 export const dashboardSubtitle = "Схемы защиты";
 
+export function timeOfDayGreeting(hour: number) {
+  if (hour >= 5 && hour < 12) return "Доброе утро";
+  if (hour >= 12 && hour < 18) return "Добрый день";
+  return "Добрый вечер";
+}
+
 export function firstNameFromDisplayName(value: string | null | undefined) {
   const normalized = value?.trim() ?? "";
   return normalized.split(/\s+/)[0] || "коллега";
@@ -59,7 +65,15 @@ export const dashboardActions = [
   },
 ] as const;
 
-export const dashboardReferenceLayout = ["hero", "summary", "actions", "plan", "attention", "pipeline", "notifications"] as const;
+export const dashboardReferenceLayout = [
+  "hero",
+  "summary",
+  "actions",
+  "plan",
+  "attention",
+  "pipeline",
+  "notifications",
+] as const;
 
 function formatTaskClock(value: Date | string | null | undefined) {
   if (!value) return "—";
@@ -142,7 +156,8 @@ export default function Dashboard() {
         <div className="dashboard-reference-hero-copy">
           <p className="dashboard-workday-kicker">{data.roleLabel}</p>
           <h1 id="workday-title">
-            Доброе утро, {firstNameFromDisplayName(data.userName)}
+            {timeOfDayGreeting(new Date().getHours())},{" "}
+            {firstNameFromDisplayName(data.userName)}
           </h1>
           <p className="dashboard-workday-date">
             {new Date().toLocaleDateString("ru-RU", {
@@ -422,19 +437,19 @@ export default function Dashboard() {
         className="dashboard-workday-reference-links"
         aria-label="Справочный доступ"
       >
-        <Link href="/catalog">
+        <Link className="is-catalog" href="/catalog">
           <ClipboardList />
           Каталог препаратов
         </Link>
-        <Link href="/agro-helper">
+        <Link className="is-calculator" href="/agro-helper">
           <Sprout />
           Калькулятор нормы
         </Link>
-        <Link href="/knowledge-base">
+        <Link className="is-regulations" href="/knowledge-base">
           <Layers3 />
           Регламенты
         </Link>
-        <Link href="/sales">
+        <Link className="is-analytics" href="/sales">
           <BriefcaseBusiness />
           Аналитика
         </Link>

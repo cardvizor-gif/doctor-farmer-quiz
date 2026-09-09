@@ -2471,3 +2471,64 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   .cabinet-canvas-overview .cabinet-topbar { overflow: visible; }
   .cabinet-canvas-overview .cabinet-mobile-team-link { display: none !important; }
 }
+
+/* AgroHelper DF section color system: distinct tones, shared semantics, readable contrast. */
+.cabinet-canvas-overview .cabinet-workspace {
+  position: relative;
+  isolation: isolate;
+  background: #edf3e6;
+}
+.cabinet-canvas-overview .cabinet-workspace::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(218,239,178,.64), rgba(239,248,221,.42)), url('/manus-storage/doctor-farmer-overview-field_3122122e.jpg') center / cover;
+  opacity: .68;
+}
+.cabinet-canvas-overview .cabinet-workspace::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(246,250,240,.62), rgba(239,247,231,.52));
+  pointer-events: none;
+}
+.cabinet-canvas-overview .cabinet-topbar { background: rgba(255,255,255,.92) !important; }
+.cabinet-canvas-overview .cabinet-content { background: transparent; }
+.dashboard-reference-workday .dashboard-workday-card,
+.dashboard-reference-workday .dashboard-workday-summary-card { background: rgba(255,255,255,.94); }
+.dashboard-reference-workday .dashboard-workday-action.is-green { border-color: #86bd35; background: #e2f4af; color: #255d31; }
+.dashboard-reference-workday .dashboard-workday-action.is-mint { border-color: #58b59b; background: #cef0e1; color: #176853; }
+.dashboard-reference-workday .dashboard-workday-action.is-blue { border-color: #68abc9; background: #d4ecf8; color: #1f6382; }
+.dashboard-reference-workday .dashboard-workday-action.is-teal { border-color: #59b496; background: #d1f0e0; color: #17664d; }
+.dashboard-reference-workday .dashboard-workday-action.is-sage { border-color: #aacd4b; background: #e8f5b8; color: #557d20; }
+.dashboard-workday-reference-links a.is-catalog { border-color: #99c74b; background: #e9f6be; color: #4e7822; }
+.dashboard-workday-reference-links a.is-calculator { border-color: #65b99f; background: #d9f1e5; color: #21745d; }
+.dashboard-workday-reference-links a.is-regulations { border-color: #77b4cd; background: #dceef7; color: #2a6981; }
+.dashboard-workday-reference-links a.is-analytics { border-color: #d4ad55; background: #fff0c8; color: #8a6216; }
+.dashboard-workday-reference-links a.is-catalog svg { color: #71a62f; }
+.dashboard-workday-reference-links a.is-calculator svg { color: #31977b; }
+.dashboard-workday-reference-links a.is-regulations svg { color: #3985a7; }
+.dashboard-workday-reference-links a.is-analytics svg { color: #bf8c26; }
+.dashboard-workday-reference-links a:hover { filter: saturate(1.08) brightness(.98); }
+.cabinet-canvas-overview .cabinet-nav-item.is-overview svg { color: #b7ee42; }
+.cabinet-canvas-overview .cabinet-nav-item.is-schemes svg { color: #6fc4a5; }
+.cabinet-canvas-overview .cabinet-nav-item.is-farms svg { color: #b9d94c; }
+.cabinet-canvas-overview .cabinet-nav-item.is-proposals svg { color: #77b8d7; }
+.cabinet-canvas-overview .cabinet-nav-item.is-orders svg { color: #f0bf58; }
+.cabinet-canvas-overview .cabinet-nav-item.is-sales svg { color: #d6a2d8; }
+.cabinet-canvas-overview .cabinet-nav-item.is-catalog svg { color: #df9b5c; }
+.cabinet-canvas-overview .cabinet-nav-item.is-quiz svg { color: #df89a3; }
+.cabinet-canvas-overview .cabinet-nav-item.is-active svg { color: #173b25; }
+.cabinet-canvas-overview .cabinet-mobile-bottom-nav-item.is-overview svg { color: #83b82e; }
+.cabinet-canvas-overview .cabinet-mobile-bottom-nav-item.is-schemes svg { color: #3eae8a; }
+.cabinet-canvas-overview .cabinet-mobile-bottom-nav-item.is-farms svg { color: #6e9d2a; }
+.cabinet-canvas-overview .cabinet-mobile-bottom-nav-item.is-proposals svg { color: #3e91b8; }
+.cabinet-canvas-overview .cabinet-mobile-bottom-nav-item.is-sales svg { color: #bd8d2f; }
+@media (max-width: 767px) {
+  .cabinet-canvas-overview .cabinet-workspace::before { opacity: .76; }
+  .cabinet-canvas-overview .cabinet-workspace::after { background: linear-gradient(180deg, rgba(246,250,240,.56), rgba(239,247,231,.46)); }
+  .dashboard-reference-workday .dashboard-workday-card,
+  .dashboard-reference-workday .dashboard-workday-summary-card { background: rgba(255,255,255,.92); }
+}

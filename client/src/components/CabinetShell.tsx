@@ -35,98 +35,129 @@ import { Link, useLocation } from "wouter";
 import type { PermissionCode } from "@shared/permissions";
 
 export const cabinetNavigation = [
-  { href: "/", label: "Обзор", icon: LayoutDashboard, permission: undefined },
+  {
+    href: "/",
+    label: "Обзор",
+    icon: LayoutDashboard,
+    tone: "overview",
+    permission: undefined,
+  },
   {
     href: "/agro-helper",
     label: "Схемы защиты",
     icon: Sprout,
+    tone: "schemes",
     permission: "agro.use" as PermissionCode,
   },
   {
     href: "/farms",
     label: "Хозяйства",
     icon: Building2,
+    tone: "farms",
     permission: "farms.read" as PermissionCode,
   },
   {
     href: "/proposals/new",
     label: "Генератор КП",
     icon: FilePlus2,
+    tone: "proposals",
     permission: "proposals.read" as PermissionCode,
   },
   {
     href: "/order-requests",
     label: "Заявки",
     icon: ClipboardList,
+    tone: "orders",
     permission: "orders.read" as PermissionCode,
   },
   {
     href: "/sales",
     label: "Продажи",
     icon: Briefcase,
+    tone: "sales",
     permission: "sales.read" as PermissionCode,
   },
   {
     href: "/catalog",
     label: "Номенклатура",
     icon: Database,
+    tone: "catalog",
     permission: "catalog.manage" as PermissionCode,
   },
   {
     href: "/quiz",
     label: "Тестирование",
     icon: Trophy,
+    tone: "quiz",
     permission: "quiz.use" as PermissionCode,
   },
 ] as const;
 
 export const mobileNavigation = [
-  { href: "/", label: "Главная", icon: Home, permission: undefined },
+  {
+    href: "/",
+    label: "Главная",
+    icon: Home,
+    tone: "overview",
+    permission: undefined,
+  },
   {
     href: "/agro-helper",
     label: "Схемы",
     icon: Sprout,
+    tone: "schemes",
     permission: "agro.use" as PermissionCode,
   },
   {
     href: "/farms",
     label: "Хозяйства",
     icon: Building2,
+    tone: "farms",
     permission: "farms.read" as PermissionCode,
   },
   {
     href: "/proposals/new",
     label: "КП",
     icon: FilePlus2,
+    tone: "proposals",
     permission: "proposals.read" as PermissionCode,
   },
   {
     href: "/sales",
     label: "Продажи",
     icon: Briefcase,
+    tone: "sales",
     permission: "sales.read" as PermissionCode,
   },
 ] as const;
 
-export const mobileTopbarActions = ["access-requests", "support", "notifications", "account"] as const;
+export const mobileTopbarActions = [
+  "access-requests",
+  "support",
+  "notifications",
+  "account",
+] as const;
 
 export const mobileUtilityNavigation = [
   {
     href: "/admin",
     label: "Команда",
     icon: UsersRound,
+    tone: "team",
     permission: "team.read" as PermissionCode,
   },
   {
     href: "/access-requests",
     label: "Заявки доступа",
     icon: ShieldCheck,
+    tone: "access",
     superuserOnly: true,
   },
   {
     href: "/support",
     label: "Обращения",
     icon: MessageSquareText,
+    tone: "support",
     permission: "support.create" as PermissionCode,
   },
 ] as const;
@@ -449,7 +480,7 @@ export default function CabinetShell({
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`cabinet-nav-item ${isActive ? "is-active" : ""}`}
+                  className={`cabinet-nav-item is-${item.tone ?? "default"} ${isActive ? "is-active" : ""}`}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{item.label}</span>
@@ -472,7 +503,7 @@ export default function CabinetShell({
                     key={item.href}
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`cabinet-nav-item ${isActive ? "is-active" : ""}`}
+                    className={`cabinet-nav-item is-${item.tone ?? "default"} ${isActive ? "is-active" : ""}`}
                   >
                     <Icon className="h-4 w-4" />
                     <span>{item.label}</span>
@@ -815,7 +846,7 @@ export default function CabinetShell({
             <Link
               key={item.href}
               href={item.href}
-              className={`cabinet-mobile-bottom-nav-item ${isActive ? "is-active" : ""}`}
+              className={`cabinet-mobile-bottom-nav-item is-${item.tone ?? "default"} ${isActive ? "is-active" : ""}`}
               aria-current={isActive ? "page" : undefined}
             >
               <Icon className="h-5 w-5" strokeWidth={2} />

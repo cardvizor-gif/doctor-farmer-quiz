@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { dashboardActions, dashboardModules, dashboardReferenceLayout, dashboardSubtitle, dashboardTitle, farmAttentionTone, firstNameFromDisplayName, taskProgressStep } from "./Dashboard";
+import { dashboardActions, dashboardModules, dashboardReferenceLayout, dashboardSubtitle, dashboardTitle, farmAttentionTone, firstNameFromDisplayName, taskProgressStep, timeOfDayGreeting } from "./Dashboard";
 
 describe("главная страница рабочего кабинета", () => {
   it("использует утверждённую формулировку заголовка и подзаголовка", () => {
     expect(dashboardTitle).toBe("АгроПомощник");
     expect(dashboardSubtitle).toBe("Схемы защиты");
+  });
+
+  it("определяет приветствие по времени суток", () => {
+    expect(timeOfDayGreeting(8)).toBe("Доброе утро");
+    expect(timeOfDayGreeting(14)).toBe("Добрый день");
+    expect(timeOfDayGreeting(20)).toBe("Добрый вечер");
+    expect(timeOfDayGreeting(3)).toBe("Добрый вечер");
   });
 
   it("показывает только имя сотрудника в приветствии", () => {
