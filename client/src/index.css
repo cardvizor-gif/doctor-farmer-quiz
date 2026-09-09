@@ -2211,3 +2211,179 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   .dashboard-workday-hero-buttons { display: grid; grid-template-columns: 1fr 1fr; }
   .dashboard-workday-reference { display: none; }
 }
+
+/* Reference 1: full desktop Overview composition */
+.cabinet-canvas-overview { background: #e9ece6; }
+.cabinet-canvas-overview .cabinet-frame { grid-template-columns: 212px minmax(0, 1fr); border-radius: 0; border: 0; background: #fff; box-shadow: 0 24px 60px rgba(28, 57, 43, .12); }
+.cabinet-canvas-overview .cabinet-sidebar { border-right: 0; background: #003f34; padding: 26px 14px 18px; color: #fff; }
+.cabinet-canvas-overview .cabinet-sidebar-top { padding: 0 11px; }
+.cabinet-canvas-overview .cabinet-brand { gap: 9px; color: #fff; text-decoration: none; }
+.cabinet-canvas-overview .cabinet-brand-mark { width: 26px; height: 26px; color: #9bd73a; stroke-width: 2.1; }
+.cabinet-canvas-overview .cabinet-sidebar-product-name { color: #fff; font-size: 15px; font-weight: 800; letter-spacing: -.03em; white-space: nowrap; }
+.cabinet-canvas-overview .cabinet-sidebar-product-name b { color: #c4ea64; font-weight: 800; }
+.cabinet-canvas-overview .cabinet-nav { gap: 5px; margin-top: 34px; }
+.cabinet-canvas-overview .cabinet-nav-item { min-height: 42px; border-radius: 8px; color: rgba(255,255,255,.72); font-size: 12px; font-weight: 650; }
+.cabinet-canvas-overview .cabinet-nav-item svg { color: #d7eed4; stroke-width: 1.8; }
+.cabinet-canvas-overview .cabinet-nav-item:hover { color: #fff; background: rgba(255,255,255,.09); }
+.cabinet-canvas-overview .cabinet-nav-item.is-active { background: linear-gradient(90deg, #9bdc2c, #5caa29); color: #123c2c; box-shadow: none; }
+.cabinet-canvas-overview .cabinet-nav-item.is-active svg { color: #123c2c; }
+.cabinet-canvas-overview .cabinet-sidebar-footer { border-top-color: rgba(255,255,255,.17); color: rgba(255,255,255,.63); }
+.cabinet-canvas-overview .cabinet-sidebar-footer strong { color: #fff; }
+.cabinet-canvas-overview .cabinet-help-mark { background: rgba(159,216,60,.18); color: #b9ea63; }
+.cabinet-canvas-overview .cabinet-workspace { overflow: visible; background: #fff; }
+.cabinet-canvas-overview .cabinet-workspace::before, .cabinet-canvas-overview .cabinet-workspace::after { display: none; }
+.cabinet-canvas-overview .cabinet-topbar { min-height: 72px; border-bottom: 1px solid #e9eee8; background: #fff; padding: 12px 20px 12px 22px; }
+.cabinet-canvas-overview .cabinet-topbar > div:first-child { flex: 1; }
+.cabinet-canvas-overview .cabinet-topbar-product-name { display: none; }
+.cabinet-canvas-overview .cabinet-search-hint { min-width: 250px; max-width: 500px; border: 1px solid #e3e9e3; border-radius: 7px; background: #fff; color: #7d8880; padding: 10px 13px; box-shadow: 0 1px 4px rgba(21,62,44,.04); }
+.cabinet-canvas-overview .cabinet-search-hint kbd { color: #a3aca4; }
+.cabinet-canvas-overview .cabinet-access-requests-link, .cabinet-canvas-overview .cabinet-admin-panel-link { min-height: 38px; border-color: #e7ece6; border-radius: 7px; background: #fff; color: #495d50; padding: 8px 12px; font-size: 11px; }
+.cabinet-canvas-overview .cabinet-access-requests-link:hover, .cabinet-canvas-overview .cabinet-admin-panel-link:hover { background: #f4f9ef; border-color: #b6d78c; color: #2e6c35; }
+.cabinet-canvas-overview .cabinet-notifications-trigger { width: 38px; height: 38px; border: 1px solid #e7ece6; border-radius: 7px; background: #fff; color: #436054; }
+.cabinet-canvas-overview .cabinet-account-trigger { min-height: 38px; border: 0; color: #243d32; }
+.cabinet-canvas-overview .cabinet-account-avatar { background: #005343; color: #dff2c6; }
+.cabinet-canvas-overview .cabinet-content { padding: 14px 16px 28px; background: #fff; }
+.dashboard-reference-workday { gap: 14px; color: #263b30; }
+.dashboard-reference-workday .dashboard-workday-hero { position: relative; min-height: 96px; overflow: hidden; align-items: center; border: 1px solid #edf1eb; border-radius: 10px; background: linear-gradient(90deg, rgba(255,255,255,.99) 0%, rgba(255,255,255,.97) 31%, rgba(255,255,255,.78) 47%, rgba(255,255,255,.08) 100%), url('/manus-storage/doctor-farmer-overview-field_3122122e.jpg') center right / cover no-repeat; box-shadow: 0 4px 12px rgba(32,70,46,.05); color: #233b2e; padding: 18px 24px; }
+.dashboard-reference-hero-copy { position: relative; z-index: 1; }
+.dashboard-reference-workday .dashboard-workday-kicker { color: #6b9f40; font-size: 10px; letter-spacing: .1em; }
+.dashboard-reference-workday .dashboard-workday-hero h1 { margin-top: 5px; color: #183a2b; font-size: clamp(23px, 2.4vw, 30px); font-weight: 800; letter-spacing: -.04em; }
+.dashboard-reference-workday .dashboard-workday-date { margin-top: 8px; color: #718077; font-size: 12px; text-transform: none; }
+.dashboard-reference-workday .dashboard-workday-scope { display: none; }
+.dashboard-sales-plan-inline { position: relative; z-index: 1; display: grid; gap: 2px; align-content: center; min-width: 172px; margin-left: auto; padding: 9px 13px; border: 1px solid rgba(99,153,60,.24); border-radius: 9px; background: rgba(255,255,255,.78); color: #315d3d; text-decoration: none; }
+.dashboard-sales-plan-inline strong { font-size: 18px; }
+.dashboard-sales-plan-inline span { font-size: 10px; font-weight: 700; }
+.dashboard-reference-workday .dashboard-workday-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; min-height: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.dashboard-reference-workday .dashboard-workday-summary-card { display: flex; align-items: center; gap: 13px; min-height: 82px; padding: 14px 18px; border: 1px solid #e9eee8; border-radius: 9px; background: #fff; box-shadow: 0 2px 8px rgba(31,67,44,.035); }
+.dashboard-reference-workday .dashboard-workday-summary-card > span { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border-radius: 50%; }
+.dashboard-reference-workday .dashboard-workday-summary-card > span svg { width: 21px; height: 21px; stroke-width: 1.8; }
+.dashboard-reference-workday .dashboard-workday-summary-card > div { display: grid; gap: 1px; }
+.dashboard-reference-workday .dashboard-workday-summary-card small { order: 0; margin: 0; color: #52645a; font-size: 11px; font-weight: 650; }
+.dashboard-reference-workday .dashboard-workday-summary-card strong { order: 1; color: #254d35; font-size: 26px; line-height: 1; font-weight: 800; }
+.dashboard-reference-workday .dashboard-workday-summary-card em { order: 2; color: #88948c; font-size: 10px; font-style: normal; }
+.dashboard-reference-workday .dashboard-workday-summary-card.is-green > span { background: #eaf5e4; color: #3a8b52; }
+.dashboard-reference-workday .dashboard-workday-summary-card.is-rose > span { background: #fae8e8; color: #d06a6c; }
+.dashboard-reference-workday .dashboard-workday-summary-card.is-amber > span { background: #fff4dc; color: #d89a25; }
+.dashboard-workday-actions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.dashboard-workday-action { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; border: 1px solid #e7ede6; border-radius: 7px; color: #345a3c; background: #fff; font-size: 11px; font-weight: 750; text-decoration: none; transition: border-color .16s ease, transform .16s ease, background .16s ease; }
+.dashboard-workday-action:hover { border-color: #a9cb79; background: #fbfef8; transform: translateY(-1px); }
+.dashboard-workday-action svg { width: 17px; height: 17px; stroke-width: 1.8; }
+.dashboard-workday-action.is-green svg, .dashboard-workday-action.is-sage svg { color: #5d9c42; }
+.dashboard-workday-action.is-mint svg { color: #3b9c84; }
+.dashboard-workday-action.is-blue svg { color: #4c8fac; }
+.dashboard-workday-action.is-teal svg { color: #559f83; }
+.dashboard-reference-workday .dashboard-workday-layout { grid-template-columns: minmax(0, 1.72fr) minmax(335px, .9fr); gap: 14px; }
+.dashboard-reference-workday .dashboard-workday-side { gap: 12px; }
+.dashboard-reference-workday .dashboard-workday-card { border: 1px solid #e8eee7; border-radius: 10px; box-shadow: 0 2px 8px rgba(31,67,44,.035); }
+.dashboard-reference-workday .dashboard-workday-card-heading { align-items: center; padding: 13px 16px 10px; }
+.dashboard-reference-workday .dashboard-workday-card-heading h2 { margin-top: 3px; color: #1f3428; font-size: 16px; font-weight: 800; letter-spacing: -.025em; }
+.dashboard-reference-workday .dashboard-workday-eyebrow { color: #6e9b45; font-size: 9px; letter-spacing: .1em; }
+.dashboard-reference-workday .dashboard-workday-card-link-top { padding: 0; color: #6c806f; font-size: 10px; }
+.dashboard-reference-workday .dashboard-workday-task-list { border-top: 1px solid #eff2ee; }
+.dashboard-reference-task-row { min-height: 76px; gap: 11px; padding: 11px 16px; }
+.dashboard-reference-task-row:hover { background: #fbfdf9; }
+.dashboard-workday-task-time { display: grid; width: 48px; flex: 0 0 48px; gap: 3px; align-content: center; border-right: 1px solid #edf1ec; }
+.dashboard-workday-task-time strong { color: #253d2e; font-size: 14px; font-weight: 800; }
+.dashboard-workday-task-time small { color: #8b968e; font-size: 9px; }
+.dashboard-reference-task-row .dashboard-workday-task-icon { width: 38px; height: 38px; border-radius: 50%; background: #edf7e8; color: #4e9452; }
+.dashboard-reference-task-row .dashboard-workday-task-icon.is-active { background: #e7f4fb; color: #4c90ad; }
+.dashboard-workday-task-copy { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.dashboard-reference-task-row .dashboard-workday-task-copy strong { overflow: hidden; color: #243b2e; font-size: 12px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-reference-task-row .dashboard-workday-task-copy small { overflow: hidden; color: #7f8c83; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-reference-workday .dashboard-workday-status { padding: 5px 9px; border-radius: 6px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.dashboard-reference-workday .dashboard-workday-status-todo { background: #edf6e7; color: #659b48; }
+.dashboard-reference-workday .dashboard-workday-status-in_progress { background: #e8f4fa; color: #4d90ae; }
+.dashboard-reference-workday .dashboard-workday-status-done { background: #edf6e7; color: #659b48; }
+.dashboard-workday-task-open { display: inline-flex; min-width: 86px; min-height: 29px; align-items: center; justify-content: center; border-radius: 5px; background: #005343; color: #fff; font-size: 10px; font-weight: 750; }
+.dashboard-workday-task-more { width: 16px; height: 16px; color: #8d998f; }
+.dashboard-reference-workday .dashboard-workday-card-link-bottom { padding: 11px 16px 14px; color: #6b9140; font-size: 10px; }
+.dashboard-reference-workday .dashboard-workday-farm-list, .dashboard-reference-workday .dashboard-workday-pipeline-list { padding: 0 12px 10px; }
+.dashboard-reference-workday .dashboard-workday-farm-row, .dashboard-reference-workday .dashboard-workday-pipeline-row { gap: 8px; min-height: 46px; padding: 8px 3px; border-top-color: #eef2ed; }
+.dashboard-reference-workday .dashboard-workday-farm-row > span:nth-child(2), .dashboard-reference-workday .dashboard-workday-pipeline-row > span:nth-child(2) { gap: 2px; }
+.dashboard-reference-workday .dashboard-workday-farm-row strong, .dashboard-reference-workday .dashboard-workday-pipeline-row strong { color: #2f4938; font-size: 10px; }
+.dashboard-reference-workday .dashboard-workday-farm-row small, .dashboard-reference-workday .dashboard-workday-pipeline-row small { color: #8a958d; font-size: 9px; }
+.dashboard-reference-workday .dashboard-workday-farm-marker { width: 27px; height: 27px; border-radius: 7px; background: #edf6e7; color: #5c9948; }
+.dashboard-reference-workday .dashboard-workday-farm-marker svg { width: 15px; height: 15px; }
+.dashboard-workday-farm-reason { margin-left: auto; border-radius: 5px; padding: 5px 7px; background: #fff5e3; color: #c58b28; font-size: 9px; white-space: nowrap; }
+.dashboard-workday-farm-row.is-finance .dashboard-workday-farm-reason { background: #f4eafb; color: #8a63a8; }
+.dashboard-reference-workday .dashboard-workday-farm-row > span:last-child, .dashboard-reference-workday .dashboard-workday-pipeline-row > span:last-child { color: #84938a; font-size: 18px; line-height: 1; }
+.dashboard-reference-workday .dashboard-workday-pipeline-row > svg { width: 17px; height: 17px; color: #5c9948; }
+.dashboard-reference-workday .dashboard-workday-pipeline-row b { min-width: 25px; border-radius: 999px; background: #edf6e7; color: #5f9349; font-size: 10px; }
+.dashboard-reference-workday .dashboard-workday-notifications { padding: 0 12px 8px; }
+.dashboard-reference-workday .dashboard-workday-notification { align-items: center; min-height: 45px; padding: 8px 3px; }
+.dashboard-reference-workday .dashboard-workday-notification strong { color: #344b3b; font-size: 10px; }
+.dashboard-reference-workday .dashboard-workday-notification small { color: #8a958d; font-size: 9px; }
+.dashboard-workday-notification-arrow { margin-left: auto; color: #85928a; font-size: 17px; }
+.dashboard-reference-workday .dashboard-workday-reference-links { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.dashboard-workday-reference-links a { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; border: 1px solid #edf1eb; border-radius: 7px; color: #54734f; background: #fbfdf9; font-size: 10px; font-weight: 700; text-decoration: none; }
+.dashboard-workday-reference-links a:hover { border-color: #b8d796; background: #f5faef; }
+.dashboard-workday-reference-links svg { width: 16px; height: 16px; color: #75a24f; }
+.dashboard-reference-workday .dashboard-support-strip { display: none; }
+
+@media (max-width: 1100px) {
+  .cabinet-canvas-overview .cabinet-frame { grid-template-columns: 192px minmax(0, 1fr); }
+  .dashboard-reference-workday .dashboard-workday-layout { grid-template-columns: minmax(0, 1.45fr) minmax(290px, .85fr); }
+  .dashboard-workday-task-open { min-width: 68px; }
+  .dashboard-workday-farm-reason { max-width: 124px; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (max-width: 900px) {
+  .cabinet-canvas-overview .cabinet-frame { grid-template-columns: 1fr; }
+  .dashboard-reference-workday .dashboard-workday-layout { grid-template-columns: 1fr; }
+  .dashboard-reference-workday .dashboard-workday-side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-reference-workday .dashboard-workday-side > .dashboard-workday-card:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .cabinet-canvas-overview .cabinet-topbar { min-height: 62px; padding: 10px; }
+  .cabinet-canvas-overview .cabinet-topbar > div:first-child { flex: 0 0 auto; }
+  .cabinet-canvas-overview .cabinet-topbar-product-name { display: inline-flex; }
+  .cabinet-canvas-overview .cabinet-search-hint { display: none; }
+  .cabinet-canvas-overview .cabinet-access-requests-link, .cabinet-canvas-overview .cabinet-admin-panel-link { display: inline-flex; width: 34px; min-width: 34px; justify-content: center; padding: 8px; }
+  .cabinet-canvas-overview .cabinet-access-requests-link > span, .cabinet-canvas-overview .cabinet-admin-panel-link > span { display: none; }
+  .cabinet-canvas-overview .cabinet-notifications-trigger { width: 34px; height: 34px; }
+  .cabinet-canvas-overview .cabinet-account-copy { display: none; }
+  .cabinet-canvas-overview .cabinet-content { padding: 10px 10px calc(82px + env(safe-area-inset-bottom)); }
+  .dashboard-reference-workday { gap: 10px; }
+  .dashboard-reference-workday .dashboard-workday-hero { min-height: 108px; padding: 16px 15px; background-position: 72% center; }
+  .dashboard-reference-workday .dashboard-workday-hero h1 { max-width: 235px; font-size: 24px; line-height: 1.05; }
+  .dashboard-reference-workday .dashboard-workday-date { font-size: 11px; }
+  .dashboard-reference-workday .dashboard-workday-summary { gap: 7px; }
+  .dashboard-reference-workday .dashboard-workday-summary-card { min-height: 72px; gap: 7px; padding: 10px 8px; }
+  .dashboard-reference-workday .dashboard-workday-summary-card > span { width: 30px; height: 30px; }
+  .dashboard-reference-workday .dashboard-workday-summary-card > span svg { width: 16px; height: 16px; }
+  .dashboard-reference-workday .dashboard-workday-summary-card small { font-size: 9px; }
+  .dashboard-reference-workday .dashboard-workday-summary-card strong { font-size: 21px; }
+  .dashboard-reference-workday .dashboard-workday-summary-card em { font-size: 8px; }
+  .dashboard-workday-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .dashboard-workday-action { min-height: 38px; font-size: 10px; }
+  .dashboard-workday-action:last-child { grid-column: 1 / -1; }
+  .dashboard-reference-workday .dashboard-workday-side { grid-template-columns: 1fr; }
+  .dashboard-reference-workday .dashboard-workday-side > .dashboard-workday-card:last-child { grid-column: auto; }
+  .dashboard-reference-task-row { gap: 7px; min-height: 68px; padding: 9px 10px; }
+  .dashboard-workday-task-time { width: 34px; flex-basis: 34px; }
+  .dashboard-workday-task-time strong { font-size: 11px; }
+  .dashboard-workday-task-time small, .dashboard-workday-task-more { display: none; }
+  .dashboard-reference-task-row .dashboard-workday-task-icon { width: 31px; height: 31px; }
+  .dashboard-reference-task-row .dashboard-workday-task-copy strong { font-size: 11px; }
+  .dashboard-reference-task-row .dashboard-workday-task-copy small { font-size: 9px; }
+  .dashboard-workday-task-open { min-width: 56px; min-height: 27px; font-size: 9px; }
+  .dashboard-reference-workday .dashboard-workday-status { display: none; }
+  .dashboard-workday-farm-reason { max-width: 130px; font-size: 8px; }
+  .dashboard-reference-workday .dashboard-workday-reference-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-workday-reference-links a { min-height: 34px; font-size: 9px; }
+  .dashboard-sales-plan-inline { display: none; }
+}
+
+/* Final specificity guard for Reference 1 header: legacy overview gradient must not win. */
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-topbar { min-height: 72px !important; border-bottom: 1px solid #e9eee8 !important; background: #fff !important; color: #243d32 !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-topbar-product-name { display: none !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-search-hint { background: #fff !important; border: 1px solid #e3e9e3 !important; color: #7d8880 !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-access-requests-link,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-admin-panel-link { border: 1px solid #e7ece6 !important; background: #fff !important; color: #495d50 !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-notifications-trigger { border: 1px solid #e7ece6 !important; background: #fff !important; color: #436054 !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-trigger { color: #243d32 !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-copy strong { color: #243d32 !important; }
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-account-copy small { color: #849089 !important; }
+@media (max-width: 640px) {
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-topbar { min-height: 62px !important; }
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-topbar-product-name { display: inline-flex !important; color: #214630 !important; }
+}
