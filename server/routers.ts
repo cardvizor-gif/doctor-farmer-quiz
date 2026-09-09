@@ -235,7 +235,7 @@ export const appRouter = router({
     removeMember: workspaceProcedure.input(z.object({ workspaceId: z.number().int().positive(), userOpenId: z.string().trim().min(1).max(64) })).mutation(({ input }) => db.removeWorkspaceMember(input.workspaceId, input.userOpenId)),
   }),
   dashboard: router({
-    overview: protectedProcedure.query(({ ctx }) => db.getDashboardOverview({ openId: ctx.user.openId, role: ctx.user.role, isSuperuser: ctx.user.isSuperuser, name: ctx.user.name })),
+    overview: protectedProcedure.query(({ ctx }) => db.getDashboardOverview({ openId: ctx.user.openId, role: ctx.user.role, isSuperuser: ctx.user.isSuperuser, name: ctx.user.displayName || ctx.user.name })),
   }),
   sales: router({
     overview: permissionProcedure("sales.read").query(async ({ ctx }) => {
