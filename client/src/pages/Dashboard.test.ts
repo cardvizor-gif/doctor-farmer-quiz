@@ -30,7 +30,6 @@ describe("главная страница рабочего кабинета", ()
   it("фиксирует двухколоночную геометрию эталонного Overview и DOM-регионы", () => {
     expect(dashboardColumnLayout.fullWidth).toEqual(["hero"]);
     expect(dashboardColumnLayout.left).toEqual([
-      "summary",
       "actions",
       "plan",
       "clients",
@@ -44,7 +43,6 @@ describe("главная страница рабочего кабинета", ()
     ]);
     expect(dashboardColumnAttributes).toEqual({
       hero: "full-width",
-      summary: "left-column",
       actions: "left-column",
       plan: "left-column",
       clients: "left-column",
@@ -70,9 +68,6 @@ describe("главная страница рабочего кабинета", ()
       "data-dashboard-region={dashboardColumnAttributes.hero}"
     );
     expect(dashboardSource).toContain(
-      "data-dashboard-region={dashboardColumnAttributes.summary}"
-    );
-    expect(dashboardSource).toContain(
       "data-dashboard-region={dashboardColumnAttributes.actions}"
     );
     expect(dashboardSource).toContain(
@@ -90,9 +85,12 @@ describe("главная страница рабочего кабинета", ()
     expect(dashboardSource).toContain('data-dashboard-region="right-column"');
     expect(dashboardSource).toContain("data.sales.planScopeLabel");
     expect(dashboardSource).toContain("План продаж не задан");
-    expect(cssSource).toContain(
-      ".dashboard-reference-workday .dashboard-workday-summary {"
-    );
+    expect(dashboardSource).toContain('data-testid="dashboard-reference-hero-row"');
+    expect(dashboardSource).toContain('data-testid="dashboard-workday-main-grid"');
+    expect(dashboardSource).toContain('data-testid="dashboard-workday-right-rail"');
+    expect(cssSource).toContain("grid-template-columns: 260px minmax(0, 1fr)");
+    expect(cssSource).toContain("grid-template-columns: minmax(0, 1fr) 280px");
+    expect(cssSource).toContain("grid-template-columns: repeat(6, minmax(0, 1fr))");
     expect(cssSource).toContain("grid-column: 1;");
     expect(cssSource).toContain(
       ".dashboard-reference-workday .dashboard-workday-side {"
@@ -132,10 +130,9 @@ describe("главная страница рабочего кабинета", ()
     expect(new Set(dashboardModules.map(module => module.tone)).size).toBe(6);
   });
 
-  it("сохраняет референсную структуру Overview и пять быстрых действий", () => {
+  it("сохраняет референсную структуру Overview и шесть быстрых действий", () => {
     expect(dashboardReferenceLayout).toEqual([
       "hero",
-      "summary",
       "actions",
       "plan",
       "clients",
@@ -146,13 +143,14 @@ describe("главная страница рабочего кабинета", ()
       "notifications",
     ]);
     expect(dashboardActions.map(action => action.title)).toEqual([
-      "Новое хозяйство",
-      "Новая задача",
+      "Новый клиент",
+      "Встреча",
+      "Звонок",
+      "Подобрать препарат",
+      "Рассчитать норму",
       "Создать КП",
-      "Новая заявка",
-      "Подобрать схему",
     ]);
-    expect(new Set(dashboardActions.map(action => action.href)).size).toBe(5);
+    expect(new Set(dashboardActions.map(action => action.href)).size).toBe(4);
   });
 
   it("сохраняет уникальные рабочие маршруты всех карточек", () => {

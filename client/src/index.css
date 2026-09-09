@@ -2942,3 +2942,256 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   }
   .cabinet-canvas.cabinet-canvas-overview .cabinet-sidebar.is-open { transform: translateX(0); }
 }
+
+
+/* Doctor Farmer specification lock: literal tokens from the supplied design specification. */
+.cabinet-canvas.cabinet-canvas-overview {
+  --df-page: #f4f7f5;
+  --df-brand: #1f6f3e;
+  --df-accent: #2e8b4f;
+  --df-sidebar: #132a20;
+  --df-muted: #8a928c;
+  --df-ink: #1a1d1b;
+  --df-line: #eef1ef;
+  --df-card-radius: 16px;
+  --df-button-radius: 10px;
+  background: var(--df-page) !important;
+  font-family: Inter, "SF Pro Display", "Golos Text", system-ui, sans-serif !important;
+}
+.cabinet-canvas.cabinet-canvas-overview .cabinet-frame {
+  grid-template-columns: 260px minmax(0, 1fr) !important;
+  min-height: calc(100vh - 16px) !important;
+  background: var(--df-page) !important;
+}
+.cabinet-canvas.cabinet-canvas-overview .cabinet-sidebar {
+  background: var(--df-sidebar) !important;
+}
+.cabinet-canvas.cabinet-canvas-overview .cabinet-content,
+.cabinet-canvas.cabinet-canvas-overview .cabinet-workspace {
+  background: var(--df-page) !important;
+}
+.cabinet-canvas.cabinet-canvas-overview .cabinet-content {
+  padding: 20px 24px 24px !important;
+}
+.cabinet-canvas.cabinet-canvas-overview .cabinet-topbar {
+  min-height: 64px !important;
+  padding: 12px 24px !important;
+}
+.cabinet-canvas.cabinet-canvas-overview .cabinet-search-hint {
+  width: 420px;
+  min-height: 40px;
+  border-radius: var(--df-button-radius);
+  background: var(--df-page) !important;
+  color: var(--df-muted) !important;
+}
+.dashboard-reference-workday {
+  max-width: none;
+  gap: 20px;
+  color: var(--df-ink);
+}
+.dashboard-reference-hero-row {
+  grid-template-columns: minmax(0, 1fr) 280px !important;
+  gap: 20px !important;
+}
+.dashboard-reference-workday .dashboard-workday-hero {
+  min-height: 140px;
+  padding: 20px;
+  border-radius: var(--df-card-radius);
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.dashboard-reference-workday .dashboard-workday-hero h1 {
+  color: var(--df-ink);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.dashboard-reference-workday .dashboard-workday-date,
+.dashboard-reference-workday .dashboard-workday-scope {
+  color: var(--df-muted);
+  font-size: 12px;
+}
+.dashboard-reference-workday .dashboard-workday-actions {
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 12px;
+}
+.dashboard-reference-workday .dashboard-workday-action {
+  min-height: 40px;
+  border-radius: var(--df-button-radius);
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.dashboard-reference-workday .dashboard-workday-action.is-filled {
+  background: var(--df-accent) !important;
+  border-color: var(--df-accent) !important;
+  color: #fff !important;
+}
+.dashboard-reference-workday .dashboard-workday-action.is-outline {
+  background: #fff !important;
+  border: 1px solid #dfe7e1 !important;
+  color: var(--df-brand) !important;
+}
+.dashboard-reference-workday .dashboard-workday-layout {
+  grid-template-columns: minmax(0, 1fr) 280px !important;
+  gap: 20px !important;
+}
+.dashboard-reference-workday .dashboard-workday-main-grid {
+  grid-template-columns: minmax(330px, 1.3fr) minmax(270px, 1fr) minmax(270px, 1fr) !important;
+  gap: 20px !important;
+}
+.dashboard-reference-workday .dashboard-workday-card {
+  border: 1px solid #e7ece8;
+  border-radius: var(--df-card-radius);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.dashboard-reference-workday .dashboard-workday-card-heading {
+  padding: 20px 20px 12px;
+}
+.dashboard-reference-workday .dashboard-workday-card-heading h2 {
+  color: var(--df-ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+.dashboard-reference-workday .dashboard-workday-eyebrow {
+  color: var(--df-brand);
+  font-size: 11px;
+}
+.dashboard-reference-workday .dashboard-workday-task-copy strong,
+.dashboard-reference-workday .dashboard-client-row strong,
+.dashboard-reference-workday .dashboard-workday-farm-row strong,
+.dashboard-reference-workday .dashboard-workday-notification strong {
+  color: var(--df-ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+.dashboard-reference-workday .dashboard-workday-task-copy small,
+.dashboard-reference-workday .dashboard-client-row small,
+.dashboard-reference-workday .dashboard-workday-farm-row small,
+.dashboard-reference-workday .dashboard-workday-notification small {
+  color: var(--df-muted);
+  font-size: 12px;
+}
+.dashboard-reference-workday .dashboard-client-metrics > div {
+  min-height: 84px;
+  border-radius: 12px;
+  background: var(--df-page);
+}
+.dashboard-reference-workday .dashboard-client-metrics strong,
+.dashboard-reference-workday .dashboard-sales-body strong {
+  color: var(--df-ink);
+  font-size: 21px;
+  font-weight: 700;
+}
+.dashboard-reference-workday .dashboard-client-metrics small,
+.dashboard-reference-workday .dashboard-sales-body small {
+  color: var(--df-muted);
+  font-size: 12px;
+}
+.dashboard-reference-workday .dashboard-workday-side {
+  gap: 20px;
+}
+.dashboard-reference-workday .dashboard-sales-plan-inline {
+  border-radius: var(--df-card-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+@media (max-width: 1200px) and (min-width: 901px) {
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-frame { grid-template-columns: 210px minmax(0,1fr) !important; }
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-content { padding: 16px !important; }
+  .dashboard-reference-workday .dashboard-workday-main-grid { grid-template-columns: minmax(290px,1.2fr) minmax(220px,1fr) !important; }
+  .dashboard-reference-workday .dashboard-workday-main-grid .dashboard-workday-sales-column { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+}
+@media (max-width: 900px) {
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-frame { grid-template-columns: 1fr !important; }
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-content { padding: 12px 12px 84px !important; }
+  .dashboard-reference-workday .dashboard-workday-actions { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 10px; }
+  .dashboard-reference-workday .dashboard-workday-action:last-child { grid-column: auto; }
+}
+@media (max-width: 640px) {
+  .dashboard-reference-hero-row { gap: 10px !important; }
+  .dashboard-reference-workday .dashboard-workday-hero { min-height: 140px; padding: 16px; }
+  .dashboard-reference-workday .dashboard-workday-actions { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  .dashboard-reference-workday .dashboard-workday-layout,
+  .dashboard-reference-workday .dashboard-workday-main-grid { gap: 12px !important; }
+}
+
+
+/* Reference viewport correction: preserve the three center columns and right rail at 1280px. */
+@media (min-width: 901px) and (max-width: 1400px) {
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-frame {
+    grid-template-columns: 180px minmax(0, 1fr) !important;
+  }
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-content {
+    padding: 14px 16px 18px !important;
+  }
+  .dashboard-reference-workday {
+    gap: 12px;
+  }
+  .dashboard-reference-hero-row {
+    grid-template-columns: minmax(0, 1fr) 250px !important;
+    gap: 12px !important;
+  }
+  .dashboard-reference-workday .dashboard-workday-actions {
+    gap: 8px;
+  }
+  .dashboard-reference-workday .dashboard-workday-action {
+    padding: 0 8px;
+    font-size: 10px;
+  }
+  .dashboard-reference-workday .dashboard-workday-layout {
+    grid-template-columns: minmax(0, 1fr) 260px !important;
+    gap: 12px !important;
+    min-width: 0;
+  }
+  .dashboard-reference-workday .dashboard-workday-main-grid {
+    grid-template-columns: minmax(235px, 1.25fr) minmax(205px, 1.1fr) minmax(165px, .85fr) !important;
+    gap: 10px !important;
+    min-width: 0;
+  }
+  .dashboard-reference-workday .dashboard-workday-side {
+    gap: 12px;
+    min-width: 0;
+  }
+}
+
+
+/* Mobile safety override must come after every desktop specification lock. */
+@media (max-width: 900px) {
+  .dashboard-reference-workday > .dashboard-reference-hero-row {
+    grid-template-columns: 1fr !important;
+    grid-column: auto !important;
+    width: 100% !important;
+  }
+  .dashboard-reference-workday .dashboard-workday-layout {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+  .dashboard-reference-workday .dashboard-workday-main-grid {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+  .dashboard-reference-workday .dashboard-workday-side {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+  .dashboard-reference-workday .dashboard-workday-actions {
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    width: 100% !important;
+  }
+}
+
+
+@media (max-width: 900px) and (min-width: 641px) {
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-topbar {
+    padding: 10px 14px !important;
+    gap: 8px;
+  }
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-search-hint {
+    width: min(320px, 42vw) !important;
+    min-width: 0;
+  }
+  .cabinet-canvas.cabinet-canvas-overview .cabinet-search-hint kbd {
+    display: none;
+  }
+}

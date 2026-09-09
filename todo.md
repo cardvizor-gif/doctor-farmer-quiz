@@ -474,3 +474,9 @@
 - [x] Exact reference verification: зафиксировать измеряемое сравнение hero/plan row, sidebar, topbar, main grid и right rail с эталонным скриншотом; desktop 1280×720, tablet 768×1024 и mobile 390×844 проверены.
 - [x] Exact reference regression: добавить render-level проверки финальных DOM-регионов, split plan widget, скрытой summary row и main-grid/right-rail структуры; 162 теста пройдены.
 - [x] Exact reference final pass: повторно подтвердить desktop/tablet/mobile, типографику и палитру, затем обновить статус после полного test/build цикла.
+
+- [x] Exact spec pass: sidebar 260px #132A20, main content plus right rail 280px, page #F4F7F5, card radius 16px, button radius 10px; compact viewport override сохраняет образец на 1280px.
+- [x] Exact spec pass: Inter/SF Pro/Golos-like typography with H1 24px, H2 15px, body 14px, secondary 12–13px, metrics 20–22px.
+- [x] Exact spec pass: implement six quick actions, task tabs/list, clients metrics/list, sales donut/chart, control clients and latest inquiries exactly in the specified order.
+- [x] Exact spec pass: preserve real AgroHelper data/RBAC and use empty states instead of fabricated financial or customer data.
+- [x] Exact spec pass: validate desktop/tablet/mobile with render-level tests, typecheck, full tests and production build.

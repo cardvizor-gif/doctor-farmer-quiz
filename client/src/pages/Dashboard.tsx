@@ -51,26 +51,16 @@ export const dashboardModules = [
 ] as const;
 
 export const dashboardActions = [
-  { title: "Новое хозяйство", href: "/farms", icon: Building2, tone: "green" },
-  { title: "Новая задача", href: "/sales", icon: ListTodo, tone: "mint" },
-  { title: "Создать КП", href: "/proposals/new", icon: FileText, tone: "blue" },
-  {
-    title: "Новая заявка",
-    href: "/order-requests",
-    icon: ClipboardCheck,
-    tone: "teal",
-  },
-  {
-    title: "Подобрать схему",
-    href: "/agro-helper",
-    icon: Sprout,
-    tone: "sage",
-  },
+  { title: "Новый клиент", href: "/farms", icon: Plus, tone: "filled" },
+  { title: "Встреча", href: "/sales", icon: Plus, tone: "outline" },
+  { title: "Звонок", href: "/sales", icon: Phone, tone: "outline" },
+  { title: "Подобрать препарат", href: "/agro-helper", icon: Sprout, tone: "outline" },
+  { title: "Рассчитать норму", href: "/agro-helper", icon: Calculator, tone: "outline" },
+  { title: "Создать КП", href: "/proposals/new", icon: FileText, tone: "outline" },
 ] as const;
 
 export const dashboardReferenceLayout = [
   "hero",
-  "summary",
   "actions",
   "plan",
   "clients",
@@ -83,13 +73,12 @@ export const dashboardReferenceLayout = [
 
 export const dashboardColumnLayout = {
   fullWidth: ["hero"],
-  left: ["summary", "actions", "plan", "clients", "sales", "quickAccess"],
+  left: ["actions", "plan", "clients", "sales", "quickAccess"],
   right: ["attention", "pipeline", "notifications"],
 } as const;
 
 export const dashboardColumnAttributes = {
   hero: "full-width",
-  summary: "left-column",
   actions: "left-column",
   plan: "left-column",
   clients: "left-column",
@@ -205,36 +194,6 @@ export default function Dashboard() {
         />
       </div>
 
-      <section
-        className="dashboard-workday-summary"
-        data-dashboard-region={dashboardColumnAttributes.summary}
-        aria-label="Сводка рабочего дня"
-      >
-        <SummaryCard
-          icon={<CalendarCheck2 />}
-          value={data.summary.today}
-          label="Сегодня"
-          suffix="задач"
-          tone="green"
-        />
-        <SummaryCard
-          icon={<AlertCircle />}
-          value={data.summary.overdue}
-          label="Просрочено"
-          suffix="задач"
-          tone="rose"
-        />
-        <SummaryCard
-          icon={<Flag />}
-          value={
-            data.isLeadership ? data.summary.farms : data.summary.proposals
-          }
-          label="На контроле"
-          suffix={data.isLeadership ? "хозяйств" : "КП"}
-          tone="amber"
-        />
-      </section>
-
       <nav
         className="dashboard-workday-actions"
         data-dashboard-region={dashboardColumnAttributes.actions}
@@ -348,7 +307,7 @@ export default function Dashboard() {
             <div className="dashboard-workday-card-heading">
               <div>
                 <p className="dashboard-workday-eyebrow">Рабочий портфель</p>
-                <h2 id="clients-title">Хозяйства</h2>
+                <h2 id="clients-title">Клиенты</h2>
               </div>
               <Link
                 href="/farms"
@@ -366,18 +325,18 @@ export default function Dashboard() {
               <div>
                 <CalendarCheck2 />
                 <strong>{data.summary.today}</strong>
-                <small>Задачи</small>
+                  <small>В работе</small>
               </div>
               <div>
                 <AlertCircle />
                 <strong>{data.summary.overdue}</strong>
-                <small>Риски</small>
+                  <small>Долг</small>
               </div>
             </div>
             <div className="dashboard-client-list">
               {data.attention.attentionFarms.length === 0 ? (
                 <p className="dashboard-workday-empty-note">
-                  Новых хозяйств под контролем нет.
+                  Последние клиенты пока не добавлены.
                 </p>
               ) : (
                 data.attention.attentionFarms.slice(0, 3).map(farm => (
