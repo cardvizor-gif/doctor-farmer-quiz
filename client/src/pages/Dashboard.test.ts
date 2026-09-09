@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { dashboardModules, dashboardSubtitle, dashboardTitle } from "./Dashboard";
+import { dashboardModules, dashboardSubtitle, dashboardTitle, firstNameFromDisplayName } from "./Dashboard";
 
 describe("главная страница рабочего кабинета", () => {
   it("использует утверждённую формулировку заголовка и подзаголовка", () => {
     expect(dashboardTitle).toBe("АгроПомощник");
     expect(dashboardSubtitle).toBe("Схемы защиты");
+  });
+
+  it("показывает только имя сотрудника в приветствии", () => {
+    expect(firstNameFromDisplayName("Шамиль Вильданов")).toBe("Шамиль");
+    expect(firstNameFromDisplayName("  Шамиль  ")).toBe("Шамиль");
+    expect(firstNameFromDisplayName(null)).toBe("коллега");
   });
 
   it("сохраняет шесть основных модулей в согласованном порядке", () => {

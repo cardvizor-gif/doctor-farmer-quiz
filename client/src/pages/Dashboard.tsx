@@ -7,6 +7,11 @@ import { trpc } from "@/lib/trpc";
 export const dashboardTitle = "АгроПомощник";
 export const dashboardSubtitle = "Схемы защиты";
 
+export function firstNameFromDisplayName(value: string | null | undefined) {
+  const normalized = value?.trim() ?? "";
+  return normalized.split(/\s+/)[0] || "коллега";
+}
+
 /** Legacy module metadata kept for existing contracts/tests; the rendered home is role-aware. */
 export const dashboardModules = [
   { title: "Схемы защиты", href: "/agro-helper", tone: "emerald" },
@@ -55,7 +60,7 @@ export default function Dashboard() {
       <section className="dashboard-workday-hero" aria-labelledby="workday-title">
         <div>
           <p className="dashboard-workday-kicker">{data.roleLabel}</p>
-          <h1 id="workday-title">Доброе утро, {data.userName}</h1>
+          <h1 id="workday-title">Доброе утро, {firstNameFromDisplayName(data.userName)}</h1>
           <p className="dashboard-workday-date">{new Date().toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })}</p>
           <p className="dashboard-workday-scope">{data.scopeLabel}</p>
         </div>
