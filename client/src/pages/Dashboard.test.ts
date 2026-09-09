@@ -33,7 +33,9 @@ describe("главная страница рабочего кабинета", ()
       "summary",
       "actions",
       "plan",
-      "references",
+      "clients",
+      "sales",
+      "quickAccess",
     ]);
     expect(dashboardColumnLayout.right).toEqual([
       "attention",
@@ -45,7 +47,9 @@ describe("главная страница рабочего кабинета", ()
       summary: "left-column",
       actions: "left-column",
       plan: "left-column",
-      references: "left-column",
+      clients: "left-column",
+      sales: "left-column",
+      quickAccess: "left-column",
       attention: "right-column",
       pipeline: "right-column",
       notifications: "right-column",
@@ -75,9 +79,17 @@ describe("главная страница рабочего кабинета", ()
       "data-dashboard-region={dashboardColumnAttributes.plan}"
     );
     expect(dashboardSource).toContain(
-      "data-dashboard-region={dashboardColumnAttributes.references}"
+      "data-dashboard-region={dashboardColumnAttributes.clients}"
+    );
+    expect(dashboardSource).toContain(
+      "data-dashboard-region={dashboardColumnAttributes.sales}"
+    );
+    expect(dashboardSource).toContain(
+      "data-dashboard-region={dashboardColumnAttributes.quickAccess}"
     );
     expect(dashboardSource).toContain('data-dashboard-region="right-column"');
+    expect(dashboardSource).toContain("data.sales.planScopeLabel");
+    expect(dashboardSource).toContain("План продаж не задан");
     expect(cssSource).toContain(
       ".dashboard-reference-workday .dashboard-workday-summary {"
     );
@@ -126,6 +138,9 @@ describe("главная страница рабочего кабинета", ()
       "summary",
       "actions",
       "plan",
+      "clients",
+      "sales",
+      "quickAccess",
       "attention",
       "pipeline",
       "notifications",

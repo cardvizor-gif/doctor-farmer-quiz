@@ -2654,3 +2654,112 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 @media (max-width: 767px) {
   .cabinet-mobile-menu-dismissal { display: contents; }
 }
+
+/* Approved dashboard composition: tasks + farms + sales/tools, with control rail. */
+.dashboard-reference-workday .dashboard-workday-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, .42fr);
+  gap: 14px;
+  align-items: start;
+}
+.dashboard-workday-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, .92fr) minmax(190px, .74fr);
+  gap: 12px;
+  min-width: 0;
+  align-items: start;
+}
+.dashboard-workday-main-grid > .dashboard-workday-tasks { min-width: 0; }
+.dashboard-workday-sales-column { display: grid; gap: 12px; min-width: 0; }
+.dashboard-workday-sales-body { display: flex; align-items: center; gap: 12px; padding: 6px 14px 10px; }
+.dashboard-sales-large-ring { display: grid; width: 54px; height: 54px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: conic-gradient(#3d9b55 var(--sales-progress), #e9f0e6 0deg); position: relative; }
+.dashboard-sales-large-ring::after { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: #fff; }
+.dashboard-sales-large-ring span { position: relative; z-index: 1; color: #2b7950; font-size: 13px; font-weight: 900; }
+.dashboard-workday-sales-body strong, .dashboard-workday-sales-body small { display: block; }
+.dashboard-workday-sales-body strong { color: #294437; font-size: 15px; }
+.dashboard-workday-sales-body small { margin-top: 2px; color: #8a968d; font-size: 9px; }
+.dashboard-sales-empty { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 8px; align-items: center; padding: 10px 14px 6px; }
+.dashboard-sales-empty svg { grid-row: span 2; width: 28px; height: 28px; color: #6ca456; }
+.dashboard-sales-empty strong { color: #355242; font-size: 11px; }
+.dashboard-sales-empty small { color: #8a968d; font-size: 9px; }
+.dashboard-sales-mini-bars { display: flex; align-items: end; gap: 7px; height: 50px; padding: 4px 14px 12px; border-top: 1px solid #f0f3ef; }
+.dashboard-sales-mini-bars i { display: block; flex: 1; min-width: 6px; max-width: 14px; height: 18px; border-radius: 4px 4px 1px 1px; background: #dfeadf; }
+.dashboard-sales-mini-bars i:nth-child(2) { height: 24px; background: #c7e0c8; }
+.dashboard-sales-mini-bars i:nth-child(3) { height: 30px; background: #a8cfb1; }
+.dashboard-sales-mini-bars i:nth-child(4) { height: 39px; background: #83ba91; }
+.dashboard-sales-mini-bars i:nth-child(5) { height: 31px; background: #6aa87d; }
+.dashboard-sales-mini-bars i:nth-child(6) { height: 44px; background: #3e8d65; }
+.dashboard-quick-access-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 0 12px 12px; }
+.dashboard-quick-access-grid a { display: grid; min-height: 51px; place-items: center; align-content: center; gap: 3px; border: 1px solid #edf2ea; border-radius: 7px; background: #fbfdf9; color: #4d7556; font-size: 9px; font-weight: 750; text-align: center; text-decoration: none; }
+.dashboard-quick-access-grid a:hover { border-color: #b9d99b; background: #f4faee; }
+.dashboard-quick-access-grid svg { width: 17px; height: 17px; color: #5c9b62; }
+.dashboard-client-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; padding: 0 12px 9px; }
+.dashboard-client-metrics > div { display: grid; gap: 1px; padding: 7px 6px; border-radius: 7px; background: #f5f9f3; }
+.dashboard-client-metrics svg { width: 14px; height: 14px; color: #4c9660; }
+.dashboard-client-metrics strong { color: #2e7950; font-size: 16px; line-height: 1; }
+.dashboard-client-metrics small { color: #87958a; font-size: 8px; }
+.dashboard-client-list { padding: 0 12px 9px; }
+.dashboard-client-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 7px; align-items: center; min-height: 45px; border-top: 1px solid #eef2ed; color: inherit; text-decoration: none; }
+.dashboard-client-avatar { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 50%; background: #e4f2e2; color: #4c9560; }
+.dashboard-client-avatar svg { width: 14px; height: 14px; }
+.dashboard-client-row strong, .dashboard-client-row small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-client-row strong { color: #35503d; font-size: 10px; }
+.dashboard-client-row small { margin-top: 2px; color: #8a968d; font-size: 8px; }
+.dashboard-client-row > span:last-child { color: #84938a; font-size: 17px; }
+.dashboard-reference-workday .dashboard-workday-side { min-width: 0; }
+@media (max-width: 1150px) and (min-width: 901px) {
+  .dashboard-workday-main-grid { grid-template-columns: minmax(0, 1fr) minmax(0, .95fr); }
+  .dashboard-workday-sales-column { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .dashboard-reference-workday .dashboard-workday-layout { grid-template-columns: 1fr; }
+  .dashboard-workday-main-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-workday-sales-column { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .dashboard-workday-main-grid { grid-template-columns: 1fr; }
+  .dashboard-workday-sales-column { grid-column: auto; grid-template-columns: 1fr; }
+  .dashboard-workday-sales-body { padding-inline: 12px; }
+  .dashboard-quick-access-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Final approved layout lock: prevent legacy display-contents/grid auto-placement from collapsing the work area. */
+@media (min-width: 1101px) {
+  .dashboard-reference-workday {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.72fr) minmax(300px, .88fr) !important;
+    grid-auto-flow: row !important;
+    column-gap: 16px !important;
+    row-gap: 10px !important;
+  }
+  .dashboard-reference-workday > .dashboard-workday-hero { grid-column: 1 / -1 !important; grid-row: 1 !important; }
+  .dashboard-reference-workday > .dashboard-workday-summary { grid-column: 1 !important; grid-row: 2 !important; display: grid !important; }
+  .dashboard-reference-workday > .dashboard-workday-actions { grid-column: 1 !important; grid-row: 3 !important; display: grid !important; }
+  .dashboard-reference-workday > .dashboard-workday-layout { display: contents !important; }
+  .dashboard-reference-workday .dashboard-workday-main-grid { grid-column: 1 !important; grid-row: 4 !important; display: grid !important; min-width: 0 !important; width: 100% !important; }
+  .dashboard-reference-workday .dashboard-workday-side { grid-column: 2 !important; grid-row: 2 / span 3 !important; display: grid !important; width: 100% !important; min-width: 0 !important; }
+  .dashboard-reference-workday > .dashboard-workday-support-strip,
+  .dashboard-reference-workday > .dashboard-support-strip { grid-column: 1 / -1 !important; }
+}
+
+.dashboard-reference-workday .dashboard-sales-plan-inline {
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-width: 260px !important;
+  max-width: 310px !important;
+  padding: 9px 12px !important;
+}
+.dashboard-reference-workday .dashboard-sales-plan-inline > .dashboard-sales-plan-ring { width: 48px; height: 48px; }
+.dashboard-reference-workday .dashboard-sales-plan-inline > span:last-child { display: grid !important; min-width: 0 !important; gap: 2px !important; }
+.dashboard-reference-workday .dashboard-sales-plan-inline small,
+.dashboard-reference-workday .dashboard-sales-plan-inline strong,
+.dashboard-reference-workday .dashboard-sales-plan-inline em { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (min-width: 901px) {
+  .dashboard-reference-workday .dashboard-workday-main-grid > .dashboard-workday-tasks {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+}

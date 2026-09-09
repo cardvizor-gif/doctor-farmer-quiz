@@ -1,5 +1,17 @@
 # Project TODO
 
+- [x] Dashboard approved design: воспроизвести desktop-композицию вложенного образца — dark sidebar, верхняя панель, hero, plan widget и рабочая сетка.
+- [x] Dashboard approved design: применить цветовую гамму, карточки и плотность образца без потери существующих маршрутов и данных.
+- [x] Dashboard approved design: добавить role-aware plan widget для менеджера, РОПа и директора кластера с честным пустым состоянием; добавлены planScope personal/region/cluster/company.
+- [x] Dashboard: покрыть planScope personal/region/cluster/company серверными RBAC regression-тестами.
+- [x] Dashboard approved design: проверить mobile/tablet, RBAC, typecheck, полный набор тестов и production-сборку.
+- [x] Dashboard: выполнить и зафиксировать tablet-визуальную проверку и visibility regression для ключевых блоков; tablet 768×1024 и client/server regression пройдены.
+
+- [x] Dashboard: воспроизвести компоновку вложенного образца — dark sidebar, верхняя панель, hero, план, клиенты, продажи, быстрый доступ и контроль.
+- [x] Dashboard: закрепить цветовую гамму и размеры блоков по вложенному эталону, сохранив адаптивность и текущие маршруты.
+- [x] Dashboard: подготовить общий ролевой виджет выполнения плана для менеджера, РОПа и директора кластера без фиктивных сумм; при отсутствии источника отображается «План не задан».
+- [x] Dashboard: после согласования проверить UI, RBAC, typecheck, полный набор тестов и production-сборку.
+
 - [x] Mobile menu: закрывать боковую панель тапом по любой области справа вне меню; добавлен реальный React interaction-тест backdrop click.
 - [x] Mobile menu: закрывать боковую панель свайпом панели влево с сохранением обычной навигации; добавлен реальный React interaction-тест swipe-left и защиты от вертикального жеста.
 - [x] Mobile menu: добавить regression-проверки, проверить mobile, typecheck, полный набор тестов и production-сборку; mobile 390×844 проверен.

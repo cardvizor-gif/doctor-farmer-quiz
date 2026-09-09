@@ -10,6 +10,9 @@ import {
   ClipboardCheck,
   ClipboardList,
   FileText,
+  BarChart3,
+  Calculator,
+  UsersRound,
   Flag,
   HelpCircle,
   Layers3,
@@ -70,6 +73,9 @@ export const dashboardReferenceLayout = [
   "summary",
   "actions",
   "plan",
+  "clients",
+  "sales",
+  "quickAccess",
   "attention",
   "pipeline",
   "notifications",
@@ -77,7 +83,7 @@ export const dashboardReferenceLayout = [
 
 export const dashboardColumnLayout = {
   fullWidth: ["hero"],
-  left: ["summary", "actions", "plan", "references"],
+  left: ["summary", "actions", "plan", "clients", "sales", "quickAccess"],
   right: ["attention", "pipeline", "notifications"],
 } as const;
 
@@ -86,7 +92,9 @@ export const dashboardColumnAttributes = {
   summary: "left-column",
   actions: "left-column",
   plan: "left-column",
-  references: "left-column",
+  clients: "left-column",
+  sales: "left-column",
+  quickAccess: "left-column",
   attention: "right-column",
   pipeline: "right-column",
   notifications: "right-column",
@@ -186,12 +194,13 @@ export default function Dashboard() {
           </p>
           <p className="dashboard-workday-scope">{data.scopeLabel}</p>
         </div>
-        {data.sales.isConfigured && (
-          <Link href="/sales" className="dashboard-sales-plan-inline">
-            <strong>{data.sales.percent ?? 0}%</strong>
-            <span>Выполнение плана продаж</span>
-          </Link>
-        )}
+        <SalesPlanWidget
+          isConfigured={data.sales.isConfigured}
+          percent={data.sales.percent}
+          fact={data.sales.fact}
+          planTarget={data.sales.planTarget}
+          planScopeLabel={data.sales.planScopeLabel}
+        />
       </section>
 
       <section
@@ -245,79 +254,234 @@ export default function Dashboard() {
       </nav>
 
       <div className="dashboard-workday-layout">
-        <section
-          className="dashboard-workday-card dashboard-workday-tasks"
-          data-dashboard-region={dashboardColumnAttributes.plan}
-          aria-labelledby="today-plan-title"
-        >
-          <div className="dashboard-workday-card-heading">
-            <div>
-              <p className="dashboard-workday-eyebrow">Фокус дня</p>
-              <h2 id="today-plan-title">План на сегодня</h2>
+        <div className="dashboard-workday-main-grid">
+          <section
+            className="dashboard-workday-card dashboard-workday-tasks"
+            data-dashboard-region={dashboardColumnAttributes.plan}
+            aria-labelledby="today-plan-title"
+          >
+            <div className="dashboard-workday-card-heading">
+              <div>
+                <p className="dashboard-workday-eyebrow">Фокус дня</p>
+                <h2 id="today-plan-title">План на сегодня</h2>
+              </div>
+              <Link
+                href="/sales"
+                className="dashboard-workday-card-link dashboard-workday-card-link-top"
+              >
+                Все задачи <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+            <div className="dashboard-workday-task-list">
+              {data.tasks.length === 0 ? (
+                <EmptyState
+                  icon={<CheckCircle2 />}
+                  title="Открытых задач нет"
+                  text="Создайте следующее действие по хозяйству или откройте раздел продаж."
+                />
+              ) : (
+                data.tasks.slice(0, 5).map(item => {
+                  const Icon = taskIcon(item.task.title);
+                  return (
+                    <Link
+                      key={item.task.id}
+                      href="/sales"
+                      className="dashboard-workday-task-row dashboard-reference-task-row"
+                    >
+                      <span className="dashboard-workday-task-time">
+                        <strong>{formatTaskClock(item.task.dueAt)}</strong>
+                        <small>
+                          {item.task.dueAt
+                            ? formatTaskDate(item.task.dueAt)
+                            : ""}
+                        </small>
+                      </span>
+                      <span
+                        className={`dashboard-workday-task-icon ${item.task.status === "in_progress" ? "is-active" : ""}`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="dashboard-workday-task-copy">
+                        <strong>{item.task.title}</strong>
+                        <small>
+                          {item.task.description ||
+                            `${item.workspace.name} · ${item.region.name}`}
+                        </small>
+                      </span>
+                      <span
+                        className={`dashboard-workday-status dashboard-workday-status-${item.task.status}`}
+                      >
+                        {taskStatusLabel(item.task.status)}
+                      </span>
+                      <span className="dashboard-workday-task-open">
+                        Открыть
+                      </span>
+                      <MoreVertical
+                        className="dashboard-workday-task-more"
+                        aria-hidden="true"
+                      />
+                    </Link>
+                  );
+                })
+              )}
             </div>
             <Link
               href="/sales"
-              className="dashboard-workday-card-link dashboard-workday-card-link-top"
+              className="dashboard-workday-card-link dashboard-workday-card-link-bottom"
             >
-              Все задачи <span aria-hidden="true">→</span>
+              Показать все задачи <span aria-hidden="true">⌄</span>
             </Link>
-          </div>
-          <div className="dashboard-workday-task-list">
-            {data.tasks.length === 0 ? (
-              <EmptyState
-                icon={<CheckCircle2 />}
-                title="Открытых задач нет"
-                text="Создайте следующее действие по хозяйству или откройте раздел продаж."
-              />
-            ) : (
-              data.tasks.slice(0, 5).map(item => {
-                const Icon = taskIcon(item.task.title);
-                return (
-                  <Link
-                    key={item.task.id}
-                    href="/sales"
-                    className="dashboard-workday-task-row dashboard-reference-task-row"
-                  >
-                    <span className="dashboard-workday-task-time">
-                      <strong>{formatTaskClock(item.task.dueAt)}</strong>
-                      <small>
-                        {item.task.dueAt ? formatTaskDate(item.task.dueAt) : ""}
-                      </small>
-                    </span>
-                    <span
-                      className={`dashboard-workday-task-icon ${item.task.status === "in_progress" ? "is-active" : ""}`}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <span className="dashboard-workday-task-copy">
-                      <strong>{item.task.title}</strong>
-                      <small>
-                        {item.task.description ||
-                          `${item.workspace.name} · ${item.region.name}`}
-                      </small>
-                    </span>
-                    <span
-                      className={`dashboard-workday-status dashboard-workday-status-${item.task.status}`}
-                    >
-                      {taskStatusLabel(item.task.status)}
-                    </span>
-                    <span className="dashboard-workday-task-open">Открыть</span>
-                    <MoreVertical
-                      className="dashboard-workday-task-more"
-                      aria-hidden="true"
-                    />
-                  </Link>
-                );
-              })
-            )}
-          </div>
-          <Link
-            href="/sales"
-            className="dashboard-workday-card-link dashboard-workday-card-link-bottom"
+          </section>
+
+          <section
+            className="dashboard-workday-card dashboard-workday-clients"
+            data-dashboard-region={dashboardColumnAttributes.clients}
+            aria-labelledby="clients-title"
           >
-            Показать все задачи <span aria-hidden="true">⌄</span>
-          </Link>
-        </section>
+            <div className="dashboard-workday-card-heading">
+              <div>
+                <p className="dashboard-workday-eyebrow">Рабочий портфель</p>
+                <h2 id="clients-title">Хозяйства</h2>
+              </div>
+              <Link
+                href="/farms"
+                className="dashboard-workday-card-link dashboard-workday-card-link-top"
+              >
+                Все <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+            <div className="dashboard-client-metrics">
+              <div>
+                <UsersRound />
+                <strong>{data.summary.farms}</strong>
+                <small>Активные</small>
+              </div>
+              <div>
+                <CalendarCheck2 />
+                <strong>{data.summary.today}</strong>
+                <small>Задачи</small>
+              </div>
+              <div>
+                <AlertCircle />
+                <strong>{data.summary.overdue}</strong>
+                <small>Риски</small>
+              </div>
+            </div>
+            <div className="dashboard-client-list">
+              {data.attention.attentionFarms.length === 0 ? (
+                <p className="dashboard-workday-empty-note">
+                  Новых хозяйств под контролем нет.
+                </p>
+              ) : (
+                data.attention.attentionFarms.slice(0, 3).map(farm => (
+                  <Link
+                    key={farm.id}
+                    href="/farms"
+                    className="dashboard-client-row"
+                  >
+                    <span className="dashboard-client-avatar">
+                      <Building2 />
+                    </span>
+                    <span>
+                      <strong>{farm.name}</strong>
+                      <small>
+                        {farm.district || farm.settlement || "Регион не указан"}
+                      </small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                  </Link>
+                ))
+              )}
+            </div>
+          </section>
+
+          <div className="dashboard-workday-sales-column">
+            <section
+              className="dashboard-workday-card dashboard-workday-sales"
+              data-dashboard-region={dashboardColumnAttributes.sales}
+              aria-labelledby="sales-title"
+            >
+              <div className="dashboard-workday-card-heading">
+                <div>
+                  <p className="dashboard-workday-eyebrow">
+                    Коммерческий контур
+                  </p>
+                  <h2 id="sales-title">Продажи</h2>
+                </div>
+                <Link
+                  href="/sales"
+                  className="dashboard-workday-card-link dashboard-workday-card-link-top"
+                >
+                  Все <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+              {data.sales.isConfigured ? (
+                <div className="dashboard-sales-body">
+                  <div
+                    className="dashboard-sales-large-ring"
+                    style={
+                      {
+                        "--sales-progress": `${data.sales.percent ?? 0}%`,
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span>{data.sales.percent ?? 0}%</span>
+                  </div>
+                  <div>
+                    <strong>{data.sales.fact ?? 0} ₽</strong>
+                    <small>из {data.sales.planTarget ?? 0} ₽</small>
+                  </div>
+                </div>
+              ) : (
+                <div className="dashboard-sales-empty">
+                  <BarChart3 />
+                  <strong>План продаж не задан</strong>
+                  <small>
+                    Подключите источник данных или настройте период.
+                  </small>
+                </div>
+              )}
+              <div className="dashboard-sales-mini-bars" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+                <i />
+                <i />
+                <i />
+              </div>
+            </section>
+            <section
+              className="dashboard-workday-card dashboard-workday-quick-access"
+              data-dashboard-region={dashboardColumnAttributes.quickAccess}
+              aria-labelledby="quick-access-title"
+            >
+              <div className="dashboard-workday-card-heading">
+                <div>
+                  <p className="dashboard-workday-eyebrow">Инструменты</p>
+                  <h2 id="quick-access-title">Быстрый доступ</h2>
+                </div>
+              </div>
+              <div className="dashboard-quick-access-grid">
+                <Link href="/catalog">
+                  <ClipboardList />
+                  <span>Каталог препаратов</span>
+                </Link>
+                <Link href="/agro-helper">
+                  <Calculator />
+                  <span>Калькулятор нормы</span>
+                </Link>
+                <Link href="/knowledge-base">
+                  <Layers3 />
+                  <span>Регламенты</span>
+                </Link>
+                <Link href="/sales">
+                  <BarChart3 />
+                  <span>Аналитика</span>
+                </Link>
+              </div>
+            </section>
+          </div>
+        </div>
 
         <aside
           className="dashboard-workday-side"
@@ -460,29 +624,6 @@ export default function Dashboard() {
         </aside>
       </div>
 
-      <section
-        className="dashboard-workday-reference-links"
-        data-dashboard-region={dashboardColumnAttributes.references}
-        aria-label="Справочный доступ"
-      >
-        <Link className="is-catalog" href="/catalog">
-          <ClipboardList />
-          Каталог препаратов
-        </Link>
-        <Link className="is-calculator" href="/agro-helper">
-          <Sprout />
-          Калькулятор нормы
-        </Link>
-        <Link className="is-regulations" href="/knowledge-base">
-          <Layers3 />
-          Регламенты
-        </Link>
-        <Link className="is-analytics" href="/sales">
-          <BriefcaseBusiness />
-          Аналитика
-        </Link>
-      </section>
-
       <section className="dashboard-support-strip" aria-label="Поддержка">
         <div>
           <strong>Нужна помощь по кабинету?</strong>
@@ -502,6 +643,48 @@ export default function Dashboard() {
         onClose={() => setIsSupportOpen(false)}
       />
     </div>
+  );
+}
+
+export type SalesPlanWidgetProps = {
+  isConfigured: boolean;
+  percent: number | null;
+  fact: number | null;
+  planTarget: number | null;
+  planScopeLabel?: string | null;
+};
+
+export function SalesPlanWidget({
+  isConfigured,
+  percent,
+  fact,
+  planTarget,
+  planScopeLabel,
+}: SalesPlanWidgetProps) {
+  return (
+    <Link
+      href="/sales"
+      className={`dashboard-sales-plan-inline ${isConfigured ? "" : "is-empty"}`}
+      aria-label="Открыть выполнение плана продаж"
+    >
+      <span
+        className="dashboard-sales-plan-ring"
+        style={
+          { "--sales-progress": `${percent ?? 0}%` } as React.CSSProperties
+        }
+      >
+        <span>{isConfigured ? `${percent ?? 0}%` : "—"}</span>
+      </span>
+      <span>
+        <small>{planScopeLabel ?? "Выполнение плана"}</small>
+        <strong>{isConfigured ? `${fact ?? 0} ₽` : "План не задан"}</strong>
+        <em>
+          {isConfigured
+            ? `из ${planTarget ?? 0} ₽`
+            : "Источник данных не подключён"}
+        </em>
+      </span>
+    </Link>
   );
 }
 
