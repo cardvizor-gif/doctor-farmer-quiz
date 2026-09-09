@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dashboardModules, dashboardSubtitle, dashboardTitle, firstNameFromDisplayName } from "./Dashboard";
+import { dashboardModules, dashboardSubtitle, dashboardTitle, farmAttentionTone, firstNameFromDisplayName, taskProgressStep } from "./Dashboard";
 
 describe("главная страница рабочего кабинета", () => {
   it("использует утверждённую формулировку заголовка и подзаголовка", () => {
@@ -11,6 +11,17 @@ describe("главная страница рабочего кабинета", ()
     expect(firstNameFromDisplayName("Шамиль Вильданов")).toBe("Шамиль");
     expect(firstNameFromDisplayName("  Шамиль  ")).toBe("Шамиль");
     expect(firstNameFromDisplayName(null)).toBe("коллега");
+  });
+
+  it("отображает статусы задач как последовательные этапы рабочего процесса", () => {
+    expect(taskProgressStep("todo")).toBe(0);
+    expect(taskProgressStep("in_progress")).toBe(1);
+    expect(taskProgressStep("done")).toBe(3);
+  });
+
+  it("разделяет финансовые и операционные причины внимания к хозяйству", () => {
+    expect(farmAttentionTone("Просрочен платеж по договору")).toBe("finance");
+    expect(farmAttentionTone("Нет активности 30 дней")).toBe("operation");
   });
 
   it("сохраняет шесть основных модулей в согласованном порядке", () => {

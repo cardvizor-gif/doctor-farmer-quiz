@@ -48,6 +48,17 @@ function taskStatusLabel(status: string) {
   return "Запланировано";
 }
 
+export function taskProgressStep(status: string) {
+  if (status === "done") return 3;
+  if (status === "in_progress") return 1;
+  if (status === "cancelled") return 0;
+  return 0;
+}
+
+export function farmAttentionTone(nextAction: string | null | undefined) {
+  return /оплат|платеж|долг|дебитор/i.test(nextAction ?? "") ? "finance" : "operation";
+}
+
 export default function Dashboard() {
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const { data, isLoading, error } = trpc.dashboard.overview.useQuery(undefined, { retry: false });
@@ -72,7 +83,7 @@ export default function Dashboard() {
 
       <section className="dashboard-workday-summary" aria-label="Сводка рабочего дня">
         <SummaryCard icon={<CalendarCheck2 />} value={data.summary.today} label="Сегодня" tone="green" />
-        <SummaryCard icon={<AlertCircle />} value={data.summary.overdue} label="Просрочено" tone="red" />
+        <SummaryCard icon={<AlertCircle />} value={data.summary.overdue} label="Просрочено" tone="amber" />
         <SummaryCard icon={<Flag />} value={data.isLeadership ? data.summary.farms : data.summary.proposals} label="На контроле" mobileLabel="КП" tone="blue" />
       </section>
 
@@ -87,7 +98,10 @@ export default function Dashboard() {
               <Link key={item.task.id} href="/sales" className="dashboard-workday-task-row">
                 <span className={`dashboard-workday-task-icon ${item.task.status === "in_progress" ? "is-active" : ""}`}><BriefcaseBusiness className="h-5 w-5" /></span>
                 <span className="min-w-0 flex-1"><strong>{item.task.title}</strong><small>{item.workspace.name} · {formatTaskTime(item.task.dueAt)}</small></span>
-                <span className={`dashboard-workday-status dashboard-workday-status-${item.task.status}`}>{taskStatusLabel(item.task.status)}</span>
+                <span className="dashboard-workday-task-progress" aria-label={`Этап: ${taskStatusLabel(item.task.status)}`}>
+                  <span className="dashboard-workday-task-progress-line" aria-hidden="true">{[0, 1, 2, 3].map((step) => <i key={step} className={step <= taskProgressStep(item.task.status) ? "is-complete" : ""} />)}</span>
+                  <small>{taskStatusLabel(item.task.status)}</small>
+                </span>
               </Link>
             ))}
           </div>
@@ -98,15 +112,15 @@ export default function Dashboard() {
           <section className="dashboard-workday-card" aria-labelledby="farms-attention-title">
             <div className="dashboard-workday-card-heading"><div><p className="dashboard-workday-eyebrow">Контроль клиентов</p><h2 id="farms-attention-title">Хозяйства, требующие внимания</h2></div><Link href="/farms" className="dashboard-workday-card-link">Все <span aria-hidden="true">→</span></Link></div>
             <div className="dashboard-workday-farm-list">
-              {data.attention.attentionFarms.length === 0 ? <p className="dashboard-workday-empty-note">Хозяйств с ближайшим действием нет.</p> : data.attention.attentionFarms.slice(0, 3).map((farm) => <Link key={farm.id} href="/farms" className="dashboard-workday-farm-row"><span className="dashboard-workday-farm-marker"><Building2 /></span><span><strong>{farm.name}</strong><small>{farm.district || farm.settlement || "Следующее действие требует контроля"}</small></span><span aria-hidden="true">›</span></Link>)}
+              {data.attention.attentionFarms.length === 0 ? <p className="dashboard-workday-empty-note">Хозяйств с ближайшим действием нет.</p> : data.attention.attentionFarms.slice(0, 3).map((farm) => <Link key={farm.id} href="/farms" className={`dashboard-workday-farm-row is-${farmAttentionTone(farm.nextAction)}`}><span className="dashboard-workday-farm-marker"><Building2 /></span><span><strong>{farm.name}</strong><small>{farm.district || farm.settlement || "Следующее действие требует контроля"}</small></span><span aria-hidden="true">›</span></Link>)}
             </div>
           </section>
 
           <section className="dashboard-workday-card" aria-labelledby="attention-title">
             <div className="dashboard-workday-card-heading"><div><p className="dashboard-workday-eyebrow">Исключения</p><h2 id="attention-title">Требуют внимания</h2></div><Bell className="h-5 w-5 text-[#9fce35]" /></div>
             <div className="dashboard-workday-attention-list">
-              <Link href="/sales" className="dashboard-workday-attention-row is-danger"><AlertCircle /><span><strong>Просроченные задачи</strong><small>{data.attention.overdueTasks} требуют реакции</small></span><b>{data.attention.overdueTasks}</b></Link>
-              <Link href="/order-requests" className="dashboard-workday-attention-row is-warning"><ClipboardList /><span><strong>Заявки на рассмотрении</strong><small>{data.attention.openOrders} в рабочем контуре</small></span><b>{data.attention.openOrders}</b></Link>
+              <Link href="/sales" className="dashboard-workday-attention-row is-warning"><AlertCircle /><span><strong>Просроченные задачи</strong><small>{data.attention.overdueTasks} требуют реакции</small></span><b>{data.attention.overdueTasks}</b></Link>
+              <Link href="/order-requests" className="dashboard-workday-attention-row is-info"><ClipboardList /><span><strong>Заявки на рассмотрении</strong><small>{data.attention.openOrders} в рабочем контуре</small></span><b>{data.attention.openOrders}</b></Link>
             </div>
           </section>
 
@@ -135,7 +149,7 @@ export default function Dashboard() {
   );
 }
 
-function SummaryCard({ icon, value, label, mobileLabel, tone }: { icon: React.ReactNode; value: number; label: string; mobileLabel?: string; tone: "green" | "red" | "blue" | "violet" }) {
+function SummaryCard({ icon, value, label, mobileLabel, tone }: { icon: React.ReactNode; value: number; label: string; mobileLabel?: string; tone: "green" | "amber" | "red" | "blue" | "violet" }) {
   return <article className={`dashboard-workday-summary-card is-${tone}`}><span>{icon}</span><strong>{value}</strong><small><span className="dashboard-summary-label-desktop">{label}</span>{mobileLabel && <span className="dashboard-summary-label-mobile">{mobileLabel}</span>}</small></article>;
 }
 

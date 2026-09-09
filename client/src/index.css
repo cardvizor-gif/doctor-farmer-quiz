@@ -2123,3 +2123,55 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 @media (max-width: 640px) {
   .dashboard-workday-hero h1 { font-size: 22px; line-height: 1.12; letter-spacing: -.025em; }
 }
+
+/* Dashboard UX refinement: compact metrics, semantic status colors and readable hierarchy */
+.dashboard-workday-summary { display: flex; align-items: center; gap: 0; min-height: 56px; padding: 6px 10px; border: 1px solid #e2eadf; border-radius: 14px; background: #fff; box-shadow: 0 4px 12px rgba(37,72,40,.04); }
+.dashboard-workday-summary-card { display: flex; flex: 1 1 0; align-items: center; gap: 8px; min-height: 42px; padding: 5px 14px; border: 0; border-right: 1px solid #e8eee6; border-radius: 0; background: transparent; box-shadow: none; }
+.dashboard-workday-summary-card:last-child { border-right: 0; }
+.dashboard-workday-summary-card > span { width: 28px; height: 28px; border-radius: 9px; }
+.dashboard-workday-summary-card svg { width: 16px; height: 16px; }
+.dashboard-workday-summary-card strong { font-size: 22px; line-height: 1; font-weight: 900; }
+.dashboard-workday-summary-card small { margin: 0; font-size: 12px; font-weight: 700; }
+.dashboard-workday-summary-card.is-green { border-color: transparent; background: transparent; }
+.dashboard-workday-summary-card.is-amber { border-color: transparent; background: transparent; }
+.dashboard-workday-summary-card.is-amber > span { background: #fff1d8; color: #b66b08; }
+.dashboard-workday-summary-card.is-amber strong { color: #9c610f; }
+.dashboard-workday-summary-card.is-red > span { background: #fde8e6; color: #c34a42; }
+.dashboard-workday-summary-card.is-blue { border-color: transparent; background: transparent; }
+.dashboard-workday-summary-card.is-blue > span { background: #e6f1f7; color: #2876a0; }
+.dashboard-workday-card-heading h2 { font-size: 17px; font-weight: 800; }
+.dashboard-workday-task-row { align-items: flex-start; line-height: 1.4; }
+.dashboard-workday-task-row strong { font-size: 14px; font-weight: 700; line-height: 1.4; }
+.dashboard-workday-task-row small { line-height: 1.4; }
+.dashboard-workday-task-progress { display: grid; flex: 0 0 82px; align-self: center; gap: 4px; }
+.dashboard-workday-task-progress-line { display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; gap: 4px; }
+.dashboard-workday-task-progress-line::before { content: ""; position: absolute; }
+.dashboard-workday-task-progress-line i { position: relative; display: block; height: 5px; border-radius: 999px; background: #e5ebe5; }
+.dashboard-workday-task-progress-line i.is-complete { background: #7fad35; }
+.dashboard-workday-task-progress small { color: #718083; font-size: 10px; text-align: right; }
+.dashboard-workday-attention-row.is-danger { background: #fff0ef; color: #c34a42; }
+.dashboard-workday-attention-row.is-danger b { background: #d94c47; color: #fff; }
+.dashboard-workday-attention-row.is-warning { background: #fff7e9; color: #b66b08; }
+.dashboard-workday-attention-row.is-warning b { background: #ef921a; color: #fff; }
+.dashboard-workday-attention-row.is-info { background: #edf5fb; color: #357ca4; }
+.dashboard-workday-attention-row.is-info b { background: #438ab4; color: #fff; }
+.dashboard-workday-farm-row.is-finance .dashboard-workday-farm-marker { background: #f0eafb; color: #7354a7; }
+.dashboard-workday-farm-row.is-finance strong { color: #684b95; }
+.dashboard-workday-farm-row.is-operation .dashboard-workday-farm-marker { background: #fff0d5; color: #b66b08; }
+.dashboard-workday-farm-row.is-operation strong { color: #8d641d; }
+.dashboard-workday-notification strong { font-size: 13px; font-weight: 700; line-height: 1.4; }
+.dashboard-workday-notification small { font-size: 13px; line-height: 1.4; }
+.cabinet-mobile-bottom-nav-item svg { stroke-width: 2 !important; }
+@media (max-width: 640px) {
+  .dashboard-workday-summary { min-height: 50px; padding: 5px 4px; }
+  .dashboard-workday-summary-card { gap: 5px; padding: 4px 7px; }
+  .dashboard-workday-summary-card > span { width: 25px; height: 25px; border-radius: 8px; }
+  .dashboard-workday-summary-card strong { font-size: 19px; }
+  .dashboard-workday-summary-card small { font-size: 10px; }
+  .dashboard-workday-card-heading h2 { font-size: 16px; font-weight: 800; }
+  .dashboard-workday-task-row { min-height: 68px; padding: 10px 12px; }
+  .dashboard-workday-task-row strong { font-size: 13px; }
+  .dashboard-workday-task-progress { flex-basis: 66px; }
+  .dashboard-workday-task-progress-line { gap: 3px; }
+  .dashboard-workday-task-progress small { font-size: 9px; }
+}

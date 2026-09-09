@@ -307,7 +307,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
           const Icon = item.icon;
           const isActive = item.href === "/" ? location === "/" : location.startsWith(item.href);
           return <Link key={item.href} href={item.href} className={`cabinet-mobile-bottom-nav-item ${isActive ? "is-active" : ""}`} aria-current={isActive ? "page" : undefined}>
-            <Icon className="h-5 w-5" strokeWidth={isActive ? 2.3 : 1.8} />
+            <Icon className="h-5 w-5" strokeWidth={2} />
             <span>{item.label}</span>
           </Link>;
         })}
