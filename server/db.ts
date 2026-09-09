@@ -385,6 +385,62 @@ export async function listWorkspaceTasks(workspaceIds: number[]) {
   return rows;
 }
 
+const dashboardRoleRank = { manager: 1, rop: 2, cluster_director: 3, deputy_ceo: 4, ceo: 5 } as const;
+const dashboardRoleLabels = { manager: "Менеджер", rop: "РОП", cluster_director: "Директор кластера", deputy_ceo: "Заместитель генерального директора", ceo: "Генеральный директор" } as const;
+
+/**
+ * Role-aware home data. Leadership scope is derived only from explicit workspaceMembers;
+ * primaryRegionId is never used to expand a user's visibility.
+ */
+export async function getDashboardOverview(user: { openId: string; role: "user" | "admin"; isSuperuser?: number | boolean }) {
+  const memberships = await listWorkspacesForUser(user.openId);
+  const allWorkspaces = user.isSuperuser ? await listWorkspaces() : memberships;
+  const workspaceIds = allWorkspaces.map(item => item.workspace.id);
+  const memberRows = workspaceIds.length ? await listWorkspaceMembers(workspaceIds) : [];
+  const highestMembership = memberships.reduce<typeof memberships[number]["membership"] | null>((best, item) => {
+    if (!best || dashboardRoleRank[item.membership.membershipRole] > dashboardRoleRank[best.membershipRole]) return item.membership;
+    return best;
+  }, null);
+  const roleKey = user.isSuperuser ? "ceo" : highestMembership?.membershipRole ?? "manager";
+  const isLeadership = Boolean(user.isSuperuser || highestMembership && highestMembership.membershipRole !== "manager");
+  const ownerIds = user.isSuperuser
+    ? (await listTeamMembers()).map(item => item.openId)
+    : isLeadership
+      ? Array.from(new Set(memberRows.map(item => item.user.openId)))
+      : [user.openId];
+  const [tasks, scopedFarms, scopedProposals, scopedOrders, notifications] = await Promise.all([
+    user.isSuperuser ? listWorkspaceTasks(workspaceIds) : isLeadership && workspaceIds.length
+      ? listWorkspaceTasks(workspaceIds)
+      : listWorkspaceTasksForUser(user.openId),
+    Promise.all(ownerIds.map(ownerId => listFarms(ownerId))),
+    Promise.all(ownerIds.map(ownerId => listProposals(ownerId))),
+    Promise.all(ownerIds.map(ownerId => listOrderRequests(ownerId))),
+    listNotificationsForUser(user.openId, 8),
+  ]);
+  const farms = scopedFarms.flat();
+  const proposals = scopedProposals.flat();
+  const orders = scopedOrders.flat();
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const tomorrowStart = new Date(todayStart); tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+  const openTask = (item: typeof tasks[number]) => item.task.status === "todo" || item.task.status === "in_progress";
+  const todayTasks = tasks.filter(item => openTask(item) && item.task.dueAt && new Date(item.task.dueAt) >= todayStart && new Date(item.task.dueAt) < tomorrowStart);
+  const overdueTasks = tasks.filter(item => openTask(item) && item.task.dueAt && new Date(item.task.dueAt) < todayStart);
+  const attentionFarms = farms.filter(farm => farm.nextActionAt && new Date(farm.nextActionAt) < tomorrowStart).slice(0, 5);
+  const openProposals = proposals.filter(proposal => proposal.status === "draft" || proposal.status === "sent");
+  const openOrders = orders.filter(order => order.status === "draft" || order.status === "submitted" || order.status === "partial");
+  return {
+    role: roleKey,
+    roleLabel: user.isSuperuser ? "Суперпользователь" : dashboardRoleLabels[roleKey],
+    isLeadership,
+    scopeLabel: user.isSuperuser ? "Вся компания" : allWorkspaces.map(item => item.region.name).join(", ") || "Личное рабочее пространство",
+    workspaces: allWorkspaces.map(item => ({ id: item.workspace.id, name: item.workspace.name, region: item.region.name })),
+    summary: { today: todayTasks.length, overdue: overdueTasks.length, farms: farms.length, proposals: openProposals.length, orders: openOrders.length, team: memberRows.length },
+    tasks: [...overdueTasks, ...todayTasks, ...tasks.filter(item => openTask(item) && !todayTasks.includes(item) && !overdueTasks.includes(item))].slice(0, 8),
+    attention: { overdueTasks: overdueTasks.length, attentionFarms, openProposals: openProposals.length, openOrders: openOrders.length },
+    notifications,
+  };
+}
+
 export async function getUserPermissions(openId: string): Promise<PermissionCode[]> {
   const db = await getDb();
   if (!db) return [];
