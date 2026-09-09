@@ -75,6 +75,23 @@ export const dashboardReferenceLayout = [
   "notifications",
 ] as const;
 
+export const dashboardColumnLayout = {
+  fullWidth: ["hero"],
+  left: ["summary", "actions", "plan", "references"],
+  right: ["attention", "pipeline", "notifications"],
+} as const;
+
+export const dashboardColumnAttributes = {
+  hero: "full-width",
+  summary: "left-column",
+  actions: "left-column",
+  plan: "left-column",
+  references: "left-column",
+  attention: "right-column",
+  pipeline: "right-column",
+  notifications: "right-column",
+} as const;
+
 function formatTaskClock(value: Date | string | null | undefined) {
   if (!value) return "—";
   return new Date(value).toLocaleTimeString("ru-RU", {
@@ -151,6 +168,7 @@ export default function Dashboard() {
     <div className="dashboard-workday dashboard-reference-workday">
       <section
         className="dashboard-workday-hero"
+        data-dashboard-region={dashboardColumnAttributes.hero}
         aria-labelledby="workday-title"
       >
         <div className="dashboard-reference-hero-copy">
@@ -178,6 +196,7 @@ export default function Dashboard() {
 
       <section
         className="dashboard-workday-summary"
+        data-dashboard-region={dashboardColumnAttributes.summary}
         aria-label="Сводка рабочего дня"
       >
         <SummaryCard
@@ -205,7 +224,11 @@ export default function Dashboard() {
         />
       </section>
 
-      <nav className="dashboard-workday-actions" aria-label="Быстрые действия">
+      <nav
+        className="dashboard-workday-actions"
+        data-dashboard-region={dashboardColumnAttributes.actions}
+        aria-label="Быстрые действия"
+      >
         {dashboardActions.map(action => {
           const Icon = action.icon;
           return (
@@ -224,6 +247,7 @@ export default function Dashboard() {
       <div className="dashboard-workday-layout">
         <section
           className="dashboard-workday-card dashboard-workday-tasks"
+          data-dashboard-region={dashboardColumnAttributes.plan}
           aria-labelledby="today-plan-title"
         >
           <div className="dashboard-workday-card-heading">
@@ -295,7 +319,10 @@ export default function Dashboard() {
           </Link>
         </section>
 
-        <aside className="dashboard-workday-side">
+        <aside
+          className="dashboard-workday-side"
+          data-dashboard-region="right-column"
+        >
           <section
             className="dashboard-workday-card"
             aria-labelledby="farms-attention-title"
@@ -435,6 +462,7 @@ export default function Dashboard() {
 
       <section
         className="dashboard-workday-reference-links"
+        data-dashboard-region={dashboardColumnAttributes.references}
         aria-label="Справочный доступ"
       >
         <Link className="is-catalog" href="/catalog">
