@@ -270,7 +270,7 @@ export default function CabinetShell({ children }: { children: React.ReactNode }
               <button type="button" className="cabinet-search-hint" onClick={() => setIsSearchOpen(true)} aria-label="Открыть поиск по кабинету"><Search className="h-4 w-4" /><span>Поиск по кабинету</span><kbd>⌘ K</kbd></button>
               {canViewTeam && <Link href="/admin" className="cabinet-admin-panel-link" aria-label="Открыть панель администратора"><UsersRound className="h-4 w-4" aria-hidden="true" /><span>Команда</span></Link>}
               {user?.isSuperuser && <Link href="/access-requests" className="cabinet-access-requests-link" aria-label={pendingAccessRequests > 0 ? `Заявки доступа: ${pendingAccessRequests} новых` : "Заявки доступа: новых нет"}>
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" /><span>Заявки</span>{pendingAccessRequests > 0 && <strong aria-hidden="true">{pendingAccessRequests}</strong>}
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" /><span>Заявки доступа</span>{pendingAccessRequests > 0 && <strong aria-hidden="true">{pendingAccessRequests}</strong>}
               </Link>}
               {canCreateSupport && <Link href="/support" className="cabinet-access-requests-link" aria-label={newSupportTickets > 0 ? `Обращения: ${newSupportTickets} новых` : "Открыть обращения"}>
                 <MessageSquareText className="h-4 w-4" aria-hidden="true" /><span>Обращения</span>{newSupportTickets > 0 && <strong aria-hidden="true">{newSupportTickets}</strong>}

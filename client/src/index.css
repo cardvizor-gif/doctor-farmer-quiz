@@ -2101,3 +2101,19 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   .cabinet-sidebar-utility-nav::before { content: "Управление"; padding: 0 14px 4px; color: #9fb8b5; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
   .cabinet-sidebar-utility-nav .cabinet-nav-item { min-height: 42px; }
 }
+
+@media (max-width: 767px) {
+  .cabinet-topbar-actions .cabinet-admin-panel-link { display: none; }
+  .cabinet-topbar-actions .cabinet-access-requests-link {
+    display: inline-flex;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+    border-radius: 10px;
+  }
+  .cabinet-topbar-actions .cabinet-access-requests-link > span { display: none; }
+  .cabinet-topbar-actions .cabinet-access-requests-link > strong { position: absolute; margin: -21px -24px 0 0; }
+}
