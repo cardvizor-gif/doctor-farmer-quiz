@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { AlertCircle, Bell, BriefcaseBusiness, Building2, CalendarCheck2, CheckCircle2, ClipboardList, FileText, HelpCircle, Layers3, ListTodo, Plus, ShieldAlert, Sprout, Trophy } from "lucide-react";
+import { AlertCircle, Bell, BriefcaseBusiness, Building2, CalendarCheck2, CheckCircle2, ClipboardList, FileText, Flag, HelpCircle, Layers3, ListTodo, Plus, ShieldAlert } from "lucide-react";
 import { SupportModal } from "@/components/SupportModal";
 import { trpc } from "@/lib/trpc";
 
@@ -36,13 +36,6 @@ function formatTaskTime(value: Date | string | null | undefined) {
   return new Date(value).toLocaleString("ru-RU", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-function roleHeading(role: string) {
-  if (role === "manager") return "Ваш рабочий день";
-  if (role === "rop") return "Контроль команды";
-  if (role === "cluster_director") return "Контур кластера";
-  return "Сводка компании";
-}
-
 function taskStatusLabel(status: string) {
   if (status === "in_progress") return "В работе";
   if (status === "done") return "Готово";
@@ -61,9 +54,10 @@ export default function Dashboard() {
     <div className="dashboard-workday">
       <section className="dashboard-workday-hero" aria-labelledby="workday-title">
         <div>
-          <p className="dashboard-workday-kicker">{data.roleLabel} · {data.scopeLabel}</p>
-          <h1 id="workday-title">{roleHeading(data.role)}</h1>
+          <p className="dashboard-workday-kicker">{data.roleLabel}</p>
+          <h1 id="workday-title">Доброе утро, {data.userName}</h1>
           <p className="dashboard-workday-date">{new Date().toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })}</p>
+          <p className="dashboard-workday-scope">{data.scopeLabel}</p>
         </div>
         <div className="dashboard-workday-hero-actions">
           <Link href="/sales" className="dashboard-workday-secondary-action"><ListTodo className="h-4 w-4" />Открыть задачи</Link>
@@ -74,8 +68,7 @@ export default function Dashboard() {
       <section className="dashboard-workday-summary" aria-label="Сводка рабочего дня">
         <SummaryCard icon={<CalendarCheck2 />} value={data.summary.today} label="Сегодня" tone="green" />
         <SummaryCard icon={<AlertCircle />} value={data.summary.overdue} label="Просрочено" tone="red" />
-        <SummaryCard icon={<Building2 />} value={data.summary.farms} label={data.isLeadership ? "Хозяйств в контуре" : "Мои хозяйства"} tone="blue" />
-        <SummaryCard icon={<FileText />} value={data.summary.proposals} label="КП в работе" tone="violet" />
+        <SummaryCard icon={<Flag />} value={data.isLeadership ? data.summary.farms : data.summary.proposals} label="На контроле" mobileLabel="КП" tone="blue" />
       </section>
 
       <div className="dashboard-workday-layout">
@@ -97,13 +90,24 @@ export default function Dashboard() {
         </section>
 
         <aside className="dashboard-workday-side">
+          <section className="dashboard-workday-card" aria-labelledby="farms-attention-title">
+            <div className="dashboard-workday-card-heading"><div><p className="dashboard-workday-eyebrow">Контроль клиентов</p><h2 id="farms-attention-title">Хозяйства, требующие внимания</h2></div><Link href="/farms" className="dashboard-workday-card-link">Все <span aria-hidden="true">→</span></Link></div>
+            <div className="dashboard-workday-farm-list">
+              {data.attention.attentionFarms.length === 0 ? <p className="dashboard-workday-empty-note">Хозяйств с ближайшим действием нет.</p> : data.attention.attentionFarms.slice(0, 3).map((farm) => <Link key={farm.id} href="/farms" className="dashboard-workday-farm-row"><span className="dashboard-workday-farm-marker"><Building2 /></span><span><strong>{farm.name}</strong><small>{farm.district || farm.settlement || "Следующее действие требует контроля"}</small></span><span aria-hidden="true">›</span></Link>)}
+            </div>
+          </section>
+
           <section className="dashboard-workday-card" aria-labelledby="attention-title">
             <div className="dashboard-workday-card-heading"><div><p className="dashboard-workday-eyebrow">Исключения</p><h2 id="attention-title">Требуют внимания</h2></div><Bell className="h-5 w-5 text-[#9fce35]" /></div>
             <div className="dashboard-workday-attention-list">
               <Link href="/sales" className="dashboard-workday-attention-row is-danger"><AlertCircle /><span><strong>Просроченные задачи</strong><small>{data.attention.overdueTasks} требуют реакции</small></span><b>{data.attention.overdueTasks}</b></Link>
               <Link href="/order-requests" className="dashboard-workday-attention-row is-warning"><ClipboardList /><span><strong>Заявки на рассмотрении</strong><small>{data.attention.openOrders} в рабочем контуре</small></span><b>{data.attention.openOrders}</b></Link>
-              <Link href="/proposals" className="dashboard-workday-attention-row is-info"><FileText /><span><strong>КП в работе</strong><small>{data.attention.openProposals} требуют следующего шага</small></span><b>{data.attention.openProposals}</b></Link>
             </div>
+          </section>
+
+          <section className="dashboard-workday-card" aria-labelledby="pipeline-title">
+            <div className="dashboard-workday-card-heading"><div><p className="dashboard-workday-eyebrow">Коммерческий контур</p><h2 id="pipeline-title">КП и заявки в работе</h2></div><Link href="/sales" className="dashboard-workday-card-link">Все <span aria-hidden="true">→</span></Link></div>
+            <div className="dashboard-workday-pipeline-list"><Link href="/proposals" className="dashboard-workday-pipeline-row"><FileText /><span><strong>КП в работе</strong><small>Требуют следующего шага</small></span><b>{data.attention.openProposals}</b></Link><Link href="/order-requests" className="dashboard-workday-pipeline-row"><ClipboardList /><span><strong>Заявки</strong><small>На рассмотрении и в работе</small></span><b>{data.attention.openOrders}</b></Link></div>
           </section>
 
           <section className="dashboard-workday-card" aria-labelledby="notifications-title">
@@ -126,8 +130,8 @@ export default function Dashboard() {
   );
 }
 
-function SummaryCard({ icon, value, label, tone }: { icon: React.ReactNode; value: number; label: string; tone: "green" | "red" | "blue" | "violet" }) {
-  return <article className={`dashboard-workday-summary-card is-${tone}`}><span>{icon}</span><strong>{value}</strong><small>{label}</small></article>;
+function SummaryCard({ icon, value, label, mobileLabel, tone }: { icon: React.ReactNode; value: number; label: string; mobileLabel?: string; tone: "green" | "red" | "blue" | "violet" }) {
+  return <article className={`dashboard-workday-summary-card is-${tone}`}><span>{icon}</span><strong>{value}</strong><small><span className="dashboard-summary-label-desktop">{label}</span>{mobileLabel && <span className="dashboard-summary-label-mobile">{mobileLabel}</span>}</small></article>;
 }
 
 function EmptyState({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {

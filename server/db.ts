@@ -392,7 +392,7 @@ const dashboardRoleLabels = { manager: "Менеджер", rop: "РОП", cluste
  * Role-aware home data. Leadership scope is derived only from explicit workspaceMembers;
  * primaryRegionId is never used to expand a user's visibility.
  */
-export async function getDashboardOverview(user: { openId: string; role: "user" | "admin"; isSuperuser?: number | boolean }) {
+export async function getDashboardOverview(user: { openId: string; role: "user" | "admin"; isSuperuser?: number | boolean; name?: string | null }) {
   const memberships = await listWorkspacesForUser(user.openId);
   const allWorkspaces = user.isSuperuser ? await listWorkspaces() : memberships;
   const workspaceIds = allWorkspaces.map(item => item.workspace.id);
@@ -430,6 +430,7 @@ export async function getDashboardOverview(user: { openId: string; role: "user" 
   const openOrders = orders.filter(order => order.status === "draft" || order.status === "submitted" || order.status === "partial");
   return {
     role: roleKey,
+    userName: user.name?.trim() || "коллега",
     roleLabel: user.isSuperuser ? "Суперпользователь" : dashboardRoleLabels[roleKey],
     isLeadership,
     scopeLabel: user.isSuperuser ? "Вся компания" : allWorkspaces.map(item => item.region.name).join(", ") || "Личное рабочее пространство",

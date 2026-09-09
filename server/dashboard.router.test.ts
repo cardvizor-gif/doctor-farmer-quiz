@@ -23,7 +23,7 @@ describe("role-aware dashboard", () => {
 
     expect(result.role).toBe("manager");
     expect(result.summary.farms).toBe(4);
-    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: manager.openId, role: "user", isSuperuser: 0 });
+    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: manager.openId, role: "user", isSuperuser: 0, name: manager.name });
   });
 
   it("passes the ROP identity to the server scope resolver", async () => {
@@ -33,7 +33,7 @@ describe("role-aware dashboard", () => {
     const result = await appRouter.createCaller(context(rop)).dashboard.overview();
 
     expect(result.roleLabel).toBe("РОП");
-    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: rop.openId, role: "user", isSuperuser: 0 });
+    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: rop.openId, role: "user", isSuperuser: 0, name: rop.name });
   });
 
   it("passes the immutable superuser marker to the company scope resolver", async () => {
@@ -43,6 +43,6 @@ describe("role-aware dashboard", () => {
     const result = await appRouter.createCaller(context(owner));
 
     expect((await result.dashboard.overview()).scopeLabel).toBe("Вся компания");
-    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: ENV.ownerOpenId, role: "admin", isSuperuser: 1 });
+    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: ENV.ownerOpenId, role: "admin", isSuperuser: 1, name: owner.name });
   });
 });

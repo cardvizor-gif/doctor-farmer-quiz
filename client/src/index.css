@@ -1977,3 +1977,82 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 @keyframes dashboard-workday-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 @media (max-width: 900px) { .dashboard-workday-layout { grid-template-columns: 1fr; } .dashboard-workday-quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .dashboard-workday { gap: 10px; } .dashboard-workday-hero { align-items: stretch; flex-direction: column; gap: 14px; padding: 17px; border-radius: 18px; } .dashboard-workday-hero h1 { font-size: 25px; } .dashboard-workday-hero-actions { display: grid; grid-template-columns: 1fr 1fr; } .dashboard-workday-primary-action, .dashboard-workday-secondary-action { min-height: 42px; padding: 0 8px; font-size: 11px; } .dashboard-workday-summary { gap: 6px; grid-template-columns: repeat(2, minmax(0, 1fr)); } .dashboard-workday-summary-card { min-height: 68px; padding: 10px; border-radius: 14px; } .dashboard-workday-summary-card > span { width: 30px; height: 30px; border-radius: 9px; } .dashboard-workday-summary-card svg { width: 16px; height: 16px; } .dashboard-workday-summary-card strong { font-size: 21px; } .dashboard-workday-summary-card small { font-size: 10px; } .dashboard-workday-card { border-radius: 17px; } .dashboard-workday-card-heading { padding: 15px 14px 11px; } .dashboard-workday-card-heading h2 { font-size: 17px; } .dashboard-workday-task-row { min-height: 66px; padding: 10px 14px; } .dashboard-workday-task-row strong { font-size: 12px; } .dashboard-workday-status { padding: 5px 7px; font-size: 9px; } .dashboard-workday-quick-grid { gap: 7px; padding: 0 10px 10px; } .dashboard-workday-quick-card { padding: 9px; } .dashboard-workday-quick-card strong { font-size: 11px; } .dashboard-workday-quick-card small { font-size: 9px; } .dashboard-support-strip { display: none; } }
+
+/* Approved workday reference: light operational dashboard */
+.dashboard-workday { max-width: 1440px; margin: 0 auto; gap: 16px; color: #243b34; }
+.dashboard-workday-hero { align-items: center; min-height: 118px; padding: 22px 26px; border: 0; border-radius: 16px; background: linear-gradient(108deg, #79bd20 0%, #9bd522 100%); box-shadow: 0 10px 24px rgba(70, 117, 27, .12); }
+.dashboard-workday-kicker { margin-bottom: 5px; color: rgba(255,255,255,.86); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.dashboard-workday-hero h1 { color: #fff; font-size: clamp(26px, 3vw, 38px); letter-spacing: -.045em; }
+.dashboard-workday-date, .dashboard-workday-scope { color: rgba(255,255,255,.9); }
+.dashboard-workday-scope { margin: 2px 0 0; font-size: 11px; }
+.dashboard-workday-hero-actions { gap: 8px; }
+.dashboard-workday-primary-action { background: #183e35; color: #fff; }
+.dashboard-workday-primary-action:hover { background: #0e3029; color: #fff; }
+.dashboard-workday-secondary-action { border-color: rgba(255,255,255,.68); background: rgba(255,255,255,.95); color: #315741; }
+.dashboard-workday-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.dashboard-workday-summary-card { min-height: 92px; border: 1px solid #e5ece1; border-radius: 14px; background: #fff; box-shadow: 0 5px 14px rgba(37, 72, 40, .06); }
+.dashboard-workday-summary-card.is-green { border-color: #cfe4a7; background: #fbfff6; }
+.dashboard-workday-summary-card.is-red { border-color: #f2c9c6; background: #fffafa; }
+.dashboard-workday-summary-card.is-blue { border-color: #c9dced; background: #fbfdff; }
+.dashboard-workday-summary-card > span { width: 40px; height: 40px; }
+.dashboard-workday-summary-card strong { font-size: 28px; }
+.dashboard-workday-layout { grid-template-columns: minmax(0, 1.6fr) minmax(330px, .9fr); gap: 16px; align-items: start; }
+.dashboard-workday-card { border-color: #e5ebe3; border-radius: 16px; box-shadow: 0 5px 16px rgba(37, 72, 40, .05); }
+.dashboard-workday-card-heading { padding: 16px 18px 12px; }
+.dashboard-workday-card-heading h2 { color: #263a33; font-size: 18px; }
+.dashboard-workday-task-row { min-height: 76px; padding: 12px 18px; }
+.dashboard-workday-task-row:hover, .dashboard-workday-farm-row:hover, .dashboard-workday-pipeline-row:hover { background: #fbfef8; }
+.dashboard-workday-task-row strong { font-size: 14px; }
+.dashboard-workday-side { gap: 12px; }
+.dashboard-workday-side > .dashboard-workday-card { box-shadow: 0 4px 12px rgba(37, 72, 40, .045); }
+.dashboard-workday-farm-list, .dashboard-workday-pipeline-list { display: grid; padding: 0 12px 12px; }
+.dashboard-workday-farm-row, .dashboard-workday-pipeline-row { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 11px 6px; border-top: 1px solid #edf2eb; color: inherit; text-decoration: none; }
+.dashboard-workday-farm-row > span:nth-child(2), .dashboard-workday-pipeline-row > span:nth-child(2) { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.dashboard-workday-farm-row strong, .dashboard-workday-pipeline-row strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.dashboard-workday-farm-row small, .dashboard-workday-pipeline-row small { overflow: hidden; color: #7b8a82; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-workday-farm-row > span:last-child { color: #84968b; font-size: 24px; line-height: 1; }
+.dashboard-workday-farm-marker { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 9px; background: #eef8df; color: #659d39; }
+.dashboard-workday-farm-marker svg { width: 16px; height: 16px; }
+.dashboard-workday-pipeline-row > svg { width: 18px; height: 18px; flex: 0 0 auto; color: #609a3d; }
+.dashboard-workday-pipeline-row b { min-width: 26px; padding: 4px 7px; border-radius: 999px; background: #eef6e6; color: #598b36; font-size: 12px; text-align: center; }
+.dashboard-summary-label-mobile { display: none; }
+.dashboard-workday-quick { display: none; }
+.dashboard-support-strip { display: none; }
+@media (max-width: 900px) { .dashboard-workday-layout { grid-template-columns: 1fr; } .dashboard-workday-side { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dashboard-workday-side > .dashboard-workday-card:last-child { grid-column: 1 / -1; } }
+@media (max-width: 640px) {
+  .dashboard-workday { gap: 10px; padding-bottom: 76px; }
+  .dashboard-workday-hero { min-height: 0; padding: 16px 14px; border-radius: 14px; }
+  .dashboard-workday-hero h1 { font-size: 25px; }
+  .dashboard-workday-hero-actions { display: none; }
+  .dashboard-workday-summary { gap: 7px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dashboard-workday-summary-card { min-height: 76px; padding: 9px 6px; border-radius: 13px; }
+  .dashboard-workday-summary-card > span { width: 30px; height: 30px; border-radius: 9px; }
+  .dashboard-workday-summary-card svg { width: 16px; height: 16px; }
+  .dashboard-workday-summary-card strong { font-size: 22px; }
+  .dashboard-workday-summary-card small { font-size: 9px; }
+  .dashboard-summary-label-desktop { display: none; }
+  .dashboard-summary-label-mobile { display: inline; }
+  .dashboard-workday-layout { gap: 10px; }
+  .dashboard-workday-side { display: contents; }
+  .dashboard-workday-side > .dashboard-workday-card { order: 3; }
+  .dashboard-workday-side > .dashboard-workday-card:nth-child(2) { order: 4; }
+  .dashboard-workday-side > .dashboard-workday-card:nth-child(3) { order: 5; }
+  .dashboard-workday-side > .dashboard-workday-card:nth-child(4) { order: 6; }
+  .dashboard-workday-tasks { order: 2; }
+  .dashboard-workday-card { border-radius: 14px; }
+  .dashboard-workday-card-heading { padding: 13px 13px 10px; }
+  .dashboard-workday-card-heading h2 { font-size: 16px; }
+  .dashboard-workday-task-row { min-height: 61px; padding: 9px 12px; }
+  .dashboard-workday-task-row strong { font-size: 12px; }
+  .dashboard-workday-task-row small { font-size: 10px; }
+  .dashboard-workday-farm-row, .dashboard-workday-pipeline-row { padding: 9px 4px; }
+}
+
+@media (max-width: 767px) {
+  .cabinet-topbar-actions { gap: 6px; }
+  .cabinet-topbar-actions .cabinet-search-hint,
+  .cabinet-topbar-actions .cabinet-admin-panel-link,
+  .cabinet-topbar-actions .cabinet-access-requests-link { display: none; }
+  .cabinet-topbar-product-wrap { max-width: 150px; }
+  .cabinet-topbar-product-name { font-size: 15px; line-height: 1.02; }
+}
