@@ -108,6 +108,8 @@ export const mobileNavigation = [
   },
 ] as const;
 
+export const mobileTopbarActions = ["access-requests", "support", "notifications", "account"] as const;
+
 export const mobileUtilityNavigation = [
   {
     href: "/admin",
@@ -532,7 +534,7 @@ export default function CabinetShell({
               {canViewTeam && (
                 <Link
                   href="/admin"
-                  className="cabinet-admin-panel-link"
+                  className="cabinet-admin-panel-link cabinet-mobile-team-link"
                   aria-label="Открыть панель администратора"
                 >
                   <UsersRound className="h-4 w-4" aria-hidden="true" />

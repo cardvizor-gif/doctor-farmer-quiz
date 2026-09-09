@@ -2387,3 +2387,87 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
   .cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-topbar { min-height: 62px !important; }
   .cabinet-canvas.cabinet-canvas-overview .cabinet-workspace.cabinet-theme-overview .cabinet-topbar-product-name { display: inline-flex !important; color: #214630 !important; }
 }
+
+/* Mobile Overview polish: compact two-line brand and stronger section color coding. */
+@media (max-width: 767px) {
+  .cabinet-canvas-overview .cabinet-topbar {
+    display: flex;
+    min-width: 0;
+    gap: 6px;
+    padding: 8px 8px !important;
+    overflow: hidden;
+  }
+  .cabinet-canvas-overview .cabinet-topbar > div:first-child {
+    min-width: 0;
+    flex: 0 1 auto !important;
+    gap: 6px;
+  }
+  .cabinet-canvas-overview .cabinet-menu-trigger {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    flex: 0 0 36px;
+  }
+  .cabinet-canvas-overview .cabinet-topbar-product-wrap {
+    min-width: 0;
+    max-width: 96px;
+  }
+  .cabinet-canvas-overview .cabinet-topbar-product-name {
+    display: inline-flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    width: 92px;
+    color: #164c3d !important;
+    font-size: 14px;
+    font-weight: 850;
+    line-height: .82;
+    letter-spacing: -.055em;
+    white-space: normal;
+  }
+  .cabinet-canvas-overview .cabinet-topbar-product-name span { display: block; }
+  .cabinet-canvas-overview .cabinet-topbar-actions {
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    gap: 4px;
+    overflow: visible;
+  }
+  .cabinet-canvas-overview .cabinet-topbar-actions > .cabinet-access-requests-link,
+  .cabinet-canvas-overview .cabinet-topbar-actions > .cabinet-admin-panel-link,
+  .cabinet-canvas-overview .cabinet-topbar-actions > .cabinet-account-wrap,
+  .cabinet-canvas-overview .cabinet-topbar-actions > .cabinet-notifications-trigger {
+    flex: 0 0 32px;
+  }
+  .cabinet-canvas-overview .cabinet-access-requests-link,
+  .cabinet-canvas-overview .cabinet-admin-panel-link,
+  .cabinet-canvas-overview .cabinet-notifications-trigger,
+  .cabinet-canvas-overview .cabinet-account-trigger {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px;
+    min-height: 32px;
+    padding: 5px !important;
+    border-radius: 8px;
+  }
+  .cabinet-canvas-overview .cabinet-access-requests-link strong { top: -5px; right: -5px; }
+  .cabinet-canvas-overview .cabinet-account-avatar { width: 27px; height: 27px; border-radius: 8px; font-size: 10px; }
+  .dashboard-reference-workday .dashboard-workday-action.is-green { border-color: #8fc23d; background: #e7f6b6; color: #245e34; }
+  .dashboard-reference-workday .dashboard-workday-action.is-mint { border-color: #65b59d; background: #d9f2e8; color: #176c59; }
+  .dashboard-reference-workday .dashboard-workday-action.is-blue { border-color: #78b6ce; background: #dceff8; color: #22637c; }
+  .dashboard-reference-workday .dashboard-workday-action.is-teal { border-color: #69b89b; background: #dcf3e7; color: #1a6a51; }
+  .dashboard-reference-workday .dashboard-workday-action.is-sage { border-color: #a2c957; background: #edf6c8; color: #4f7622; }
+  .dashboard-reference-workday .dashboard-workday-summary-card.is-green { border-color: #b5d889; background: #fbfff1; }
+  .dashboard-reference-workday .dashboard-workday-summary-card.is-rose { border-color: #efb4b5; background: #fff8f8; }
+  .dashboard-reference-workday .dashboard-workday-summary-card.is-amber { border-color: #f0ce83; background: #fffdf6; }
+  .dashboard-reference-workday .dashboard-workday-summary-card.is-green > span { background: #d9f0b4; color: #4b8d26; }
+  .dashboard-reference-workday .dashboard-workday-summary-card.is-rose > span { background: #f8d5d5; color: #c65458; }
+  .dashboard-reference-workday .dashboard-workday-summary-card.is-amber > span { background: #ffe9b3; color: #bd7d15; }
+  .dashboard-reference-workday .dashboard-workday-eyebrow { color: #5a922c; }
+  .dashboard-reference-workday .dashboard-workday-card-link { color: #4f812d; }
+}
+
+@media (max-width: 767px) {
+  .cabinet-canvas-overview .cabinet-topbar { overflow: visible; }
+  .cabinet-canvas-overview .cabinet-mobile-team-link { display: none !important; }
+}

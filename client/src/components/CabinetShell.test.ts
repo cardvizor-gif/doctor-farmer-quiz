@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountIdentity, cabinetPageTitle, cabinetTheme, filterCabinetNavigation, filterMobileUtilityNavigation, isOutsideAccountMenu, mobileNavigation } from "./CabinetShell";
+import { accountIdentity, cabinetPageTitle, cabinetTheme, filterCabinetNavigation, filterMobileUtilityNavigation, isOutsideAccountMenu, mobileNavigation, mobileTopbarActions } from "./CabinetShell";
 
 describe("accountIdentity", () => {
   it("uses the authenticated name and email in the account menu", () => {
@@ -61,6 +61,12 @@ describe("accountIdentity", () => {
       ["/proposals/new", "КП"],
       ["/sales", "Продажи"],
     ]);
+  });
+
+  it("keeps only four priority actions in the mobile topbar", () => {
+    expect(mobileTopbarActions).toEqual(["access-requests", "support", "notifications", "account"]);
+    expect(mobileTopbarActions).not.toContain("team");
+    expect(mobileTopbarActions).toHaveLength(4);
   });
 
   it("closes the account menu only for a pointer target outside its root", () => {
