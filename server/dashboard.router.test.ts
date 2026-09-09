@@ -7,7 +7,7 @@ import * as db from "./db";
 import { ENV } from "./_core/env";
 import { appRouter } from "./routers";
 
-const manager = { id: 1, openId: "manager-1", name: "Менеджер", displayName: "Менеджер", email: "manager@example.com", loginMethod: "invite", role: "user" as const, isSuperuser: 0, status: "active" as const };
+const manager = { id: 1, openId: "manager-1", name: "Менеджер", displayName: "Менеджер", position: "Менеджер по продажам", email: "manager@example.com", loginMethod: "invite", role: "user" as const, isSuperuser: 0, status: "active" as const };
 
 function context(user: typeof manager): TrpcContext {
   return { user, req: { protocol: "https", headers: {} } as TrpcContext["req"], res: {} as TrpcContext["res"] } as TrpcContext;
@@ -17,13 +17,15 @@ describe("role-aware dashboard", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns a manager workday through the protected dashboard route", async () => {
-    vi.mocked(db.getDashboardOverview).mockResolvedValue({ role: "manager", roleLabel: "Менеджер", isLeadership: false, scopeLabel: "Личное рабочее пространство", workspaces: [], summary: { today: 2, overdue: 0, farms: 4, proposals: 1, orders: 0, team: 1 }, tasks: [], attention: { overdueTasks: 0, attentionFarms: [], openProposals: 1, openOrders: 0 }, notifications: [] } as never);
+    vi.mocked(db.getDashboardOverview).mockResolvedValue({ role: "manager", userName: "Менеджер", position: "Менеджер по продажам", roleLabel: "Менеджер", isLeadership: false, scopeLabel: "Личное рабочее пространство", workspaces: [], summary: { today: 2, overdue: 0, farms: 4, proposals: 1, orders: 0, team: 1 }, tasks: [], attention: { overdueTasks: 0, attentionFarms: [], openProposals: 1, openOrders: 0 }, sales: { isConfigured: false, planTarget: null, fact: null, percent: null, history: [] }, notifications: [] } as never);
 
     const result = await appRouter.createCaller(context(manager)).dashboard.overview();
 
     expect(result.role).toBe("manager");
     expect(result.summary.farms).toBe(4);
-    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: manager.openId, role: "user", isSuperuser: 0, name: manager.name });
+    expect(result.position).toBe("Менеджер по продажам");
+    expect(result.sales).toEqual({ isConfigured: false, planTarget: null, fact: null, percent: null, history: [] });
+    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: manager.openId, role: "user", isSuperuser: 0, name: manager.name, position: manager.position });
   });
 
   it("passes the ROP identity to the server scope resolver", async () => {
@@ -33,7 +35,7 @@ describe("role-aware dashboard", () => {
     const result = await appRouter.createCaller(context(rop)).dashboard.overview();
 
     expect(result.roleLabel).toBe("РОП");
-    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: rop.openId, role: "user", isSuperuser: 0, name: rop.displayName });
+    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: rop.openId, role: "user", isSuperuser: 0, name: rop.displayName, position: rop.position });
   });
 
   it("passes the immutable superuser marker to the company scope resolver", async () => {
@@ -43,6 +45,6 @@ describe("role-aware dashboard", () => {
     const result = await appRouter.createCaller(context(owner));
 
     expect((await result.dashboard.overview()).scopeLabel).toBe("Вся компания");
-    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: ENV.ownerOpenId, role: "admin", isSuperuser: 1, name: owner.displayName });
+    expect(db.getDashboardOverview).toHaveBeenCalledWith({ openId: ENV.ownerOpenId, role: "admin", isSuperuser: 1, name: owner.displayName, position: owner.position });
   });
 });
