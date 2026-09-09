@@ -2608,3 +2608,22 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 .dashboard-reference-workday .dashboard-workday-summary-card {
   background: rgba(255,255,255,.97);
 }
+
+/* Full-height field backdrop: no empty white tail below the dashboard content. */
+.cabinet-canvas-overview .cabinet-workspace {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.cabinet-canvas-overview .cabinet-content {
+  min-height: calc(100vh - 72px);
+  min-height: calc(100dvh - 72px);
+  background:
+    linear-gradient(180deg, rgba(246,250,240,.82) 0%, rgba(239,247,231,.40) 44%, rgba(239,247,231,.10) 100%),
+    url('/manus-storage/agro-fields-collage_4edd7848.png') center bottom / cover !important;
+}
+@media (max-width: 767px) {
+  .cabinet-canvas-overview .cabinet-content {
+    min-height: calc(100vh - 62px);
+    min-height: calc(100dvh - 62px);
+  }
+}
