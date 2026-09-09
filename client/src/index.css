@@ -2627,3 +2627,30 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
     min-height: calc(100dvh - 62px);
   }
 }
+
+/* Mobile drawer dismissal: tap outside or swipe the panel left. */
+.cabinet-mobile-menu-backdrop { display: none; }
+@media (max-width: 767px) {
+  .cabinet-canvas .cabinet-sidebar {
+    z-index: 310;
+    touch-action: pan-y;
+  }
+  .cabinet-canvas .cabinet-sidebar.is-open {
+    touch-action: pan-y;
+  }
+  .cabinet-mobile-menu-backdrop {
+    position: fixed;
+    z-index: 300;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: rgba(13, 46, 42, .34);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+.cabinet-mobile-menu-dismissal { display: contents; }
+@media (max-width: 767px) {
+  .cabinet-mobile-menu-dismissal { display: contents; }
+}

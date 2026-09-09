@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   accountIdentity,
@@ -5,6 +6,7 @@ import {
   cabinetTheme,
   filterCabinetNavigation,
   filterMobileUtilityNavigation,
+  isMobileSwipeLeft,
   isOutsideAccountMenu,
   mobileNavigation,
   mobileTopbarActions,
@@ -120,6 +122,31 @@ describe("accountIdentity", () => {
     ]);
     expect(mobileTopbarActions).not.toContain("team");
     expect(mobileTopbarActions).toHaveLength(4);
+  });
+
+  it("закрывает мобильное меню горизонтальным свайпом влево", () => {
+    expect(isMobileSwipeLeft({ x: 180, y: 220 }, { x: 110, y: 228 })).toBe(
+      true
+    );
+    expect(isMobileSwipeLeft({ x: 180, y: 220 }, { x: 150, y: 300 })).toBe(
+      false
+    );
+    expect(isMobileSwipeLeft({ x: 180, y: 220 }, { x: 225, y: 220 })).toBe(
+      false
+    );
+  });
+
+  it("защищает overlay-контракт закрытия мобильного меню", () => {
+    const source = readFileSync(
+      new URL("./CabinetShell.tsx", import.meta.url),
+      "utf8"
+    );
+    const css = readFileSync(new URL("../index.css", import.meta.url), "utf8");
+    expect(source).toContain('className="cabinet-mobile-menu-backdrop"');
+    expect(source).toContain("onTouchStart={handleTouchStart}");
+    expect(source).toContain("onTouchEnd={handleTouchEnd}");
+    expect(css).toContain(".cabinet-mobile-menu-backdrop");
+    expect(css).toContain("z-index: 300;");
   });
 
   it("closes the account menu only for a pointer target outside its root", () => {

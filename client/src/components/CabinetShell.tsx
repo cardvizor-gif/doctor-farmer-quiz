@@ -252,6 +252,66 @@ export function isOutsideAccountMenu(
   }
 }
 
+export function isMobileSwipeLeft(
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  threshold = 48
+) {
+  const deltaX = end.x - start.x;
+  const deltaY = end.y - start.y;
+  return deltaX < -threshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.2;
+}
+
+export function MobileMenuDismissal({
+  isOpen,
+  onClose,
+  children,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    const touch = event.changedTouches[0];
+    swipeStartRef.current = touch
+      ? { x: touch.clientX, y: touch.clientY }
+      : null;
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    const touch = event.changedTouches[0];
+    if (
+      start &&
+      touch &&
+      isMobileSwipeLeft(start, { x: touch.clientX, y: touch.clientY })
+    ) {
+      onClose();
+    }
+  };
+
+  return (
+    <div
+      className={`cabinet-mobile-menu-dismissal ${isOpen ? "is-open" : ""}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {children}
+      {isOpen && (
+        <button
+          type="button"
+          className="cabinet-mobile-menu-backdrop"
+          onClick={onClose}
+          aria-label="Закрыть боковое меню"
+        />
+      )}
+    </div>
+  );
+}
+
 export default function CabinetShell({
   children,
 }: {
@@ -446,58 +506,39 @@ export default function CabinetShell({
   return (
     <div className={`cabinet-canvas cabinet-canvas-${pageTheme}`}>
       <div className="cabinet-frame">
-        <aside
-          className={`cabinet-sidebar ${isMobileMenuOpen ? "is-open" : ""}`}
-          aria-label="Навигация рабочего кабинета"
+        <MobileMenuDismissal
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
         >
-          <div className="cabinet-sidebar-top">
-            <Link
-              href="/"
-              className="cabinet-brand"
-              onClick={() => setIsMobileMenuOpen(false)}
-              aria-label="АгроПомощник — обзор"
-            >
-              <Leaf className="cabinet-brand-mark" aria-hidden="true" />
-              <span className="cabinet-sidebar-product-name">
-                АгроПомощник <b>DF</b>
-              </span>
-            </Link>
-            <button
-              type="button"
-              className="cabinet-mobile-close"
-              onClick={() => setIsMobileMenuOpen(false)}
-              aria-label="Закрыть меню"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <nav className="cabinet-nav">
-            {visibleNavigation.map(item => {
-              const Icon = item.icon;
-              const isActive = location === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`cabinet-nav-item is-${item.tone ?? "default"} ${isActive ? "is-active" : ""}`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-          {visibleMobileUtilityNavigation.length > 0 && (
-            <nav
-              className="cabinet-sidebar-utility-nav"
-              aria-label="Административные разделы"
-            >
-              {visibleMobileUtilityNavigation.map(item => {
+          <aside
+            className={`cabinet-sidebar ${isMobileMenuOpen ? "is-open" : ""}`}
+            aria-label="Навигация рабочего кабинета"
+          >
+            <div className="cabinet-sidebar-top">
+              <Link
+                href="/"
+                className="cabinet-brand"
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="АгроПомощник — обзор"
+              >
+                <Leaf className="cabinet-brand-mark" aria-hidden="true" />
+                <span className="cabinet-sidebar-product-name">
+                  АгроПомощник <b>DF</b>
+                </span>
+              </Link>
+              <button
+                type="button"
+                className="cabinet-mobile-close"
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="Закрыть меню"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <nav className="cabinet-nav">
+              {visibleNavigation.map(item => {
                 const Icon = item.icon;
-                const isActive =
-                  location === item.href ||
-                  location.startsWith(`${item.href}/`);
+                const isActive = location === item.href;
                 return (
                   <Link
                     key={item.href}
@@ -511,21 +552,45 @@ export default function CabinetShell({
                 );
               })}
             </nav>
-          )}
-          <button
-            type="button"
-            className="cabinet-sidebar-footer w-full text-left"
-            onClick={() => setIsSupportOpen(true)}
-          >
-            <div className="cabinet-help-mark">
-              <Headphones className="h-4 w-4" />
-            </div>
-            <div>
-              <strong>Поддержка</strong>
-              <span>Внутренняя поддержка</span>
-            </div>
-          </button>
-        </aside>
+            {visibleMobileUtilityNavigation.length > 0 && (
+              <nav
+                className="cabinet-sidebar-utility-nav"
+                aria-label="Административные разделы"
+              >
+                {visibleMobileUtilityNavigation.map(item => {
+                  const Icon = item.icon;
+                  const isActive =
+                    location === item.href ||
+                    location.startsWith(`${item.href}/`);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`cabinet-nav-item is-${item.tone ?? "default"} ${isActive ? "is-active" : ""}`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            )}
+            <button
+              type="button"
+              className="cabinet-sidebar-footer w-full text-left"
+              onClick={() => setIsSupportOpen(true)}
+            >
+              <div className="cabinet-help-mark">
+                <Headphones className="h-4 w-4" />
+              </div>
+              <div>
+                <strong>Поддержка</strong>
+                <span>Внутренняя поддержка</span>
+              </div>
+            </button>
+          </aside>
+        </MobileMenuDismissal>
         <div className={`cabinet-workspace cabinet-theme-${pageTheme}`}>
           <header className="cabinet-topbar">
             <div className="flex min-w-0 items-center gap-2.5">

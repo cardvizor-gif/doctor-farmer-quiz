@@ -1,5 +1,9 @@
 # Project TODO
 
+- [x] Mobile menu: закрывать боковую панель тапом по любой области справа вне меню; добавлен реальный React interaction-тест backdrop click.
+- [x] Mobile menu: закрывать боковую панель свайпом панели влево с сохранением обычной навигации; добавлен реальный React interaction-тест swipe-left и защиты от вертикального жеста.
+- [x] Mobile menu: добавить regression-проверки, проверить mobile, typecheck, полный набор тестов и production-сборку; mobile 390×844 проверен.
+
 - [x] Overview: растянуть фото-коллаж на всю высоту рабочей области до нижнего края без белого провала.
 - [x] Overview: сохранить непрерывный фон и читаемость карточек на desktop/mobile.
 - [x] Overview: проверить full-height фон, typecheck, полный набор тестов и production-сборку.
