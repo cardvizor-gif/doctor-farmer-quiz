@@ -1,22 +1,5 @@
 # Project TODO
 
-- [x] Dashboard exact reference: повторить вложенный образец без самостоятельных добавлений и изменений композиции.
-- [x] Dashboard exact reference: применить максимально близкие шрифт, размеры, пропорции, цвета, радиусы и отступы.
-- [x] Dashboard exact reference: сохранить реальные данные, маршруты, RBAC и честные пустые состояния.
-- [x] Dashboard exact reference: проверить desktop/tablet/mobile, render-тесты, typecheck, полный набор тестов и production-сборку.
-
-- [x] Dashboard approved design: воспроизвести desktop-композицию вложенного образца — dark sidebar, верхняя панель, hero, plan widget и рабочая сетка.
-- [x] Dashboard approved design: применить цветовую гамму, карточки и плотность образца без потери существующих маршрутов и данных.
-- [x] Dashboard approved design: добавить role-aware plan widget для менеджера, РОПа и директора кластера с честным пустым состоянием; добавлены planScope personal/region/cluster/company.
-- [x] Dashboard: покрыть planScope personal/region/cluster/company серверными RBAC regression-тестами.
-- [x] Dashboard approved design: проверить mobile/tablet, RBAC, typecheck, полный набор тестов и production-сборку.
-- [x] Dashboard: выполнить и зафиксировать tablet-визуальную проверку и visibility regression для ключевых блоков; tablet 768×1024 и client/server regression пройдены.
-
-- [x] Dashboard: воспроизвести компоновку вложенного образца — dark sidebar, верхняя панель, hero, план, клиенты, продажи, быстрый доступ и контроль.
-- [x] Dashboard: закрепить цветовую гамму и размеры блоков по вложенному эталону, сохранив адаптивность и текущие маршруты.
-- [x] Dashboard: подготовить общий ролевой виджет выполнения плана для менеджера, РОПа и директора кластера без фиктивных сумм; при отсутствии источника отображается «План не задан».
-- [x] Dashboard: после согласования проверить UI, RBAC, typecheck, полный набор тестов и production-сборку.
-
 - [x] Mobile menu: закрывать боковую панель тапом по любой области справа вне меню; добавлен реальный React interaction-тест backdrop click.
 - [x] Mobile menu: закрывать боковую панель свайпом панели влево с сохранением обычной навигации; добавлен реальный React interaction-тест swipe-left и защиты от вертикального жеста.
 - [x] Mobile menu: добавить regression-проверки, проверить mobile, typecheck, полный набор тестов и production-сборку; mobile 390×844 проверен.
@@ -470,17 +453,3 @@
 - [x] Dashboard: сохранить проверенный checkpoint после завершения.
 
 Примечание: источник месячного плана и факта продаж в текущей БД отсутствует; интерфейс не должен показывать примерные суммы как реальные.
-
-- [x] Exact reference verification: зафиксировать измеряемое сравнение hero/plan row, sidebar, topbar, main grid и right rail с эталонным скриншотом; desktop 1280×720, tablet 768×1024 и mobile 390×844 проверены.
-- [x] Exact reference regression: добавить render-level проверки финальных DOM-регионов, split plan widget, скрытой summary row и main-grid/right-rail структуры; 162 теста пройдены.
-- [x] Exact reference final pass: повторно подтвердить desktop/tablet/mobile, типографику и палитру, затем обновить статус после полного test/build цикла.
-
-- [x] Exact spec pass: sidebar 260px #132A20, main content plus right rail 280px, page #F4F7F5, card radius 16px, button radius 10px; compact viewport override сохраняет образец на 1280px.
-- [x] Exact spec pass: Inter/SF Pro/Golos-like typography with H1 24px, H2 15px, body 14px, secondary 12–13px, metrics 20–22px.
-- [x] Exact spec pass: implement six quick actions, task tabs/list, clients metrics/list, sales donut/chart, control clients and latest inquiries exactly in the specified order.
-- [x] Exact spec pass: preserve real AgroHelper data/RBAC and use empty states instead of fabricated financial or customer data.
-- [x] Exact spec pass: validate desktop/tablet/mobile with render-level tests, typecheck, full tests and production build.
-
-- [x] Dashboard recovery: устранить зависшее состояние «Формируем рабочий день…» и проверить причину на живом preview; API отвечает, loading был моментом первого запроса/HMR.
-- [x] Dashboard recovery: сохранить точную утверждённую композицию после исправления загрузки и проверить desktop/tablet/mobile.
-- [x] Dashboard recovery: обновить тесты, выполнить typecheck, полный набор тестов и production-сборку.

@@ -429,14 +429,16 @@ export async function createSalesTask(input: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
-  const result = await db.insert(salesTasks).values({
-    ...input,
-    title: input.title.trim(),
-    description: input.description?.trim() || null,
-    dueAt: input.dueAt ?? null,
-    farmId: input.farmId ?? null,
-    proposalId: input.proposalId ?? null,
-  });
+  const result = await db
+    .insert(salesTasks)
+    .values({
+      ...input,
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      dueAt: input.dueAt ?? null,
+      farmId: input.farmId ?? null,
+      proposalId: input.proposalId ?? null,
+    });
   const rows = await db
     .select()
     .from(salesTasks)
@@ -527,15 +529,17 @@ export async function publishNewsNotification(
     .from(users)
     .where(eq(users.status, "active"));
   if (recipients.length > 0) {
-    await db.insert(notifications).values(
-      recipients.map(({ openId }) => ({
-        recipientOpenId: openId,
-        kind: "news" as const,
-        title: title.trim(),
-        body: body.trim(),
-        href,
-      }))
-    );
+    await db
+      .insert(notifications)
+      .values(
+        recipients.map(({ openId }) => ({
+          recipientOpenId: openId,
+          kind: "news" as const,
+          title: title.trim(),
+          body: body.trim(),
+          href,
+        }))
+      );
   }
   return { recipients: recipients.length };
 }
@@ -693,20 +697,6 @@ export async function getDashboardOverview(user: {
   const roleKey = user.isSuperuser
     ? "ceo"
     : (highestMembership?.membershipRole ?? "manager");
-  const planScope = user.isSuperuser
-    ? "company"
-    : roleKey === "manager"
-      ? "personal"
-      : roleKey === "rop"
-        ? "region"
-        : "cluster";
-  const planScopeLabel = user.isSuperuser
-    ? "Вся компания"
-    : roleKey === "manager"
-      ? "Личный план"
-      : roleKey === "rop"
-        ? "План региона"
-        : "План кластера";
   const isLeadership = Boolean(
     user.isSuperuser ||
       (highestMembership && highestMembership.membershipRole !== "manager")
@@ -814,8 +804,6 @@ export async function getDashboardOverview(user: {
       fact: null,
       percent: null,
       history: [],
-      planScope,
-      planScopeLabel,
     },
     notifications,
   };
@@ -1001,13 +989,15 @@ export async function updateUserAccess(
       .delete(userPermissions)
       .where(eq(userPermissions.userOpenId, openId));
     if (permissions.length > 0) {
-      await tx.insert(userPermissions).values(
-        permissions.map(permission => ({
-          userOpenId: openId,
-          permission,
-          grantedByOpenId,
-        }))
-      );
+      await tx
+        .insert(userPermissions)
+        .values(
+          permissions.map(permission => ({
+            userOpenId: openId,
+            permission,
+            grantedByOpenId,
+          }))
+        );
     }
   });
   return getUserByOpenId(openId);
@@ -1605,11 +1595,13 @@ export async function replySupportTicket(input: SupportReplyInput) {
   if (!ticket) return undefined;
   const message = input.message.trim();
   await db.transaction(async tx => {
-    await tx.insert(supportMessages).values({
-      ticketId: input.ticketId,
-      authorOpenId: input.responderOpenId,
-      message,
-    });
+    await tx
+      .insert(supportMessages)
+      .values({
+        ticketId: input.ticketId,
+        authorOpenId: input.responderOpenId,
+        message,
+      });
     await tx
       .update(supportTickets)
       .set({ status: "in_progress", updatedAt: new Date() })
@@ -1885,13 +1877,15 @@ export async function requestAccess(input: AccessRequestInput) {
     return refreshed[0];
   }
 
-  const result = await db.insert(accessRequests).values({
-    email,
-    requestedName,
-    position: input.position.trim(),
-    regionId: input.regionId,
-    status: "pending",
-  });
+  const result = await db
+    .insert(accessRequests)
+    .values({
+      email,
+      requestedName,
+      position: input.position.trim(),
+      regionId: input.regionId,
+      status: "pending",
+    });
   const created = await db
     .select()
     .from(accessRequests)

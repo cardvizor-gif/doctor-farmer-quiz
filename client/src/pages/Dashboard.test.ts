@@ -30,11 +30,10 @@ describe("главная страница рабочего кабинета", ()
   it("фиксирует двухколоночную геометрию эталонного Overview и DOM-регионы", () => {
     expect(dashboardColumnLayout.fullWidth).toEqual(["hero"]);
     expect(dashboardColumnLayout.left).toEqual([
+      "summary",
       "actions",
       "plan",
-      "clients",
-      "sales",
-      "quickAccess",
+      "references",
     ]);
     expect(dashboardColumnLayout.right).toEqual([
       "attention",
@@ -43,11 +42,10 @@ describe("главная страница рабочего кабинета", ()
     ]);
     expect(dashboardColumnAttributes).toEqual({
       hero: "full-width",
+      summary: "left-column",
       actions: "left-column",
       plan: "left-column",
-      clients: "left-column",
-      sales: "left-column",
-      quickAccess: "left-column",
+      references: "left-column",
       attention: "right-column",
       pipeline: "right-column",
       notifications: "right-column",
@@ -68,29 +66,21 @@ describe("главная страница рабочего кабинета", ()
       "data-dashboard-region={dashboardColumnAttributes.hero}"
     );
     expect(dashboardSource).toContain(
+      "data-dashboard-region={dashboardColumnAttributes.summary}"
+    );
+    expect(dashboardSource).toContain(
       "data-dashboard-region={dashboardColumnAttributes.actions}"
     );
     expect(dashboardSource).toContain(
       "data-dashboard-region={dashboardColumnAttributes.plan}"
     );
     expect(dashboardSource).toContain(
-      "data-dashboard-region={dashboardColumnAttributes.clients}"
-    );
-    expect(dashboardSource).toContain(
-      "data-dashboard-region={dashboardColumnAttributes.sales}"
-    );
-    expect(dashboardSource).toContain(
-      "data-dashboard-region={dashboardColumnAttributes.quickAccess}"
+      "data-dashboard-region={dashboardColumnAttributes.references}"
     );
     expect(dashboardSource).toContain('data-dashboard-region="right-column"');
-    expect(dashboardSource).toContain("data.sales.planScopeLabel");
-    expect(dashboardSource).toContain("План продаж не задан");
-    expect(dashboardSource).toContain('data-testid="dashboard-reference-hero-row"');
-    expect(dashboardSource).toContain('data-testid="dashboard-workday-main-grid"');
-    expect(dashboardSource).toContain('data-testid="dashboard-workday-right-rail"');
-    expect(cssSource).toContain("grid-template-columns: 260px minmax(0, 1fr)");
-    expect(cssSource).toContain("grid-template-columns: minmax(0, 1fr) 280px");
-    expect(cssSource).toContain("grid-template-columns: repeat(6, minmax(0, 1fr))");
+    expect(cssSource).toContain(
+      ".dashboard-reference-workday .dashboard-workday-summary {"
+    );
     expect(cssSource).toContain("grid-column: 1;");
     expect(cssSource).toContain(
       ".dashboard-reference-workday .dashboard-workday-side {"
@@ -130,27 +120,24 @@ describe("главная страница рабочего кабинета", ()
     expect(new Set(dashboardModules.map(module => module.tone)).size).toBe(6);
   });
 
-  it("сохраняет референсную структуру Overview и шесть быстрых действий", () => {
+  it("сохраняет референсную структуру Overview и пять быстрых действий", () => {
     expect(dashboardReferenceLayout).toEqual([
       "hero",
+      "summary",
       "actions",
       "plan",
-      "clients",
-      "sales",
-      "quickAccess",
       "attention",
       "pipeline",
       "notifications",
     ]);
     expect(dashboardActions.map(action => action.title)).toEqual([
-      "Новый клиент",
-      "Встреча",
-      "Звонок",
-      "Подобрать препарат",
-      "Рассчитать норму",
+      "Новое хозяйство",
+      "Новая задача",
       "Создать КП",
+      "Новая заявка",
+      "Подобрать схему",
     ]);
-    expect(new Set(dashboardActions.map(action => action.href)).size).toBe(4);
+    expect(new Set(dashboardActions.map(action => action.href)).size).toBe(5);
   });
 
   it("сохраняет уникальные рабочие маршруты всех карточек", () => {

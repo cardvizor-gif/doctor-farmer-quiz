@@ -519,11 +519,11 @@ export default function CabinetShell({
                 href="/"
                 className="cabinet-brand"
                 onClick={() => setIsMobileMenuOpen(false)}
-                aria-label="Doctor Farmer — главная"
+                aria-label="АгроПомощник — обзор"
               >
                 <Leaf className="cabinet-brand-mark" aria-hidden="true" />
                 <span className="cabinet-sidebar-product-name">
-                  Doctor <b>Farmer</b>
+                  АгроПомощник <b>DF</b>
                 </span>
               </Link>
               <button
@@ -606,10 +606,10 @@ export default function CabinetShell({
                 <Link
                   href="/"
                   className="cabinet-topbar-product-name"
-                  aria-label="Doctor Farmer — главная"
+                  aria-label="АгроПомощник — обзор"
                 >
-                  <span>Doctor</span>
-                  <span>Farmer</span>
+                  <span>Агро</span>
+                  <span>Помощник</span>
                 </Link>
                 {location !== "/" && (
                   <h1 className="cabinet-topbar-page-title">{pageTitle}</h1>
@@ -621,10 +621,10 @@ export default function CabinetShell({
                 type="button"
                 className="cabinet-search-hint"
                 onClick={() => setIsSearchOpen(true)}
-                aria-label="Поиск по клиентам, препаратам, документам"
+                aria-label="Открыть поиск по кабинету"
               >
                 <Search className="h-4 w-4" />
-                <span>Поиск по клиентам, препаратам, документам…</span>
+                <span>Поиск по кабинету</span>
                 <kbd>⌘ K</kbd>
               </button>
               {canViewTeam && (
@@ -783,7 +783,7 @@ export default function CabinetShell({
                       </span>
                       <span className="cabinet-account-copy">
                         <strong>{account.name}</strong>
-                        <small>{user?.position || account.email}</small>
+                        <small>{account.email}</small>
                       </span>
                       <ChevronDown
                         className={`h-3.5 w-3.5 transition-transform ${isAccountMenuOpen ? "rotate-180" : ""}`}
