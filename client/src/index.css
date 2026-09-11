@@ -2654,3 +2654,71 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 @media (max-width: 767px) {
   .cabinet-mobile-menu-dismissal { display: contents; }
 }
+
+/* Mobile polish: centered plan progress card and six distinct actions. */
+.dashboard-reference-workday .dashboard-sales-plan-inline {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-self: stretch;
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid #dce8df;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .96);
+  color: #174b35;
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgba(28, 77, 50, .08);
+}
+.dashboard-plan-widget-heading,
+.dashboard-plan-widget-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dashboard-plan-widget-label {
+  color: #51745f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.dashboard-plan-widget-heading strong {
+  color: #276f43;
+  font-size: 27px;
+  line-height: 1;
+}
+.dashboard-plan-widget-track {
+  height: 10px;
+  margin: 14px 0 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8f0e9;
+}
+.dashboard-plan-widget-track span {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #80bf35, #1d8757);
+  transition: width 220ms ease;
+}
+.dashboard-plan-widget-meta { align-items: flex-start; }
+.dashboard-plan-widget-meta span { font-size: 13px; font-weight: 700; color: #24563d; }
+.dashboard-plan-widget-meta small { color: #829187; font-size: 11px; text-align: right; }
+.dashboard-reference-workday .dashboard-workday-action.is-green { background: #c8ef72; border-color: #8bc93d; color: #1d5d35; }
+.dashboard-reference-workday .dashboard-workday-action.is-mint { background: #8de0c1; border-color: #4cb894; color: #145d4a; }
+.dashboard-reference-workday .dashboard-workday-action.is-blue { background: #9fd8f2; border-color: #5caacb; color: #175a78; }
+.dashboard-reference-workday .dashboard-workday-action.is-teal { background: #a7e8d0; border-color: #51b88c; color: #165e49; }
+.dashboard-reference-workday .dashboard-workday-action.is-gold { background: #f7d36d; border-color: #d3a52c; color: #775209; }
+.dashboard-reference-workday .dashboard-workday-action.is-violet { background: #d6b4e9; border-color: #a675c2; color: #633c79; }
+@media (max-width: 767px) {
+  .cabinet-canvas-overview .cabinet-topbar-product-name { line-height: .9; letter-spacing: -.04em; }
+  .dashboard-reference-workday .dashboard-sales-plan-inline { width: min(100%, 440px); margin-inline: auto; padding: 18px 20px; }
+  .dashboard-plan-widget-heading strong { font-size: 25px; }
+  .dashboard-reference-workday .dashboard-workday-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .dashboard-reference-workday .dashboard-workday-action { min-height: 68px; border-width: 1px; }
+}
+@media (min-width: 768px) {
+  .dashboard-reference-workday .dashboard-workday-hero { align-items: stretch; }
+}

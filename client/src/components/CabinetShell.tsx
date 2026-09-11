@@ -519,11 +519,11 @@ export default function CabinetShell({
                 href="/"
                 className="cabinet-brand"
                 onClick={() => setIsMobileMenuOpen(false)}
-                aria-label="АгроПомощник — обзор"
+                aria-label="Агропомощник — обзор"
               >
                 <Leaf className="cabinet-brand-mark" aria-hidden="true" />
                 <span className="cabinet-sidebar-product-name">
-                  АгроПомощник <b>DF</b>
+                  Агропомощник
                 </span>
               </Link>
               <button
@@ -606,7 +606,7 @@ export default function CabinetShell({
                 <Link
                   href="/"
                   className="cabinet-topbar-product-name"
-                  aria-label="АгроПомощник — обзор"
+                  aria-label="Агропомощник — обзор"
                 >
                   <span>Агро</span>
                   <span>Помощник</span>

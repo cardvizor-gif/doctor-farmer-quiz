@@ -19,6 +19,7 @@ import {
   Plus,
   ShieldAlert,
   Sprout,
+  Calculator,
 } from "lucide-react";
 import { SupportModal } from "@/components/SupportModal";
 import { trpc } from "@/lib/trpc";
@@ -48,21 +49,12 @@ export const dashboardModules = [
 ] as const;
 
 export const dashboardActions = [
-  { title: "Новое хозяйство", href: "/farms", icon: Building2, tone: "green" },
-  { title: "Новая задача", href: "/sales", icon: ListTodo, tone: "mint" },
-  { title: "Создать КП", href: "/proposals/new", icon: FileText, tone: "blue" },
-  {
-    title: "Новая заявка",
-    href: "/order-requests",
-    icon: ClipboardCheck,
-    tone: "teal",
-  },
-  {
-    title: "Подобрать схему",
-    href: "/agro-helper",
-    icon: Sprout,
-    tone: "sage",
-  },
+  { title: "Новый клиент", href: "/farms", icon: Building2, tone: "green" },
+  { title: "Встреча", href: "/sales", icon: CalendarCheck2, tone: "mint" },
+  { title: "Звонок", href: "/sales", icon: Phone, tone: "blue" },
+  { title: "Подобрать препарат", href: "/agro-helper", icon: Sprout, tone: "teal" },
+  { title: "Рассчитать норму", href: "/agro-helper", icon: Calculator, tone: "gold" },
+  { title: "Создать КП", href: "/proposals/new", icon: FileText, tone: "violet" },
 ] as const;
 
 export const dashboardReferenceLayout = [
@@ -186,12 +178,7 @@ export default function Dashboard() {
           </p>
           <p className="dashboard-workday-scope">{data.scopeLabel}</p>
         </div>
-        {data.sales.isConfigured && (
-          <Link href="/sales" className="dashboard-sales-plan-inline">
-            <strong>{data.sales.percent ?? 0}%</strong>
-            <span>Выполнение плана продаж</span>
-          </Link>
-        )}
+        <PlanWidget sales={data.sales} />
       </section>
 
       <section
@@ -502,6 +489,40 @@ export default function Dashboard() {
         onClose={() => setIsSupportOpen(false)}
       />
     </div>
+  );
+}
+
+export function PlanWidget({
+  sales,
+}: {
+  sales: {
+    isConfigured: boolean;
+    planTarget: number | null;
+    fact: number | null;
+    percent: number | null;
+    history: unknown[];
+  };
+}) {
+  const percent = sales.isConfigured ? Math.max(0, Math.min(100, sales.percent ?? 0)) : 0;
+  const planTarget = sales.planTarget;
+  const fact = sales.fact;
+  const formatMoney = (value: number | null) =>
+    value === null ? "—" : `${new Intl.NumberFormat("ru-RU").format(value)} ₽`;
+
+  return (
+    <Link href="/sales" className="dashboard-sales-plan-inline" data-testid="dashboard-plan-widget">
+      <div className="dashboard-plan-widget-heading">
+        <span className="dashboard-plan-widget-label">Выполнение плана</span>
+        <strong>{sales.isConfigured ? `${percent}%` : "—"}</strong>
+      </div>
+      <div className="dashboard-plan-widget-track" aria-label={`Выполнение плана ${percent}%`}>
+        <span style={{ width: `${percent}%` }} />
+      </div>
+      <div className="dashboard-plan-widget-meta">
+        <span>{sales.isConfigured ? `${formatMoney(fact)} из ${formatMoney(planTarget)}` : "План не задан"}</span>
+        <small>{sales.isConfigured ? "Текущий период" : "Источник данных не подключён"}</small>
+      </div>
+    </Link>
   );
 }
 

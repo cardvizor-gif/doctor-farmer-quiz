@@ -6,6 +6,7 @@ import {
   dashboardColumnLayout,
   dashboardModules,
   dashboardReferenceLayout,
+  PlanWidget,
   dashboardSubtitle,
   dashboardTitle,
   farmAttentionTone,
@@ -120,7 +121,7 @@ describe("главная страница рабочего кабинета", ()
     expect(new Set(dashboardModules.map(module => module.tone)).size).toBe(6);
   });
 
-  it("сохраняет референсную структуру Overview и пять быстрых действий", () => {
+  it("сохраняет референсную структуру Overview и шесть быстрых действий", () => {
     expect(dashboardReferenceLayout).toEqual([
       "hero",
       "summary",
@@ -131,13 +132,33 @@ describe("главная страница рабочего кабинета", ()
       "notifications",
     ]);
     expect(dashboardActions.map(action => action.title)).toEqual([
-      "Новое хозяйство",
-      "Новая задача",
+      "Новый клиент",
+      "Встреча",
+      "Звонок",
+      "Подобрать препарат",
+      "Рассчитать норму",
       "Создать КП",
-      "Новая заявка",
-      "Подобрать схему",
     ]);
-    expect(new Set(dashboardActions.map(action => action.href)).size).toBe(5);
+    expect(dashboardActions.map(action => action.tone)).toEqual([
+      "green",
+      "mint",
+      "blue",
+      "teal",
+      "gold",
+      "violet",
+    ]);
+    expect(new Set(dashboardActions.map(action => action.tone)).size).toBe(6);
+  });
+
+  it("показывает честное пустое состояние plan widget без источника данных", () => {
+    expect(PlanWidget).toBeTypeOf("function");
+    const dashboardSource = readFileSync(
+      new URL("./Dashboard.tsx", import.meta.url),
+      "utf8"
+    );
+    expect(dashboardSource).toContain('data-testid="dashboard-plan-widget"');
+    expect(dashboardSource).toContain("Источник данных не подключён");
+    expect(dashboardSource).toContain("dashboard-plan-widget-track");
   });
 
   it("сохраняет уникальные рабочие маршруты всех карточек", () => {
