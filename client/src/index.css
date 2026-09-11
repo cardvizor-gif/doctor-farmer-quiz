@@ -2722,3 +2722,47 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 @media (min-width: 768px) {
   .dashboard-reference-workday .dashboard-workday-hero { align-items: stretch; }
 }
+
+/* Final overview polish: balanced action grid and account menu above hero. */
+.dashboard-reference-workday .dashboard-workday-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  align-items: stretch;
+}
+.dashboard-reference-workday .dashboard-workday-action {
+  min-width: 0;
+  min-height: 48px;
+  padding-inline: 10px;
+  line-height: 1.15;
+}
+.cabinet-canvas-overview .cabinet-topbar {
+  position: relative;
+  z-index: 50;
+  overflow: visible !important;
+}
+.cabinet-canvas-overview .cabinet-topbar-actions,
+.cabinet-canvas-overview .cabinet-account-wrap {
+  position: relative;
+  z-index: 200;
+}
+.cabinet-canvas-overview .cabinet-account-menu {
+  z-index: 500 !important;
+}
+@media (max-width: 767px) {
+  .dashboard-reference-workday .dashboard-workday-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .dashboard-reference-workday .dashboard-workday-action:last-child {
+    grid-column: auto !important;
+  }
+  .dashboard-reference-workday .dashboard-workday-action {
+    min-height: 58px;
+    padding-inline: 8px;
+  }
+}
+@media (min-width: 768px) and (max-width: 1180px) {
+  .dashboard-reference-workday .dashboard-workday-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}

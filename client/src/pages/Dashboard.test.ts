@@ -168,4 +168,20 @@ describe("главная страница рабочего кабинета", ()
     expect(hrefs).toContain("/proposals/new");
     expect(hrefs).toContain("/sales");
   });
+
+  it("фиксирует сбалансированную сетку шести действий без одинокой последней кнопки", () => {
+    const cssSource = readFileSync(
+      new URL("../index.css", import.meta.url),
+      "utf8"
+    );
+    expect(cssSource).toContain(
+      ".dashboard-reference-workday .dashboard-workday-actions {\n  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;"
+    );
+    expect(cssSource).toContain(
+      ".dashboard-reference-workday .dashboard-workday-actions {\n    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;"
+    );
+    expect(cssSource).toContain(
+      ".dashboard-reference-workday .dashboard-workday-action:last-child {\n    grid-column: auto !important;"
+    );
+  });
 });
