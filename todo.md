@@ -466,3 +466,15 @@
 - [x] Overview: перестроить шесть центральных действий в гармоничную адаптивную сетку без одинокой кнопки на второй строке; desktop/tablet 3×2, mobile 2×3.
 - [x] Overview: исправить z-index/stacking context меню профиля, чтобы оно открывалось поверх hero и фонового баннера.
 - [x] Overview: добавить regression-проверки и выполнить desktop/tablet/mobile, typecheck, полный тестовый набор и production-сборку.
+
+- [ ] Mobile quick actions: спроектировать bottom sheet/dialog без перехода со страницы «Обзор».
+- [ ] Mobile quick actions: согласовать формы для нового клиента, встречи, звонка, подбора препарата, расчёта нормы и создания КП.
+- [ ] Mobile quick actions: реализовать сохранение, закрытие, доступность и серверные проверки после согласования UX.
+
+- [ ] Quick actions phase 1: встроить bottom sheet для «Новый клиент», «Встреча» и «Звонок».
+- [ ] Quick actions phase 1: подключить сохранение хозяйства и sales tasks через существующие server procedures с проверкой прав.
+- [ ] Quick actions phase 1: добавить interaction/regression-тесты и выполнить mobile/desktop, typecheck, полный набор тестов и production-сборку.
+
+- [x] Quick actions phase 1: «Новый клиент», «Встреча» и «Звонок» открываются во встроенном bottom sheet без перехода с Overview.
+- [x] Quick actions phase 1: сохранение переиспользует farms.create и sales.createTask; добавлены tap-outside/close, mobile-safe зона и regression-тест набора действий.
+- [x] Quick actions phase 1: проверены mobile 390×844 и desktop, typecheck, полный набор unit-тестов и production-сборка.

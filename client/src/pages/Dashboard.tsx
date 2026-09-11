@@ -22,6 +22,7 @@ import {
   Calculator,
 } from "lucide-react";
 import { SupportModal } from "@/components/SupportModal";
+import QuickActionSheet, { type QuickAction } from "@/components/QuickActionSheet";
 import { trpc } from "@/lib/trpc";
 
 export const dashboardTitle = "АгроПомощник";
@@ -129,6 +130,7 @@ function taskIcon(title: string) {
 
 export default function Dashboard() {
   const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const [quickAction, setQuickAction] = useState<QuickAction | null>(null);
   const { data, isLoading, error } = trpc.dashboard.overview.useQuery(
     undefined,
     { retry: false }
@@ -218,12 +220,14 @@ export default function Dashboard() {
       >
         {dashboardActions.map(action => {
           const Icon = action.icon;
-          return (
-            <Link
-              key={action.href}
-              href={action.href}
-              className={`dashboard-workday-action is-${action.tone}`}
-            >
+          const actionKey: QuickAction | null = action.title === "Новый клиент" ? "client" : action.title === "Встреча" ? "meeting" : action.title === "Звонок" ? "call" : null;
+          return actionKey ? (
+            <button key={action.href + action.title} type="button" onClick={() => setQuickAction(actionKey)} className={`dashboard-workday-action is-${action.tone}`}>
+              <Icon aria-hidden="true" />
+              <span>{action.title}</span>
+            </button>
+          ) : (
+            <Link key={action.href + action.title} href={action.href} className={`dashboard-workday-action is-${action.tone}`}>
               <Icon aria-hidden="true" />
               <span>{action.title}</span>
             </Link>
@@ -488,6 +492,7 @@ export default function Dashboard() {
         isOpen={isSupportOpen}
         onClose={() => setIsSupportOpen(false)}
       />
+      <QuickActionSheet action={quickAction} onClose={() => setQuickAction(null)} />
     </div>
   );
 }
