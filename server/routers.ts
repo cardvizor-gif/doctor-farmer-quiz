@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { dealInputSchema, dealStageSchema } from "@shared/deal";
 import {
   farmInputSchema,
   farmSalesStages,
@@ -43,6 +44,7 @@ const orderItemSchema = z.object({
 const orderRequestInputSchema = z
   .object({
     farmId: z.number().int().positive(),
+    dealId: z.number().int().positive().nullable().optional(),
     requestDate: z.date(),
     buyerName: z.string().trim().min(1, "Укажите покупателя").max(255),
     segment: z.enum(["agroholding", "dealer", "large", "medium", "small"]),
@@ -577,7 +579,8 @@ export const appRouter = router({
             .map(item => item.user.openId);
       if (!visibleOwnerIds.includes(ctx.user.openId)) visibleOwnerIds.push(ctx.user.openId);
       const farms = await db.listSalesFarms(Array.from(new Set(visibleOwnerIds)));
-      return { workspaces, tasks, members, farms };
+      const deals = await db.listSalesDeals(Array.from(new Set(visibleOwnerIds)));
+      return { workspaces, tasks, members, farms, deals };
     }),
     createTask: permissionProcedure("sales.write")
       .input(
@@ -585,6 +588,7 @@ export const appRouter = router({
           workspaceId: z.number().int().positive(),
           assigneeOpenId: z.string().trim().min(1).max(64),
           farmId: z.number().int().positive().nullable().optional(),
+          dealId: z.number().int().positive().nullable().optional(),
           title: z.string().trim().min(2, "Укажите задачу").max(255),
           description: z.string().trim().max(10_000).nullable().optional(),
           dueAt: z.date().nullable().optional(),
@@ -598,6 +602,14 @@ export const appRouter = router({
             throw new TRPCError({
               code: "NOT_FOUND",
               message: "Хозяйство не найдено или недоступно",
+            });
+        }
+        if (input.dealId) {
+          const deal = await db.getDealById(input.dealId, ctx.user.openId);
+          if (!deal)
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Сделка не найдена или недоступна",
             });
         }
         const workspaceMember = await db.getWorkspaceMember(
@@ -657,6 +669,40 @@ export const appRouter = router({
             message: "Изменять можно только свои задачи",
           });
         return db.updateSalesTaskStatus(input.id, input.status);
+      }),
+  }),
+  deals: router({
+    list: permissionProcedure("sales.read").query(async ({ ctx }) => {
+      const memberships = await db.listWorkspacesForUser(ctx.user.openId);
+      const members = await db.listWorkspaceMembers(
+        (isSuperuser(ctx.user) ? await db.listWorkspaces() : memberships).map(item => item.workspace.id)
+      );
+      const leadershipWorkspaceIds = memberships
+        .filter(item => item.membership.membershipRole !== "manager")
+        .map(item => item.workspace.id);
+      const ownerOpenIds = isSuperuser(ctx.user)
+        ? members.map(item => item.user.openId)
+        : members.filter(item => leadershipWorkspaceIds.includes(item.membership.workspaceId) || item.user.openId === ctx.user.openId).map(item => item.user.openId);
+      if (!ownerOpenIds.includes(ctx.user.openId)) ownerOpenIds.push(ctx.user.openId);
+      return db.listSalesDeals(Array.from(new Set(ownerOpenIds)));
+    }),
+    create: permissionProcedure("sales.write")
+      .input(dealInputSchema)
+      .mutation(async ({ input, ctx }) => {
+        const farm = await db.getFarmById(input.farmId, ctx.user.openId);
+        if (!farm) throw new TRPCError({ code: "NOT_FOUND", message: "Хозяйство не найдено или недоступно" });
+        if (input.workspaceId) {
+          const membership = await db.getWorkspaceMember(input.workspaceId, ctx.user.openId);
+          if (!membership) throw new TRPCError({ code: "FORBIDDEN", message: "Нет доступа к рабочему пространству" });
+        }
+        return db.createDeal(input, ctx.user.openId);
+      }),
+    updateStage: permissionProcedure("sales.write")
+      .input(z.object({ id: z.number().int().positive(), stage: dealStageSchema }))
+      .mutation(async ({ input, ctx }) => {
+        const deal = await db.getDealById(input.id, ctx.user.openId);
+        if (!deal) throw new TRPCError({ code: "NOT_FOUND", message: "Сделка не найдена или недоступна" });
+        return db.updateDealStage(input.id, input.stage, ctx.user.openId);
       }),
   }),
   admin: router({
@@ -942,6 +988,11 @@ export const appRouter = router({
             code: "NOT_FOUND",
             message: "Сначала выберите существующее хозяйство",
           });
+        if (input.dealId) {
+          const deal = await db.getDealById(input.dealId, ctx.user.openId);
+          if (!deal || deal.deal.farmId !== input.farmId)
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Сделка не относится к выбранному хозяйству" });
+        }
         const proposal = await db.createProposal(input, ctx.user.openId);
         if (!proposal)
           throw new TRPCError({
@@ -1114,6 +1165,11 @@ export const appRouter = router({
     create: permissionProcedure("orders.write")
       .input(orderRequestInputSchema)
       .mutation(async ({ input, ctx }) => {
+        if (input.dealId) {
+          const deal = await db.getDealById(input.dealId, ctx.user.openId);
+          if (!deal || deal.deal.farmId !== input.farmId)
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Сделка не относится к выбранному хозяйству" });
+        }
         const request = await db.createOrderRequest(
           input,
           ctx.user.openId,

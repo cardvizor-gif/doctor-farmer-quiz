@@ -13,6 +13,7 @@ import {
   accessRequests,
   catalogImportBatches,
   catalogProducts,
+  deals,
   farms,
   InsertCatalogProduct,
   InsertFarm,
@@ -35,6 +36,7 @@ import {
   workspaceMembers,
   workspaces,
 } from "../drizzle/schema";
+import type { DealInput, DealStage } from "../shared/deal";
 import type { FarmInput, ProposalInput } from "../shared/farm";
 import type { PermissionCode } from "../shared/permissions";
 import { creditedActiveSeconds } from "../shared/activity";
@@ -422,6 +424,7 @@ export async function createSalesTask(input: {
   assigneeOpenId: string;
   farmId?: number | null;
   proposalId?: number | null;
+  dealId?: number | null;
   title: string;
   description?: string | null;
   dueAt?: Date | null;
@@ -438,6 +441,7 @@ export async function createSalesTask(input: {
       dueAt: input.dueAt ?? null,
       farmId: input.farmId ?? null,
       proposalId: input.proposalId ?? null,
+      dealId: input.dealId ?? null,
     });
   const rows = await db
     .select()
@@ -679,6 +683,74 @@ export async function listSalesFarms(ownerOpenIds: string[]) {
     .innerJoin(users, eq(farms.ownerOpenId, users.openId))
     .where(inArray(farms.ownerOpenId, ownerOpenIds))
     .orderBy(desc(farms.nextActionAt), desc(farms.updatedAt));
+}
+
+function toDealValues(input: DealInput, ownerOpenId: string) {
+  return {
+    farmId: input.farmId,
+    ownerOpenId,
+    workspaceId: input.workspaceId ?? null,
+    title: input.title.trim(),
+    season: input.season?.trim() || null,
+    crop: input.crop?.trim() || null,
+    area: String(input.area ?? 0),
+    potentialValue: String(input.potentialValue ?? 0),
+    probability: input.probability ?? 50,
+    stage: input.stage ?? "new",
+    nextAction: input.nextAction?.trim() || null,
+    nextActionAt: input.nextActionAt ?? null,
+    lostReason: input.lostReason?.trim() || null,
+  };
+}
+
+export async function listSalesDeals(ownerOpenIds: string[]) {
+  const database = await getDb();
+  if (!database || ownerOpenIds.length === 0) return [];
+  return database
+    .select({ deal: deals, farm: farms, owner: users })
+    .from(deals)
+    .innerJoin(farms, eq(deals.farmId, farms.id))
+    .innerJoin(users, eq(deals.ownerOpenId, users.openId))
+    .where(inArray(deals.ownerOpenId, ownerOpenIds))
+    .orderBy(desc(deals.nextActionAt), desc(deals.updatedAt));
+}
+
+export async function getDealById(id: number, ownerOpenId: string) {
+  const database = await getDb();
+  if (!database) return undefined;
+  const rows = await database
+    .select({ deal: deals, farm: farms, owner: users })
+    .from(deals)
+    .innerJoin(farms, eq(deals.farmId, farms.id))
+    .innerJoin(users, eq(deals.ownerOpenId, users.openId))
+    .where(and(eq(deals.id, id), eq(deals.ownerOpenId, ownerOpenId)))
+    .limit(1);
+  return rows[0];
+}
+
+export async function createDeal(input: DealInput, ownerOpenId: string) {
+  const database = await getDb();
+  if (!database) throw new Error("База данных недоступна");
+  const result = await database.insert(deals).values(toDealValues(input, ownerOpenId));
+  return getDealById(Number(result[0].insertId), ownerOpenId);
+}
+
+export async function updateDealStage(id: number, stage: DealStage, ownerOpenId: string) {
+  const database = await getDb();
+  if (!database) throw new Error("База данных недоступна");
+  await database
+    .update(deals)
+    .set({ stage })
+    .where(and(eq(deals.id, id), eq(deals.ownerOpenId, ownerOpenId)));
+  return getDealById(id, ownerOpenId);
+}
+
+export async function updateDeal(id: number, input: DealInput, ownerOpenId: string) {
+  const database = await getDb();
+  if (!database) throw new Error("База данных недоступна");
+  const { ownerOpenId: _ownerOpenId, ...values } = toDealValues(input, ownerOpenId);
+  await database.update(deals).set(values).where(and(eq(deals.id, id), eq(deals.ownerOpenId, ownerOpenId)));
+  return getDealById(id, ownerOpenId);
 }
 
 const dashboardRoleRank = {
@@ -1174,6 +1246,7 @@ function toFarmValues(input: FarmInput, ownerOpenId: string): InsertFarm {
 function toProposalValues(input: ProposalInput): InsertProposal {
   return {
     farmId: input.farmId,
+    dealId: input.dealId ?? null,
     title: input.title,
     crop: input.crop,
     technology: toNullable(input.technology),
@@ -1194,6 +1267,7 @@ export type OrderItemInput = {
 };
 export type OrderRequestInput = {
   farmId: number;
+  dealId?: number | null;
   requestDate: Date;
   buyerName: string;
   segment: "agroholding" | "dealer" | "large" | "medium" | "small";
@@ -1263,6 +1337,7 @@ function requestValues(
 ) {
   return {
     farmId: input.farmId,
+    dealId: input.dealId ?? null,
     ownerOpenId,
     requestDate: input.requestDate,
     buyerName: input.buyerName.trim(),

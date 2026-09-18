@@ -9,6 +9,10 @@ vi.mock("./db", () => ({
   listWorkspaceTasks: vi.fn(),
   listWorkspaceMembers: vi.fn(),
   listSalesFarms: vi.fn(),
+  listSalesDeals: vi.fn(),
+  getDealById: vi.fn(),
+  createDeal: vi.fn(),
+  updateDealStage: vi.fn(),
   getFarmById: vi.fn(),
   getWorkspaceMember: vi.fn(),
   createSalesTask: vi.fn(),
@@ -93,5 +97,26 @@ describe("regional sales workspace", () => {
     expect(result.tasks[0]?.task.id).toBe(3);
     expect(db.listWorkspaces).toHaveBeenCalledTimes(1);
     expect(db.listWorkspaceTasks).toHaveBeenCalledWith([workspace.id]);
+  });
+
+  it("creates a deal only for an accessible farm", async () => {
+    vi.mocked(db.getUserPermissions).mockResolvedValue(["sales.write"]);
+    vi.mocked(db.getFarmById).mockResolvedValue({ id: 5, ownerOpenId: manager.openId } as never);
+    vi.mocked(db.getWorkspaceMember).mockResolvedValue(membership);
+    vi.mocked(db.createDeal).mockResolvedValue({ deal: { id: 7, title: "Зерновые 2027" } } as never);
+    const caller = appRouter.createCaller(context(manager));
+
+    await expect(caller.deals.create({ farmId: 5, title: "Зерновые 2027", stage: "new", area: 100, potentialValue: 500000, probability: 50 })).resolves.toMatchObject({ deal: { id: 7 } });
+    expect(db.createDeal).toHaveBeenCalledWith(expect.objectContaining({ farmId: 5, title: "Зерновые 2027" }), manager.openId);
+  });
+
+  it("changes a deal stage only when the deal is accessible", async () => {
+    vi.mocked(db.getUserPermissions).mockResolvedValue(["sales.write"]);
+    vi.mocked(db.getDealById).mockResolvedValue({ deal: { id: 7, farmId: 5 }, farm: {}, owner: {} } as never);
+    vi.mocked(db.updateDealStage).mockResolvedValue({ deal: { id: 7, stage: "negotiation" } } as never);
+    const caller = appRouter.createCaller(context(manager));
+
+    await expect(caller.deals.updateStage({ id: 7, stage: "negotiation" })).resolves.toMatchObject({ deal: { stage: "negotiation" } });
+    expect(db.updateDealStage).toHaveBeenCalledWith(7, "negotiation", manager.openId);
   });
 });

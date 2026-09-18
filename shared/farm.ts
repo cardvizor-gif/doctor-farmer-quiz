@@ -25,6 +25,7 @@ export const farmInputSchema = z.object({
 
 export const proposalInputSchema = z.object({
   farmId: z.coerce.number().int().positive(),
+  dealId: z.coerce.number().int().positive().nullable().optional(),
   title: z.string().trim().min(2, "Укажите название предложения").max(255),
   crop: z.string().trim().min(2, "Укажите культуру").max(160),
   technology: optionalText(160),

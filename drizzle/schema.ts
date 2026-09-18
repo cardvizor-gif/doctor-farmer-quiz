@@ -133,11 +133,35 @@ export const farms = mysqlTable(
   ],
 );
 
+export const deals = mysqlTable(
+  "deals",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    farmId: int("farmId").notNull().references(() => farms.id, { onDelete: "cascade" }),
+    ownerOpenId: varchar("ownerOpenId", { length: 64 }).notNull(),
+    workspaceId: int("workspaceId").references(() => workspaces.id, { onDelete: "set null" }),
+    title: varchar("title", { length: 255 }).notNull(),
+    season: varchar("season", { length: 32 }),
+    crop: varchar("crop", { length: 160 }),
+    area: decimal("area", { precision: 12, scale: 1 }).notNull().default("0"),
+    potentialValue: decimal("potentialValue", { precision: 14, scale: 2 }).notNull().default("0"),
+    probability: int("probability").notNull().default(50),
+    stage: mysqlEnum("stage", ["new", "contacted", "qualified", "proposal", "sent", "negotiation", "confirmed", "won", "lost"]).notNull().default("new"),
+    nextAction: text("nextAction"),
+    nextActionAt: timestamp("nextActionAt"),
+    lostReason: varchar("lostReason", { length: 255 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [index("deals_farm_idx").on(table.farmId), index("deals_owner_stage_idx").on(table.ownerOpenId, table.stage), index("deals_workspace_idx").on(table.workspaceId)],
+);
+
 export const proposals = mysqlTable(
   "proposals",
   {
     id: int("id").autoincrement().primaryKey(),
     farmId: int("farmId").notNull().references(() => farms.id, { onDelete: "cascade" }),
+    dealId: int("dealId").references(() => deals.id, { onDelete: "set null" }),
     title: varchar("title", { length: 255 }).notNull(),
     crop: varchar("crop", { length: 160 }).notNull(),
     technology: varchar("technology", { length: 160 }),
@@ -150,7 +174,7 @@ export const proposals = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  table => [index("proposals_farm_idx").on(table.farmId), index("proposals_status_idx").on(table.status)],
+  table => [index("proposals_farm_idx").on(table.farmId), index("proposals_deal_idx").on(table.dealId), index("proposals_status_idx").on(table.status)],
 );
 
 export const orderRequests = mysqlTable(
@@ -158,6 +182,7 @@ export const orderRequests = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     farmId: int("farmId").notNull().references(() => farms.id, { onDelete: "cascade" }),
+    dealId: int("dealId").references(() => deals.id, { onDelete: "set null" }),
     ownerOpenId: varchar("ownerOpenId", { length: 64 }).notNull(),
     requestDate: timestamp("requestDate").notNull(),
     buyerName: varchar("buyerName", { length: 255 }).notNull(),
@@ -179,6 +204,7 @@ export const orderRequests = mysqlTable(
   table => [
     index("order_requests_owner_updated_idx").on(table.ownerOpenId, table.updatedAt),
     index("order_requests_farm_idx").on(table.farmId),
+    index("order_requests_deal_idx").on(table.dealId),
     index("order_requests_status_idx").on(table.status),
   ],
 );
@@ -353,6 +379,7 @@ export const salesTasks = mysqlTable(
     assigneeOpenId: varchar("assigneeOpenId", { length: 64 }).notNull().references(() => users.openId, { onDelete: "restrict" }),
     farmId: int("farmId").references(() => farms.id, { onDelete: "set null" }),
     proposalId: int("proposalId").references(() => proposals.id, { onDelete: "set null" }),
+    dealId: int("dealId").references(() => deals.id, { onDelete: "set null" }),
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
     dueAt: timestamp("dueAt"),
@@ -362,7 +389,7 @@ export const salesTasks = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  table => [index("sales_tasks_workspace_due_idx").on(table.workspaceId, table.dueAt), index("sales_tasks_assignee_status_idx").on(table.assigneeOpenId, table.status), index("sales_tasks_creator_idx").on(table.creatorOpenId)],
+  table => [index("sales_tasks_workspace_due_idx").on(table.workspaceId, table.dueAt), index("sales_tasks_assignee_status_idx").on(table.assigneeOpenId, table.status), index("sales_tasks_creator_idx").on(table.creatorOpenId), index("sales_tasks_deal_idx").on(table.dealId)],
 );
 
 export type SalesTask = typeof salesTasks.$inferSelect;
@@ -408,6 +435,8 @@ export const inviteCodeHistory = mysqlTable(
 
 export type Farm = typeof farms.$inferSelect;
 export type InsertFarm = typeof farms.$inferInsert;
+export type Deal = typeof deals.$inferSelect;
+export type InsertDeal = typeof deals.$inferInsert;
 export type Proposal = typeof proposals.$inferSelect;
 export type InsertProposal = typeof proposals.$inferInsert;
 export type OrderRequest = typeof orderRequests.$inferSelect;
