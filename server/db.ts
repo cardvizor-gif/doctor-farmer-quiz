@@ -651,6 +651,17 @@ export async function listWorkspaceTasks(workspaceIds: number[]) {
   return rows;
 }
 
+export async function listSalesFarms(ownerOpenIds: string[]) {
+  const database = await getDb();
+  if (!database || ownerOpenIds.length === 0) return [];
+  return database
+    .select({ farm: farms, owner: users })
+    .from(farms)
+    .innerJoin(users, eq(farms.ownerOpenId, users.openId))
+    .where(inArray(farms.ownerOpenId, ownerOpenIds))
+    .orderBy(desc(farms.nextActionAt), desc(farms.updatedAt));
+}
+
 const dashboardRoleRank = {
   manager: 1,
   rop: 2,

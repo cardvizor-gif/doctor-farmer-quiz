@@ -8,6 +8,7 @@ vi.mock("./db", () => ({
   listWorkspaceTasksForUser: vi.fn(),
   listWorkspaceTasks: vi.fn(),
   listWorkspaceMembers: vi.fn(),
+  listSalesFarms: vi.fn(),
   getWorkspaceMember: vi.fn(),
   createSalesTask: vi.fn(),
   getSalesTaskById: vi.fn(),
@@ -39,6 +40,7 @@ describe("regional sales workspace", () => {
     vi.mocked(db.listWorkspacesForUser).mockResolvedValue([{ workspace, region, membership }] as never);
     vi.mocked(db.listWorkspaceTasksForUser).mockResolvedValue([task(1)] as never);
     vi.mocked(db.listWorkspaceMembers).mockResolvedValue([{ membership, user: manager }] as never);
+    vi.mocked(db.listSalesFarms).mockResolvedValue([]);
     const caller = appRouter.createCaller(context(manager));
 
     const result = await caller.sales.overview();
@@ -73,6 +75,7 @@ describe("regional sales workspace", () => {
     vi.mocked(db.listWorkspaces).mockResolvedValue([{ workspace, region, members: [] }] as never);
     vi.mocked(db.listWorkspaceTasks).mockResolvedValue([task(3)] as never);
     vi.mocked(db.listWorkspaceMembers).mockResolvedValue([]);
+    vi.mocked(db.listSalesFarms).mockResolvedValue([]);
     const caller = appRouter.createCaller(context(owner));
 
     const result = await caller.sales.overview();

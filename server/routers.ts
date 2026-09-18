@@ -565,7 +565,18 @@ export const appRouter = router({
             )
           : await db.listWorkspaceTasksForUser(ctx.user.openId);
       const members = await db.listWorkspaceMembers(workspaceIds);
-      return { workspaces, tasks, members };
+      const visibleOwnerIds = isSuperuser(ctx.user)
+        ? members.map(item => item.user.openId)
+        : members
+            .filter(item =>
+              leadershipWorkspaceIds.length > 0
+                ? leadershipWorkspaceIds.includes(item.membership.workspaceId)
+                : item.user.openId === ctx.user.openId
+            )
+            .map(item => item.user.openId);
+      if (!visibleOwnerIds.includes(ctx.user.openId)) visibleOwnerIds.push(ctx.user.openId);
+      const farms = await db.listSalesFarms(Array.from(new Set(visibleOwnerIds)));
+      return { workspaces, tasks, members, farms };
     }),
     createTask: permissionProcedure("sales.write")
       .input(

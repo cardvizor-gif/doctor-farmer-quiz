@@ -2776,3 +2776,22 @@ body, button, input, select, textarea { font-family: 'DM Sans', system-ui, sans-
 .quick-action-form{display:grid;gap:13px;padding-top:16px;}.quick-action-form label{display:grid;gap:6px;color:#58705e;font-size:12px;font-weight:800;}.quick-action-form input,.quick-action-form select{width:100%;height:44px;border:1px solid #dce8de;border-radius:12px;background:#fbfdfb;padding:0 12px;color:#263d2b;font:inherit;font-size:14px;outline:none;}.quick-action-form textarea{min-height:88px;}.quick-action-form input:focus,.quick-action-form select:focus{border-color:#94c83d;box-shadow:0 0 0 3px rgba(148,200,61,.18);}.quick-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}.quick-action-context{margin:0;border-radius:12px;background:#f4f8f3;padding:11px 12px;color:#718176;font-size:12px;line-height:1.45;}.quick-action-error{margin:0;border-radius:12px;background:#fff0ee;padding:11px 12px;color:#b54d42;font-size:12px;line-height:1.45;}.quick-action-submit{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:0;border-radius:13px;background:#315d1e;color:white;font-size:14px;font-weight:850;cursor:pointer;}.quick-action-submit svg{width:17px;height:17px;}.quick-action-submit:disabled{cursor:not-allowed;opacity:.55;}
 @media (min-width:769px){.quick-action-layer{align-items:center;padding:24px;}.quick-action-sheet{border-radius:22px;max-height:min(86vh,700px);padding:20px 22px;}}
 @media (max-width:480px){.quick-action-sheet{padding-left:16px;padding-right:16px;}.quick-action-grid{gap:9px;}.quick-action-form input,.quick-action-form select{height:46px;}.quick-action-submit{min-height:50px;}}
+
+
+/* Pastel cabinet navigation: keeps the workspace light and calm across all roles. */
+.cabinet-canvas .cabinet-sidebar { background: #F1F6F4 !important; border-right: 1px solid #DCE8E3 !important; color: #5C737A !important; }
+.cabinet-canvas .cabinet-sidebar-product-name { color: #587079 !important; }
+.cabinet-canvas .cabinet-sidebar-product-name b { color: #7DA892 !important; }
+.cabinet-canvas .cabinet-brand-mark { color: #86AA99 !important; }
+.cabinet-canvas .cabinet-nav-item { color: #71858B !important; }
+.cabinet-canvas .cabinet-nav-item svg { color: #8AA89B !important; }
+.cabinet-canvas .cabinet-nav-item:hover { color: #58736D !important; background: #E5F0EB !important; }
+.cabinet-canvas .cabinet-nav-item.is-active { color: #557563 !important; background: #DDEDE2 !important; box-shadow: inset 3px 0 0 #A6C9B2 !important; }
+.cabinet-canvas .cabinet-nav-item.is-active svg { color: #78A98D !important; }
+.cabinet-canvas .cabinet-sidebar-footer { border-top-color: #DCE8E3 !important; color: #829498 !important; }
+.cabinet-canvas .cabinet-sidebar-footer strong { color: #5E747A !important; }
+.cabinet-canvas .cabinet-help-mark { background: #E2EFE9 !important; color: #79A68F !important; }
+.cabinet-canvas .cabinet-account-avatar { background: #DDEBE4 !important; color: #5D7D6C !important; }
+.cabinet-canvas .cabinet-menu-trigger { border-color: #B7D1C4 !important; background: #DDEDE2 !important; color: #5A7868 !important; box-shadow: 0 5px 12px rgba(105,145,125,.12) !important; }
+.cabinet-canvas .cabinet-menu-trigger:hover, .cabinet-canvas .cabinet-menu-trigger:focus-visible { background: #CFE5D8 !important; color: #4F6E5E !important; }
+.cabinet-canvas .cabinet-mobile-bottom-nav-item.is-active { background: #DDEDE2 !important; color: #5A7868 !important; }
