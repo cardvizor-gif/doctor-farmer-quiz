@@ -7,7 +7,7 @@ import { buildAgroHelperContextQuery, buildProposalContextQuery } from "@/lib/pr
 import { getFarmReturnState, getFarmSelectionState, isFarmsMobileViewport } from "@/lib/farmMobileNavigation";
 import { downloadFarmImportTemplate, downloadFarmsWorkbook, readFarmImportFile, type ImportFilePreview } from "@/lib/workspaceTransfer";
 import type { Farm } from "../../../drizzle/schema";
-import { AlertCircle, Building2, ChevronLeft, ChevronRight, CircleDollarSign, Download, FileSpreadsheet, FileText, MapPin, MoreVertical, Plus, Save, Search, Sprout, Upload, UsersRound } from "lucide-react";
+import { AlertCircle, Building2, CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, Circle, CircleDollarSign, Download, FileSpreadsheet, FileText, MapPin, MoreVertical, Plus, Save, Search, Sprout, Upload, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
@@ -178,14 +178,32 @@ export default function FarmWorkspace() {
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [draft, setDraft] = useState<FarmDraft>(blankDraft());
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
+  const [taskDueAt, setTaskDueAt] = useState("");
+  const [taskPriority, setTaskPriority] = useState<"low" | "normal" | "high">("normal");
+  const [taskWorkspaceId, setTaskWorkspaceId] = useState("");
+  const [taskAssigneeOpenId, setTaskAssigneeOpenId] = useState("");
   const [createDraft, setCreateDraft] = useState<FarmDraft>(blankDraft());
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isReadingImport, setIsReadingImport] = useState(false);
   const [importPreview, setImportPreview] = useState<ImportFilePreview | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const farmsQuery = trpc.farms.list.useQuery();
+  const farmTasksQuery = trpc.farms.tasks.useQuery({ id: selectedFarmId ?? 0 }, { enabled: Boolean(selectedFarmId) });
+  const salesOverviewQuery = trpc.sales.overview.useQuery(undefined, { retry: false });
   const farms = farmsQuery.data ?? [];
   const selectedFarm = farms.find(farm => farm.id === selectedFarmId) ?? null;
+
+  useEffect(() => {
+    const firstWorkspace = salesOverviewQuery.data?.workspaces?.[0];
+    if (!taskWorkspaceId && firstWorkspace) setTaskWorkspaceId(String(firstWorkspace.workspace.id));
+  }, [salesOverviewQuery.data?.workspaces, taskWorkspaceId]);
+
+  useEffect(() => {
+    const firstMember = salesOverviewQuery.data?.members?.find(item => item.membership.workspaceId === Number(taskWorkspaceId));
+    if (firstMember && !taskAssigneeOpenId) setTaskAssigneeOpenId(firstMember.user.openId);
+  }, [salesOverviewQuery.data?.members, taskWorkspaceId, taskAssigneeOpenId]);
 
   useEffect(() => {
     if (!selectedFarmId && farms[0]) {
@@ -253,6 +271,42 @@ export default function FarmWorkspace() {
       if (farm) selectFarm(farm);
       setLastSavedAt(Date.now());
       toast.success("Карточка хозяйства сохранена");
+    },
+    onError: error => toast.error(error.message),
+  });
+
+  const createFarmTask = trpc.sales.createTask.useMutation({
+    onSuccess: async () => {
+      await farmTasksQuery.refetch();
+      await utils.sales.overview.invalidate();
+      setTaskTitle("");
+      setTaskDescription("");
+      setTaskDueAt("");
+      toast.success("Задача привязана к хозяйству");
+    },
+    onError: error => toast.error(error.message),
+  });
+
+  const submitFarmTask = () => {
+    if (!selectedFarmId || !taskWorkspaceId || !taskAssigneeOpenId || !taskTitle.trim()) {
+      toast.error("Выберите рабочее пространство, исполнителя и укажите задачу");
+      return;
+    }
+    createFarmTask.mutate({
+      farmId: selectedFarmId,
+      workspaceId: Number(taskWorkspaceId),
+      assigneeOpenId: taskAssigneeOpenId,
+      title: taskTitle.trim(),
+      description: taskDescription.trim() || null,
+      dueAt: taskDueAt ? new Date(`${taskDueAt}T18:00:00`) : null,
+      priority: taskPriority,
+    });
+  };
+
+  const updateFarmTaskStatus = trpc.sales.updateStatus.useMutation({
+    onSuccess: async () => {
+      await farmTasksQuery.refetch();
+      await utils.sales.overview.invalidate();
     },
     onError: error => toast.error(error.message),
   });
@@ -370,6 +424,12 @@ export default function FarmWorkspace() {
                 <div className="rounded-xl bg-[#f5f8f4] p-3"><span className="text-[10px] font-bold uppercase tracking-wide text-[#6f7a73]">Следующий шаг</span><strong className="mt-1 block truncate text-sm text-[#12352a]">{draft.nextAction || "Не задан"}</strong></div>
               </div>
               <FarmFields draft={draft} onChange={changeDraft} />
+              <section className="mt-6 rounded-2xl border border-[#dce8dc] bg-[#f8fbf7] p-4 sm:p-5" aria-labelledby="farm-tasks-heading">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#2e7d52]"><CalendarClock className="h-4 w-4" />Рабочие действия</div><h3 id="farm-tasks-heading" className="mt-1 text-lg font-extrabold text-[#12352a]">Задачи по хозяйству</h3><p className="mt-1 text-xs leading-relaxed text-[#6f7a73]">Каждая задача сохраняется с привязкой к карточке и отображается в разделе «Продажи».</p></div><span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#486656]">{farmTasksQuery.data?.length ?? 0} задач</span></div>
+                <div className="mt-4 grid gap-2">{farmTasksQuery.isLoading && <p className="rounded-xl bg-white p-3 text-xs text-[#6f7a73]">Загружаем историю задач…</p>}{farmTasksQuery.data?.map(item => <div key={item.task.id} className="flex items-start gap-3 rounded-xl bg-white p-3"><button type="button" onClick={() => updateFarmTaskStatus.mutate({ id: item.task.id, status: item.task.status === "done" ? "todo" : "done" })} className="mt-0.5 text-[#79a98d]" aria-label={item.task.status === "done" ? "Вернуть задачу" : "Завершить задачу"}>{item.task.status === "done" ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}</button><div className="min-w-0 flex-1"><strong className={`block text-sm ${item.task.status === "done" ? "text-[#9aa8a0] line-through" : "text-[#365d4a]"}`}>{item.task.title}</strong><p className="mt-1 text-xs text-[#6f7a73]">{item.workspace.name} · {item.assignee.displayName || item.assignee.name || item.assignee.email || "Сотрудник"}</p><p className="mt-1 text-[11px] text-[#8a9b90]">{item.task.dueAt ? new Date(item.task.dueAt).toLocaleDateString("ru-RU") : "Срок не задан"} · {item.task.priority === "high" ? "Высокий приоритет" : item.task.priority === "low" ? "Низкий приоритет" : "Обычный приоритет"}</p></div></div>)}{!farmTasksQuery.isLoading && !farmTasksQuery.data?.length && <p className="rounded-xl bg-white p-4 text-center text-xs text-[#7a8c82]">По этому хозяйству задач пока нет.</p>}</div>
+                {salesOverviewQuery.data && <div className="mt-4 border-t border-[#e4eee4] pt-4"><p className="text-xs font-bold text-[#486656]">Поставить новую задачу</p><div className="mt-2 grid gap-2 sm:grid-cols-2"><select value={taskWorkspaceId} onChange={event => { setTaskWorkspaceId(event.target.value); setTaskAssigneeOpenId(""); }} className="h-10 rounded-xl border border-[#dce8dc] bg-white px-3 text-sm text-[#365d4a]"><option value="" disabled>Рабочее пространство</option>{salesOverviewQuery.data.workspaces.map(item => <option key={item.workspace.id} value={item.workspace.id}>{item.workspace.name}</option>)}</select><select value={taskAssigneeOpenId} onChange={event => setTaskAssigneeOpenId(event.target.value)} className="h-10 rounded-xl border border-[#dce8dc] bg-white px-3 text-sm text-[#365d4a]"><option value="" disabled>Исполнитель</option>{salesOverviewQuery.data.members.filter(item => item.membership.workspaceId === Number(taskWorkspaceId)).map(item => <option key={item.user.openId} value={item.user.openId}>{item.user.displayName || item.user.name || item.user.email || "Сотрудник"}</option>)}</select><input value={taskTitle} onChange={event => setTaskTitle(event.target.value)} placeholder="Что нужно сделать?" className="h-10 rounded-xl border border-[#dce8dc] bg-white px-3 text-sm text-[#365d4a] sm:col-span-2" /><textarea value={taskDescription} onChange={event => setTaskDescription(event.target.value)} placeholder="Комментарий или ожидаемый результат" rows={2} className="rounded-xl border border-[#dce8dc] bg-white px-3 py-2 text-sm text-[#365d4a] sm:col-span-2" /><div className="grid gap-2 sm:grid-cols-2"><input type="date" value={taskDueAt} onChange={event => setTaskDueAt(event.target.value)} className="h-10 rounded-xl border border-[#dce8dc] bg-white px-3 text-sm text-[#365d4a]" /><select value={taskPriority} onChange={event => setTaskPriority(event.target.value as "low" | "normal" | "high")} className="h-10 rounded-xl border border-[#dce8dc] bg-white px-3 text-sm text-[#365d4a]"><option value="low">Низкий приоритет</option><option value="normal">Обычный приоритет</option><option value="high">Высокий приоритет</option></select></div></div><Button type="button" onClick={submitFarmTask} disabled={createFarmTask.isPending || !salesOverviewQuery.data.workspaces.length} className="mt-3 bg-[#9fc8ad] text-[#244b39] hover:bg-[#8fbc9e]"><Plus className="mr-1.5 h-4 w-4" />{createFarmTask.isPending ? "Сохраняем…" : "Добавить задачу"}</Button></div>}
+                {salesOverviewQuery.isError && <p className="mt-4 rounded-xl bg-[#fff5df] p-3 text-xs text-[#8b6a32]">Для постановки задач требуется разрешение sales.write и назначенное рабочее пространство.</p>}
+              </section>
               <div className="mt-6 flex flex-col gap-3 border-t border-[#e7eee5] pt-5 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs leading-relaxed text-[#6f7a73]">Откройте АгроПомощник в контексте этого хозяйства: его площадь автоматически передастся в готовую схему и затем в коммерческое предложение.</p><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="border-[#2e7d52] text-[#194f38]" onClick={() => setLocation(`/agro-helper?${buildAgroHelperContextQuery({ farmId: selectedFarm.id, area: Number(draft.totalArea || 0) })}`)}>Открыть схему <ChevronRight className="ml-1 h-4 w-4" /></Button><Button type="button" className="bg-[#c7f238] text-[#253b20] shadow-none hover:bg-[#d9f35a]" onClick={() => setLocation(`/proposals/new?${buildProposalContextQuery({ farmId: selectedFarm.id, area: Number(draft.totalArea || 0) })}`)}>К генератору КП <ChevronRight className="ml-1 h-4 w-4" /></Button></div></div>
             </form>}
           </section>

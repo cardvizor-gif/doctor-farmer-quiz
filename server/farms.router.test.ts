@@ -3,6 +3,7 @@ import type { TrpcContext } from "./_core/context";
 
 vi.mock("./db", () => ({
   listFarms: vi.fn(),
+  listFarmTasks: vi.fn(),
   getFarmById: vi.fn(),
   createFarm: vi.fn(),
   createFarms: vi.fn(),
@@ -152,6 +153,17 @@ describe("farms and proposals privacy", () => {
     expect(farms).toEqual([farm]);
     expect(history).toEqual([proposal]);
     expect(found).toEqual(proposal);
+  });
+
+  it("returns tasks only for an owned farm", async () => {
+    const farmTask = { task: { id: 77, farmId: farm.id, title: "Позвонить агроному", status: "todo" }, workspace: { id: 10, name: "Башкортостан" }, region: { id: 1, name: "Республика Башкортостан" }, assignee: { openId: ownerOpenId, displayName: "Владелец" } };
+    vi.mocked(db.getFarmById).mockResolvedValue(farm);
+    vi.mocked(db.listFarmTasks).mockResolvedValue([farmTask] as never);
+    const caller = appRouter.createCaller(createContext(ownerOpenId));
+
+    await expect(caller.farms.tasks({ id: farm.id })).resolves.toEqual([farmTask]);
+    expect(db.getFarmById).toHaveBeenCalledWith(farm.id, ownerOpenId);
+    expect(db.listFarmTasks).toHaveBeenCalledWith(farm.id, ownerOpenId);
   });
 
   it("updates and removes only the authenticated user's proposal", async () => {

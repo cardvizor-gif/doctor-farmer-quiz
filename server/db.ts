@@ -651,6 +651,25 @@ export async function listWorkspaceTasks(workspaceIds: number[]) {
   return rows;
 }
 
+export async function listFarmTasks(farmId: number, ownerOpenId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      task: salesTasks,
+      workspace: workspaces,
+      region: regions,
+      assignee: users,
+    })
+    .from(salesTasks)
+    .innerJoin(farms, eq(salesTasks.farmId, farms.id))
+    .innerJoin(workspaces, eq(salesTasks.workspaceId, workspaces.id))
+    .innerJoin(regions, eq(workspaces.regionId, regions.id))
+    .innerJoin(users, eq(salesTasks.assigneeOpenId, users.openId))
+    .where(and(eq(salesTasks.farmId, farmId), eq(farms.ownerOpenId, ownerOpenId)))
+    .orderBy(salesTasks.dueAt, desc(salesTasks.createdAt));
+}
+
 export async function listSalesFarms(ownerOpenIds: string[]) {
   const database = await getDb();
   if (!database || ownerOpenIds.length === 0) return [];

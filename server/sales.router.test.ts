@@ -9,6 +9,7 @@ vi.mock("./db", () => ({
   listWorkspaceTasks: vi.fn(),
   listWorkspaceMembers: vi.fn(),
   listSalesFarms: vi.fn(),
+  getFarmById: vi.fn(),
   getWorkspaceMember: vi.fn(),
   createSalesTask: vi.fn(),
   getSalesTaskById: vi.fn(),
@@ -58,6 +59,16 @@ describe("regional sales workspace", () => {
 
     await expect(caller.sales.createTask({ workspaceId: workspace.id, assigneeOpenId: manager.openId, title: "Позвонить хозяйству", priority: "normal" })).resolves.toMatchObject({ title: "Задача 2" });
     expect(db.createSalesTask).toHaveBeenCalledWith(expect.objectContaining({ workspaceId: workspace.id, creatorOpenId: manager.openId, assigneeOpenId: manager.openId }));
+  });
+
+  it("requires access to the farm when a task is linked to it", async () => {
+    vi.mocked(db.getUserPermissions).mockResolvedValue(["sales.write"]);
+    vi.mocked(db.getFarmById).mockResolvedValue(undefined);
+    vi.mocked(db.getWorkspaceMember).mockResolvedValue(membership);
+    const caller = appRouter.createCaller(context(manager));
+
+    await expect(caller.sales.createTask({ workspaceId: workspace.id, assigneeOpenId: manager.openId, farmId: 404, title: "Привязать задачу", priority: "normal" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(db.createSalesTask).not.toHaveBeenCalled();
   });
 
   it("does not allow a manager to assign a task to another participant without sales.assign", async () => {

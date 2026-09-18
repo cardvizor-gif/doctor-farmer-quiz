@@ -583,6 +583,7 @@ export const appRouter = router({
         z.object({
           workspaceId: z.number().int().positive(),
           assigneeOpenId: z.string().trim().min(1).max(64),
+          farmId: z.number().int().positive().nullable().optional(),
           title: z.string().trim().min(2, "Укажите задачу").max(255),
           description: z.string().trim().max(10_000).nullable().optional(),
           dueAt: z.date().nullable().optional(),
@@ -590,6 +591,14 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input, ctx }) => {
+        if (input.farmId) {
+          const farm = await db.getFarmById(input.farmId, ctx.user.openId);
+          if (!farm)
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Хозяйство не найдено или недоступно",
+            });
+        }
         const workspaceMember = await db.getWorkspaceMember(
           input.workspaceId,
           ctx.user.openId
@@ -826,6 +835,17 @@ export const appRouter = router({
     list: permissionProcedure("farms.read").query(({ ctx }) =>
       db.listFarms(ctx.user.openId)
     ),
+    tasks: permissionProcedure("farms.read")
+      .input(z.object({ id: z.number().int().positive() }))
+      .query(async ({ input, ctx }) => {
+        const farm = await db.getFarmById(input.id, ctx.user.openId);
+        if (!farm)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Хозяйство не найдено",
+          });
+        return db.listFarmTasks(input.id, ctx.user.openId);
+      }),
     byId: permissionProcedure("farms.read")
       .input(z.object({ id: z.number().int().positive() }))
       .query(async ({ input, ctx }) => {
