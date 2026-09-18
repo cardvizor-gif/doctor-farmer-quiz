@@ -1,6 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import {
   farmInputSchema,
+  farmSalesStages,
   proposalInputSchema,
   proposalStatuses,
 } from "@shared/farm";
@@ -886,6 +887,22 @@ export const appRouter = router({
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Хозяйство не найдено",
+          });
+        return farm;
+      }),
+    updateStage: permissionProcedure("farms.write")
+      .input(
+        z.object({
+          id: z.number().int().positive(),
+          salesStage: z.enum(farmSalesStages),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const farm = await db.updateFarmStage(input.id, input.salesStage, ctx.user.openId);
+        if (!farm)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Хозяйство не найдено или недоступно",
           });
         return farm;
       }),

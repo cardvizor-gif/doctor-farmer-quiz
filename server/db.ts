@@ -1725,6 +1725,20 @@ export async function updateFarm(
   return getFarmById(id, ownerOpenId);
 }
 
+export async function updateFarmStage(
+  id: number,
+  salesStage: FarmInput["salesStage"],
+  ownerOpenId: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("База данных недоступна");
+  await db
+    .update(farms)
+    .set({ salesStage })
+    .where(and(eq(farms.id, id), eq(farms.ownerOpenId, ownerOpenId)));
+  return getFarmById(id, ownerOpenId);
+}
+
 export async function removeFarm(id: number, ownerOpenId: string) {
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");

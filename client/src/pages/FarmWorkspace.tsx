@@ -169,7 +169,7 @@ function FarmFields({ draft, onChange, showNotes = true }: { draft: FarmDraft; o
 export default function FarmWorkspace() {
   const utils = trpc.useUtils();
   const { user } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
@@ -211,6 +211,16 @@ export default function FarmWorkspace() {
       setDraft(farmToDraft(farms[0]));
     }
   }, [farms, selectedFarmId]);
+
+  useEffect(() => {
+    const farmId = Number(new URLSearchParams(location.split("?")[1] ?? "").get("farmId"));
+    const requestedFarm = farms.find(farm => farm.id === farmId);
+    if (requestedFarm && requestedFarm.id !== selectedFarmId) {
+      setSelectedFarmId(requestedFarm.id);
+      setDraft(farmToDraft(requestedFarm));
+      setMobileView("detail");
+    }
+  }, [farms, location, selectedFarmId]);
 
   useEffect(() => {
     if (mobileView === "detail") {

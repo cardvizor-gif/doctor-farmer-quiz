@@ -8,6 +8,7 @@ vi.mock("./db", () => ({
   createFarm: vi.fn(),
   createFarms: vi.fn(),
   updateFarm: vi.fn(),
+  updateFarmStage: vi.fn(),
   removeFarm: vi.fn(),
   claimLegacyFarms: vi.fn(),
   listProposals: vi.fn(),
@@ -164,6 +165,14 @@ describe("farms and proposals privacy", () => {
     await expect(caller.farms.tasks({ id: farm.id })).resolves.toEqual([farmTask]);
     expect(db.getFarmById).toHaveBeenCalledWith(farm.id, ownerOpenId);
     expect(db.listFarmTasks).toHaveBeenCalledWith(farm.id, ownerOpenId);
+  });
+
+  it("updates the sales stage only for an owned farm", async () => {
+    vi.mocked(db.updateFarmStage).mockResolvedValue({ ...farm, salesStage: "negotiation" });
+    const caller = appRouter.createCaller(createContext(ownerOpenId));
+
+    await expect(caller.farms.updateStage({ id: farm.id, salesStage: "negotiation" })).resolves.toMatchObject({ salesStage: "negotiation" });
+    expect(db.updateFarmStage).toHaveBeenCalledWith(farm.id, "negotiation", ownerOpenId);
   });
 
   it("updates and removes only the authenticated user's proposal", async () => {
