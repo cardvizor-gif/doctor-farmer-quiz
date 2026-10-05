@@ -3,7 +3,7 @@ import type { TrpcContext } from "./_core/context";
 
 vi.mock("./db", () => ({
   requestAccess: vi.fn(), listRegions: vi.fn(), listAccessRequests: vi.fn(), approveAccessRequest: vi.fn(), listInviteCodeHistory: vi.fn(), reissueAccessRequest: vi.fn(), rejectAccessRequest: vi.fn(),
-  findActiveInvite: vi.fn(), consumeInvite: vi.fn(), upsertUser: vi.fn(), getUserByOpenId: vi.fn(),
+  findActiveInvite: vi.fn(), consumeInvite: vi.fn(), upsertUser: vi.fn(), getUserByOpenId: vi.fn(), setUserPassword: vi.fn(), getUserByEmail: vi.fn(),
 }));
 vi.mock("./_core/sdk", () => ({ sdk: { createSessionToken: vi.fn().mockResolvedValue("local-session") } }));
 
@@ -52,8 +52,10 @@ describe("access invitations", () => {
     vi.mocked(db.getUserByOpenId).mockResolvedValue(user);
     const ctx = context(null);
     const caller = appRouter.createCaller(ctx);
-    await expect(caller.access.activate({ email: request.email, code })).resolves.toEqual(user);
+    vi.mocked(db.setUserPassword).mockResolvedValue(user);
+    await expect(caller.access.activate({ email: request.email, code, password: "SecurePass123", passwordConfirmation: "SecurePass123" })).resolves.toEqual(user);
     expect(db.consumeInvite).toHaveBeenCalledWith(request.id, hash, expect.stringMatching(/^invite_/));
+    expect(db.setUserPassword).toHaveBeenCalledWith(expect.stringMatching(/^invite_/), expect.stringMatching(/^scrypt-v1\$/));
     expect(ctx.res.cookie).toHaveBeenCalledWith(expect.any(String), "local-session", expect.objectContaining({ httpOnly: true, maxAge: 2592000000 }));
   });
 
@@ -88,8 +90,26 @@ describe("access invitations", () => {
     vi.mocked(db.findActiveInvite).mockResolvedValue(undefined);
     const ctx = context(null);
     const caller = appRouter.createCaller(ctx);
-    await expect(caller.access.activate({ email: request.email, code: "ABCDEFGHJK" })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    await expect(caller.access.activate({ email: request.email, code: "ABCDEFGHJK", password: "SecurePass123", passwordConfirmation: "SecurePass123" })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     expect(db.consumeInvite).not.toHaveBeenCalled();
+    expect(ctx.res.cookie).not.toHaveBeenCalled();
+  });
+
+  it("logs an activated employee in with the password they created", async () => {
+    const passwordHash = (await import("./password")).hashPassword("SecurePass123");
+    vi.mocked(db.getUserByEmail).mockResolvedValue({ ...user, passwordHash });
+    const ctx = context(null);
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.access.login({ email: request.email, password: "SecurePass123" })).resolves.toEqual(user);
+    expect(ctx.res.cookie).toHaveBeenCalledWith(expect.any(String), "local-session", expect.objectContaining({ httpOnly: true, maxAge: 2592000000 }));
+  });
+
+  it("rejects an incorrect employee password without creating a session", async () => {
+    const passwordHash = (await import("./password")).hashPassword("SecurePass123");
+    vi.mocked(db.getUserByEmail).mockResolvedValue({ ...user, passwordHash });
+    const ctx = context(null);
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.access.login({ email: request.email, password: "WrongPass123" })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     expect(ctx.res.cookie).not.toHaveBeenCalled();
   });
 });

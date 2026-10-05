@@ -21,6 +21,7 @@ import {
 } from "../shared/permissions";
 import { canOverseeRole, type RegionalMembershipRole } from "../shared/regions";
 import { ENV } from "./_core/env";
+import { hashPassword, verifyPassword } from "./password";
 import {
   adminProcedure,
   protectedProcedure,
@@ -168,6 +169,11 @@ const isSuperuser = (user: {
   openId: string;
   isSuperuser?: number | boolean | null;
 }) => Boolean(user.isSuperuser) || user.openId === ENV.ownerOpenId;
+
+function sanitizeUser<T extends { passwordHash?: string | null }>(user: T) {
+  const { passwordHash: _passwordHash, ...safeUser } = user;
+  return safeUser;
+}
 const getEffectivePermissions = async (user: {
   openId: string;
   isSuperuser?: number | boolean | null;
@@ -283,7 +289,7 @@ export const appRouter = router({
     me: publicProcedure.query(async ({ ctx }) => {
       if (!ctx.user) return null;
       const permissions = await getEffectivePermissions(ctx.user);
-      return { ...ctx.user, permissions, isSuperuser: isSuperuser(ctx.user) };
+      return { ...sanitizeUser(ctx.user), permissions, isSuperuser: isSuperuser(ctx.user) };
     }),
     updateProfile: protectedProcedure
       .input(
@@ -378,7 +384,7 @@ export const appRouter = router({
         if (!request)
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Заявка не найдена или уже активирована",
+            message: "Заявка не найдена или недоступна для восстановления",
           });
         return { request, code, expiresAt };
       }),
@@ -401,6 +407,15 @@ export const appRouter = router({
             .string()
             .trim()
             .length(10, "Код должен состоять из 10 символов"),
+          password: z
+            .string()
+            .min(8, "Пароль должен содержать минимум 8 символов")
+            .max(128),
+          passwordConfirmation: z.string().max(128),
+        })
+        .refine(input => input.password === input.passwordConfirmation, {
+          path: ["passwordConfirmation"],
+          message: "Пароли не совпадают",
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -420,7 +435,7 @@ export const appRouter = router({
             message: "Неверный или истёкший код приглашения",
           });
 
-        const openId = `invite_${randomBytes(16).toString("hex")}`;
+        const openId = invite.localOpenId ?? `invite_${randomBytes(16).toString("hex")}`;
         const consumed = await db.consumeInvite(
           invite.id,
           attemptedHash,
@@ -447,6 +462,7 @@ export const appRouter = router({
             code: "INTERNAL_SERVER_ERROR",
             message: "Не удалось активировать кабинет",
           });
+        const passwordUser = await db.setUserPassword(openId, hashPassword(input.password));
         const sessionToken = await sdk.createSessionToken(openId, {
           name: invite.requestedName,
           expiresInMs: 30 * 24 * 60 * 60 * 1000,
@@ -455,7 +471,32 @@ export const appRouter = router({
           ...getSessionCookieOptions(ctx.req),
           maxAge: 30 * 24 * 60 * 60 * 1000,
         });
-        return user;
+        return sanitizeUser(passwordUser ?? user);
+      }),
+    login: publicProcedure
+      .input(
+        z.object({
+          email: z.string().trim().email().max(320),
+          password: z.string().min(1).max(128),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const user = await db.getUserByEmail(input.email);
+        if (!user || user.status === "archived" || !user.passwordHash || !verifyPassword(input.password, user.passwordHash))
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Неверный e-mail или пароль",
+          });
+        await db.upsertUser({ openId: user.openId, lastSignedIn: new Date() });
+        const sessionToken = await sdk.createSessionToken(user.openId, {
+          name: user.displayName || user.name || user.email || "Сотрудник",
+          expiresInMs: 30 * 24 * 60 * 60 * 1000,
+        });
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...getSessionCookieOptions(ctx.req),
+          maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+        return sanitizeUser(user);
       }),
   }),
   activity: router({

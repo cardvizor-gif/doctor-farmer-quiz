@@ -252,6 +252,27 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, normalizeAccessEmail(email)))
+    .limit(1);
+  return result[0];
+}
+
+export async function setUserPassword(openId: string, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db
+    .update(users)
+    .set({ passwordHash, passwordSetAt: new Date(), lastSignedIn: new Date() })
+    .where(eq(users.openId, openId));
+  return getUserByOpenId(openId);
+}
+
 export async function listRegions() {
   const db = await getDb();
   if (!db) return [];
@@ -2091,21 +2112,21 @@ export async function reissueAccessRequest(
   const db = await getDb();
   if (!db) throw new Error("База данных недоступна");
   const request = await getAccessRequestById(id);
-  if (!request || request.status !== "approved") return undefined;
-  await db.transaction(async tx => {
-    await tx
-      .update(accessRequests)
-      .set({
-        reviewedByOpenId: reviewerOpenId,
-        reviewedAt: new Date(),
-        inviteCodeHash,
-        inviteCodeExpiresAt: expiresAt,
-        inviteCodeUsedAt: null,
-        localOpenId: null,
-      })
-      .where(
-        and(eq(accessRequests.id, id), eq(accessRequests.status, "approved"))
-      );
+  if (!request || !["approved", "activated"].includes(request.status)) return undefined;
+    await db.transaction(async tx => {
+      await tx
+        .update(accessRequests)
+        .set({
+          status: "approved",
+          reviewedByOpenId: reviewerOpenId,
+          reviewedAt: new Date(),
+          inviteCodeHash,
+          inviteCodeExpiresAt: expiresAt,
+          inviteCodeUsedAt: null,
+        })
+        .where(
+        and(eq(accessRequests.id, id), inArray(accessRequests.status, ["approved", "activated"]))
+        );
     await tx.insert(inviteCodeHistory).values({
       requestId: id,
       codeHash: inviteCodeHash,

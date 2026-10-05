@@ -49,6 +49,9 @@ export const users = mysqlTable("users", {
   primaryRegionId: int("primaryRegionId").references(() => regions.id, { onDelete: "set null" }),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
+  /** Scrypt password hash for invite-based employee login; never store plaintext passwords. */
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  passwordSetAt: timestamp("passwordSetAt"),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   /** Explicit owner marker survives OAuth re-login and is never editable from the admin UI. */
   isSuperuser: int("isSuperuser").default(0).notNull(),
