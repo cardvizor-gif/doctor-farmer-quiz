@@ -43,11 +43,11 @@ export const cabinetNavigation = [
     permission: undefined,
   },
   {
-    href: "/agro-helper",
-    label: "Схемы защиты",
+    href: "/proposals/new",
+    label: "Схема и КП",
     icon: Sprout,
-    tone: "schemes",
-    permission: "agro.use" as PermissionCode,
+    tone: "proposals",
+    permission: "proposals.read" as PermissionCode,
   },
   {
     href: "/farms",
@@ -55,13 +55,6 @@ export const cabinetNavigation = [
     icon: Building2,
     tone: "farms",
     permission: "farms.read" as PermissionCode,
-  },
-  {
-    href: "/proposals/new",
-    label: "Генератор КП",
-    icon: FilePlus2,
-    tone: "proposals",
-    permission: "proposals.read" as PermissionCode,
   },
   {
     href: "/order-requests",
@@ -102,11 +95,11 @@ export const mobileNavigation = [
     permission: undefined,
   },
   {
-    href: "/agro-helper",
-    label: "Схемы",
+    href: "/proposals/new",
+    label: "Схема и КП",
     icon: Sprout,
-    tone: "schemes",
-    permission: "agro.use" as PermissionCode,
+    tone: "proposals",
+    permission: "proposals.read" as PermissionCode,
   },
   {
     href: "/farms",
@@ -116,11 +109,11 @@ export const mobileNavigation = [
     permission: "farms.read" as PermissionCode,
   },
   {
-    href: "/proposals/new",
-    label: "КП",
-    icon: FilePlus2,
-    tone: "proposals",
-    permission: "proposals.read" as PermissionCode,
+    href: "/order-requests",
+    label: "Заявки",
+    icon: ClipboardList,
+    tone: "orders",
+    permission: "orders.read" as PermissionCode,
   },
   {
     href: "/sales",

@@ -68,9 +68,8 @@ describe("accountIdentity", () => {
       }).map(item => item.href)
     ).toEqual([
       "/",
-      "/agro-helper",
-      "/farms",
       "/proposals/new",
+      "/farms",
       "/order-requests",
       "/sales",
       "/catalog",
@@ -106,9 +105,9 @@ describe("accountIdentity", () => {
   it("keeps five focused destinations in the mobile bottom navigation", () => {
     expect(mobileNavigation.map(item => [item.href, item.label])).toEqual([
       ["/", "Главная"],
-      ["/agro-helper", "Схемы"],
+      ["/proposals/new", "Схема и КП"],
       ["/farms", "Хозяйства"],
-      ["/proposals/new", "КП"],
+      ["/order-requests", "Заявки"],
       ["/sales", "Продажи"],
     ]);
   });

@@ -321,10 +321,10 @@ export default function ProposalBuilder() {
     <div className="proposal-workspace min-h-screen bg-[#f4f7f1] text-[#15211c]">
       <header className="sticky top-0 z-30 border-b border-[#dde5dc] bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href="/" className="shrink-0" aria-label="АгроПомощник DF — главная"><span className="df-product-mark df-product-mark-page" aria-hidden="true">DF</span></Link>
+          <Link href="/" className="shrink-0" aria-label="АгроПомощник — главная"><span className="df-product-mark df-product-mark-page" aria-hidden="true">DF</span></Link>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setLocation("/farms")}><ArrowLeft className="mr-1.5 h-4 w-4" />К хозяйствам</Button>
-            <Link href="/agro-helper" className="hidden sm:block"><Button variant="outline" size="sm">АгроПомощник</Button></Link>
+            <span className="hidden rounded-md bg-[#edf7ef] px-3 py-2 text-xs font-bold text-[#194f38] sm:block">Единый мастер</span>
           </div>
         </div>
       </header>
@@ -332,9 +332,9 @@ export default function ProposalBuilder() {
       <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:py-10">
         <section className="proposal-workspace-hero mb-7 overflow-hidden rounded-3xl border border-[#dce8dc] bg-[#173f30] p-6 text-white shadow-[0_18px_60px_rgba(19,53,42,0.16)] lg:flex lg:items-end lg:justify-between lg:p-8">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-emerald-100"><FileText className="h-3.5 w-3.5" />Рабочее КП</div>
-            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Коммерческое предложение из схемы</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-emerald-50/80">Стоимость рассчитывается по нормам из схемы и площади. Цену каждой позиции можно скорректировать вручную с прозрачной отметкой в расчёте.</p>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.13em] text-emerald-100"><Layers3 className="h-3.5 w-3.5" />Схема и КП</div>
+            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Единый мастер: схема защиты и КП</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-emerald-50/80">Выберите культуру и технологию, проверьте состав схемы, отредактируйте нормы и цены — итоговое коммерческое предложение пересчитывается автоматически.</p>
           </div>
           <div className="mt-5 rounded-2xl border border-white/10 bg-white/10 p-4 lg:mt-0">
             <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-100/70">Бюджет по КП</span>
@@ -345,9 +345,13 @@ export default function ProposalBuilder() {
 
         {!farmsQuery.isLoading && farms.length === 0 && <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between"><div><strong className="block">Расчёт доступен без карточки хозяйства.</strong><span>Выберите культуру и площадь, чтобы просмотреть состав и потребность. Для сохранения КП добавьте хозяйство.</span></div><Button size="sm" className="shrink-0 bg-[#194f38] text-white hover:bg-[#12352a]" onClick={() => setLocation("/farms")}><Plus className="mr-1.5 h-4 w-4" />Добавить хозяйство</Button></div>}
 
+        <div className="mb-6 grid gap-2 rounded-2xl border border-[#dce8dc] bg-white p-3 shadow-sm sm:grid-cols-3 sm:gap-3 sm:p-4" aria-label="Этапы подготовки предложения">
+          {[['01', 'Схема защиты', 'Культура, технология и этапы'], ['02', 'Расчёт', 'Нормы, площадь, фасовка и цены'], ['03', 'КП', 'Сохранение, Excel и PDF']].map(([number, title, description], index) => <div key={number} className="flex items-center gap-3 rounded-xl bg-[#f5f9f4] px-3 py-2.5 sm:block sm:px-4"><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${index === 0 ? 'bg-[#194f38] text-white' : 'bg-[#dcecdf] text-[#486656]'}`}>{number}</span><div><p className="text-xs font-bold text-[#194f38]">{title}</p><p className="text-[11px] leading-4 text-[#6f7a73]">{description}</p></div></div>)}
+        </div>
+
         <div className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
           <section className="space-y-5 rounded-2xl border border-[#dde5dc] bg-white p-5 shadow-sm sm:p-6">
-            <div><p className="text-xs font-bold uppercase tracking-wide text-[#2e7d52]">01 · Контекст хозяйства</p><h2 className="mt-1 text-xl font-extrabold text-[#12352a]">Параметры предложения</h2></div>
+            <div><p className="text-xs font-bold uppercase tracking-wide text-[#2e7d52]">01 · Схема и расчёт</p><h2 className="mt-1 text-xl font-extrabold text-[#12352a]">Параметры хозяйства</h2></div>
             {farms.length > 0 ? <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Хозяйство</span><select aria-label="Выберите хозяйство" value={selectedFarmId ?? ""} onChange={(event) => chooseFarm(Number(event.target.value))} className="proposal-field-select flex h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{farms.map((farm) => <option key={farm.id} value={farm.id}>{farm.name}{farm.district ? ` · ${farm.district}` : ""}</option>)}</select>{selectedFarm && <span className="proposal-selected-value block break-words text-[11px] leading-4 text-[#61716a]">Выбрано: {selectedFarm.name}{selectedFarm.district ? ` · ${selectedFarm.district}` : ""}</span>}</label> : <div className="rounded-xl border border-dashed border-[#b9cbb9] bg-[#f5f8f4] p-3 text-xs leading-relaxed text-[#486656]"><strong className="block text-[#194f38]">Предварительный расчёт</strong>После выбора хозяйства это КП можно сохранить в его историю.</div>}
             <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Культура</span><select value={cropId} onChange={(event) => chooseCrop(event.target.value)} className="proposal-field-select flex h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{CROP_OPTIONS.map((crop) => <option key={crop.id} value={crop.id}>{crop.name}</option>)}</select></label>
             <label className="block space-y-1.5"><span className="text-xs font-bold text-[#194f38]">Технология</span><select value={technology} onChange={(event) => { setTechnology(event.target.value); resetSchemeEdits(); }} className="proposal-field-select flex h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#2e7d52]">{selectedCrop.technologies.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>

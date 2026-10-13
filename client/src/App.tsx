@@ -11,7 +11,6 @@ import type { PermissionCode } from "@shared/permissions";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Home = lazy(() => import("./pages/Home"));
-const AgroHelper = lazy(() => import("./pages/AgroHelper"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
 const Sales = lazy(() => import("./pages/Sales"));
 const FarmWorkspace = lazy(() => import("./pages/FarmWorkspace"));
@@ -40,7 +39,6 @@ function Router() {
     </CabinetShell>
   );
   const CabinetDashboard = cabinetPage(Dashboard);
-  const CabinetAgroHelper = privateCabinetPage(AgroHelper, "agro.use");
   const CabinetKnowledgeBase = privateCabinetPage(KnowledgeBase, "knowledge.read");
   const CabinetSales = privateCabinetPage(Sales, "sales.read");
   const CabinetHome = privateCabinetPage(Home, "quiz.use");
@@ -57,7 +55,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={CabinetDashboard} />
       <Route path={"/quiz"} component={CabinetHome} />
-      <Route path={"/agro-helper"} component={CabinetAgroHelper} />
+      <Route path={"/agro-helper"} component={CabinetProposalBuilder} />
       <Route path={"/knowledge-base"} component={CabinetKnowledgeBase} />
       <Route path={"/sales"} component={CabinetSales} />
       <Route path={"/farms"} component={CabinetFarmWorkspace} />
