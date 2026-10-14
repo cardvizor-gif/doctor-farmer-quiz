@@ -265,6 +265,7 @@ const salesTaskStatusSchema = z.enum([
   "cancelled",
 ]);
 const salesTaskPrioritySchema = z.enum(["low", "normal", "high"]);
+const salesPeriodSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Период должен быть в формате YYYY-MM");
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -402,11 +403,12 @@ export const appRouter = router({
     activate: publicProcedure
       .input(
         z.object({
-          email: z.string().trim().email().max(320),
+          email: z.string().trim().toLowerCase().email().max(320),
           code: z
             .string()
             .trim()
-            .length(10, "Код должен состоять из 10 символов"),
+            .transform(value => value.replace(/[\s-]/g, "").toUpperCase())
+            .refine(value => value.length === 10, "Код должен состоять из 10 символов"),
           password: z
             .string()
             .min(8, "Пароль должен содержать минимум 8 символов")
@@ -421,12 +423,13 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const invite = await db.findActiveInvite(input.email);
         const attemptedHash = createHash("sha256")
-          .update(input.code.toUpperCase())
+          .update(input.code)
           .digest("hex");
         const hashesMatch =
-          invite?.inviteCodeHash &&
+          Boolean(invite?.inviteCodeHash) &&
+          invite!.inviteCodeHash!.length === attemptedHash.length &&
           timingSafeEqual(
-            Buffer.from(invite.inviteCodeHash),
+            Buffer.from(invite!.inviteCodeHash!),
             Buffer.from(attemptedHash)
           );
         if (!invite || !hashesMatch)
@@ -621,7 +624,15 @@ export const appRouter = router({
       if (!visibleOwnerIds.includes(ctx.user.openId)) visibleOwnerIds.push(ctx.user.openId);
       const farms = await db.listSalesFarms(Array.from(new Set(visibleOwnerIds)));
       const deals = await db.listSalesDeals(Array.from(new Set(visibleOwnerIds)));
-      return { workspaces, tasks, members, farms, deals };
+      const periodKey = new Date().toISOString().slice(0, 7);
+      const permissions = await getEffectivePermissions(ctx.user);
+      const leadershipMemberships = memberships.filter(item => item.membership.membershipRole !== "manager");
+      const canAssignPlans = Boolean(isSuperuser(ctx.user) || (permissions.includes("sales.assign") && leadershipMemberships.length > 0));
+      const planRows = await db.listSalesPlans(workspaceIds, periodKey);
+      const plans = isSuperuser(ctx.user) || leadershipMemberships.length > 0
+        ? planRows
+        : planRows.filter(item => item.plan.managerOpenId === ctx.user.openId);
+      return { workspaces, tasks, members, farms, deals, plans, periodKey, canAssignPlans };
     }),
     createTask: permissionProcedure("sales.write")
       .input(
@@ -710,6 +721,24 @@ export const appRouter = router({
             message: "Изменять можно только свои задачи",
           });
         return db.updateSalesTaskStatus(input.id, input.status);
+      }),
+    assignPlan: permissionProcedure("sales.assign")
+      .input(z.object({
+        workspaceId: z.number().int().positive(),
+        managerOpenId: z.string().trim().min(1).max(64),
+        periodKey: salesPeriodSchema,
+        planAmount: z.number().nonnegative().max(100_000_000_000),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const [assigner, manager] = await Promise.all([
+          db.getWorkspaceMember(input.workspaceId, ctx.user.openId),
+          db.getWorkspaceMember(input.workspaceId, input.managerOpenId),
+        ]);
+        if (!assigner || !manager || manager.membershipRole !== "manager")
+          throw new TRPCError({ code: "FORBIDDEN", message: "План можно назначить только менеджеру своего рабочего пространства" });
+        if (!isSuperuser(ctx.user) && !canOverseeRole(assigner.membershipRole as RegionalMembershipRole, manager.membershipRole as RegionalMembershipRole))
+          throw new TRPCError({ code: "FORBIDDEN", message: "Недостаточно прав для назначения плана" });
+        return db.upsertSalesPlan({ ...input, assignedByOpenId: ctx.user.openId });
       }),
   }),
   deals: router({

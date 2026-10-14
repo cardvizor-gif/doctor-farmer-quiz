@@ -3,9 +3,11 @@ import {
   count,
   desc,
   eq,
+  gte,
   inArray,
   isNotNull,
   isNull,
+  lt,
   sql,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
@@ -26,6 +28,7 @@ import {
   proposals,
   regions,
   salesTasks,
+  salesPlans,
   shipmentItems,
   shipments,
   supportAttachments,
@@ -598,6 +601,88 @@ export async function updateSalesTaskStatus(
   return rows[0];
 }
 
+export async function upsertSalesPlan(input: {
+  workspaceId: number;
+  managerOpenId: string;
+  periodKey: string;
+  planAmount: number;
+  assignedByOpenId: string;
+}) {
+  const database = await getDb();
+  if (!database) throw new Error("База данных недоступна");
+  const values = {
+    workspaceId: input.workspaceId,
+    managerOpenId: input.managerOpenId,
+    periodKey: input.periodKey,
+    planAmount: String(input.planAmount),
+    assignedByOpenId: input.assignedByOpenId,
+  };
+  await database.insert(salesPlans).values(values).onDuplicateKeyUpdate({
+    set: {
+      planAmount: values.planAmount,
+      assignedByOpenId: values.assignedByOpenId,
+      updatedAt: new Date(),
+    },
+  });
+  const rows = await database.select().from(salesPlans).where(and(
+    eq(salesPlans.workspaceId, input.workspaceId),
+    eq(salesPlans.managerOpenId, input.managerOpenId),
+    eq(salesPlans.periodKey, input.periodKey),
+  )).limit(1);
+  return rows[0];
+}
+
+export async function listSalesPlans(workspaceIds: number[], periodKey: string) {
+  const database = await getDb();
+  if (!database || workspaceIds.length === 0) return [];
+  const rows = await database.select({ plan: salesPlans, manager: users, workspace: workspaces })
+    .from(salesPlans)
+    .innerJoin(users, eq(salesPlans.managerOpenId, users.openId))
+    .innerJoin(workspaces, eq(salesPlans.workspaceId, workspaces.id))
+    .where(and(inArray(salesPlans.workspaceId, workspaceIds), eq(salesPlans.periodKey, periodKey), eq(users.status, "active")))
+    .orderBy(users.displayName);
+  const [year, month] = periodKey.split("-").map(Number);
+  const periodStart = new Date(Date.UTC(year, month - 1, 1));
+  const periodEnd = new Date(Date.UTC(year, month, 1));
+  const wonDeals = await database.select({ ownerOpenId: deals.ownerOpenId, potentialValue: deals.potentialValue })
+    .from(deals)
+    .where(and(inArray(deals.ownerOpenId, rows.map(row => row.plan.managerOpenId)), eq(deals.stage, "won"), gte(deals.updatedAt, periodStart), lt(deals.updatedAt, periodEnd)));
+  const actualByOwner = new Map<string, number>();
+  wonDeals.forEach(row => actualByOwner.set(row.ownerOpenId, (actualByOwner.get(row.ownerOpenId) ?? 0) + Number(row.potentialValue ?? 0)));
+  return rows.map(row => ({
+    ...row,
+    actualAmount: actualByOwner.get(row.plan.managerOpenId) ?? 0,
+    actualSource: "crm_deals" as const,
+  }));
+}
+
+export async function getSalesPlanSummary(input: {
+  workspaceIds: number[];
+  managerOpenIds: string[];
+  periodKey: string;
+}) {
+  const database = await getDb();
+  if (!database || input.workspaceIds.length === 0 || input.managerOpenIds.length === 0)
+    return { periodKey: input.periodKey, planAmount: 0, actualAmount: 0, source: "not_connected" as const, people: 0 };
+  const rows = await database.select({ planAmount: salesPlans.planAmount })
+    .from(salesPlans)
+    .where(and(inArray(salesPlans.workspaceId, input.workspaceIds), inArray(salesPlans.managerOpenId, input.managerOpenIds), eq(salesPlans.periodKey, input.periodKey)));
+  const [year, month] = input.periodKey.split("-").map(Number);
+  const periodStart = new Date(Date.UTC(year, month - 1, 1));
+  const periodEnd = new Date(Date.UTC(year, month, 1));
+  const wonDeals = await database.select({ potentialValue: deals.potentialValue })
+    .from(deals)
+    .where(and(inArray(deals.ownerOpenId, input.managerOpenIds), eq(deals.stage, "won"), gte(deals.updatedAt, periodStart), lt(deals.updatedAt, periodEnd)));
+  const actualAmount = wonDeals.reduce((sum, row) => sum + Number(row.potentialValue ?? 0), 0);
+  return {
+    periodKey: input.periodKey,
+    planAmount: rows.reduce((sum, row) => sum + Number(row.planAmount ?? 0), 0),
+    actualAmount,
+    source: "crm_deals" as const,
+    people: rows.length,
+  };
+}
+
 export async function removeWorkspaceMember(
   workspaceId: number,
   userOpenId: string
@@ -877,6 +962,12 @@ export async function getDashboardOverview(user: {
       order.status === "submitted" ||
       order.status === "partial"
   );
+  const periodKey = new Date().toISOString().slice(0, 7);
+  const planSummary = await getSalesPlanSummary({
+    workspaceIds,
+    managerOpenIds: ownerIds,
+    periodKey,
+  });
   return {
     role: roleKey,
     userName: user.name?.trim() || "коллега",
@@ -920,12 +1011,13 @@ export async function getDashboardOverview(user: {
       openProposals: openProposals.length,
       openOrders: openOrders.length,
     },
-    // A target/plan source is not stored in the current data model yet. Keep this explicit instead of inventing sales numbers.
     sales: {
-      isConfigured: false,
-      planTarget: null,
-      fact: null,
-      percent: null,
+      isConfigured: planSummary.planAmount > 0,
+      planTarget: planSummary.planAmount > 0 ? planSummary.planAmount : null,
+      fact: planSummary.planAmount > 0 ? planSummary.actualAmount : null,
+      percent: planSummary.planAmount > 0 ? Math.round((planSummary.actualAmount / planSummary.planAmount) * 100) : null,
+      source: planSummary.planAmount > 0 ? planSummary.source : "not_configured",
+      periodKey,
       history: [],
     },
     notifications,

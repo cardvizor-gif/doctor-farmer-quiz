@@ -53,7 +53,7 @@ describe("access invitations", () => {
     const ctx = context(null);
     const caller = appRouter.createCaller(ctx);
     vi.mocked(db.setUserPassword).mockResolvedValue(user);
-    await expect(caller.access.activate({ email: request.email, code, password: "SecurePass123", passwordConfirmation: "SecurePass123" })).resolves.toEqual(user);
+    await expect(caller.access.activate({ email: ` ${request.email.toUpperCase()} `, code: "ABCD-EFGHJK", password: "SecurePass123", passwordConfirmation: "SecurePass123" })).resolves.toEqual(user);
     expect(db.consumeInvite).toHaveBeenCalledWith(request.id, hash, expect.stringMatching(/^invite_/));
     expect(db.setUserPassword).toHaveBeenCalledWith(expect.stringMatching(/^invite_/), expect.stringMatching(/^scrypt-v1\$/));
     expect(ctx.res.cookie).toHaveBeenCalledWith(expect.any(String), "local-session", expect.objectContaining({ httpOnly: true, maxAge: 2592000000 }));

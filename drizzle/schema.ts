@@ -398,6 +398,28 @@ export const salesTasks = mysqlTable(
 export type SalesTask = typeof salesTasks.$inferSelect;
 export type InsertSalesTask = typeof salesTasks.$inferInsert;
 
+export const salesPlans = mysqlTable(
+  "salesPlans",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+    managerOpenId: varchar("managerOpenId", { length: 64 }).notNull().references(() => users.openId, { onDelete: "cascade" }),
+    periodKey: varchar("periodKey", { length: 7 }).notNull(),
+    planAmount: decimal("planAmount", { precision: 16, scale: 2 }).notNull(),
+    assignedByOpenId: varchar("assignedByOpenId", { length: 64 }).notNull().references(() => users.openId, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [
+    uniqueIndex("sales_plans_workspace_manager_period_unique").on(table.workspaceId, table.managerOpenId, table.periodKey),
+    index("sales_plans_manager_period_idx").on(table.managerOpenId, table.periodKey),
+    index("sales_plans_workspace_period_idx").on(table.workspaceId, table.periodKey),
+  ],
+);
+
+export type SalesPlan = typeof salesPlans.$inferSelect;
+export type InsertSalesPlan = typeof salesPlans.$inferInsert;
+
 export const notifications = mysqlTable(
   "notifications",
   {
@@ -458,3 +480,4 @@ export type AccessRequest = typeof accessRequests.$inferSelect;
 export type InsertAccessRequest = typeof accessRequests.$inferInsert;
 export type InviteCodeHistory = typeof inviteCodeHistory.$inferSelect;
 export type InsertInviteCodeHistory = typeof inviteCodeHistory.$inferInsert;
+export type SalesPlanRow = typeof salesPlans.$inferSelect;

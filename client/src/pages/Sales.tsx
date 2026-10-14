@@ -8,6 +8,7 @@ import {
   Flag,
   Plus,
   Search,
+  Target,
   UserRound,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -48,7 +49,7 @@ const dealStageTone = {
   lost: "bg-[#F4DCD9] text-[#A35F5A]",
 } as const;
 type DealStage = keyof typeof dealStageLabels;
-type Tab = "overview" | "clients" | "deals" | "tasks";
+type Tab = "overview" | "clients" | "deals" | "tasks" | "plans";
 type TaskStatus = keyof typeof statusLabels;
 type Priority = keyof typeof priorityLabels;
 
@@ -82,6 +83,19 @@ type DealItem = {
   };
   farm: { id: number; name: string; district: string | null; settlement: string | null };
   owner: { displayName: string | null; name: string | null; email: string | null };
+};
+type SalesPlanItem = {
+  plan: {
+    id: number;
+    workspaceId: number;
+    managerOpenId: string;
+    periodKey: string;
+    planAmount: string;
+  };
+  manager: { displayName: string | null; name: string | null; email: string | null };
+  workspace: { name: string };
+  actualAmount: number;
+  actualSource: "crm_deals" | "not_connected";
 };
 type SalesTaskItem = {
   task: {
@@ -140,15 +154,23 @@ export default function Sales() {
   const [dealArea, setDealArea] = useState("");
   const [dealValue, setDealValue] = useState("");
   const [dealProbability, setDealProbability] = useState("50");
+  const [planManagerOpenId, setPlanManagerOpenId] = useState("");
+  const [planAmount, setPlanAmount] = useState("");
+  const [planPeriodKey, setPlanPeriodKey] = useState(() => new Date().toISOString().slice(0, 7));
 
   const workspaces = data?.workspaces ?? [];
   const tasks = (data?.tasks ?? []) as SalesTaskItem[];
   const farms = (data?.farms ?? []) as FarmItem[];
   const deals = (data?.deals ?? []) as DealItem[];
+  const plans = (data?.plans ?? []) as SalesPlanItem[];
+  const canAssignPlans = Boolean(data?.canAssignPlans);
   const selectedWorkspaceId = activeWorkspaceId || (workspaces[0] ? String(workspaces[0].workspace.id) : "");
   const selectedWorkspace = workspaces.find((item) => String(item.workspace.id) === selectedWorkspaceId);
   const workspaceMembers = (data?.members ?? []).filter(
     (item) => item.membership.workspaceId === Number(taskWorkspaceId),
+  );
+  const planManagers = (data?.members ?? []).filter(
+    (item) => item.membership.workspaceId === Number(selectedWorkspaceId) && item.membership.membershipRole === "manager",
   );
   const todayKey = new Date().toLocaleDateString("ru-RU");
   const todayTasks = tasks.filter(
@@ -210,6 +232,14 @@ export default function Sales() {
       toast.error(mutationError.message || "Не удалось изменить этап сделки");
     },
   });
+  const assignPlan = trpc.sales.assignPlan.useMutation({
+    onSuccess: () => {
+      toast.success("План менеджера сохранён");
+      setPlanAmount("");
+      void utils.sales.overview.invalidate();
+    },
+    onError: (mutationError) => toast.error(mutationError.message || "Не удалось сохранить план"),
+  });
 
   const openTaskCreate = () => {
     setTaskWorkspaceId(selectedWorkspaceId);
@@ -245,6 +275,19 @@ export default function Sales() {
       nextAction: null,
       nextActionAt: null,
       lostReason: null,
+    });
+  };
+  const submitPlan = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedWorkspaceId || !planManagerOpenId || !planAmount) {
+      toast.error("Выберите менеджера и укажите сумму плана");
+      return;
+    }
+    assignPlan.mutate({
+      workspaceId: Number(selectedWorkspaceId),
+      managerOpenId: planManagerOpenId,
+      periodKey: planPeriodKey,
+      planAmount: Number(planAmount),
     });
   };
 
@@ -285,8 +328,9 @@ export default function Sales() {
         <Metric value={String(openTasks.length)} label="открытых задач" tone="bg-[#E8E2F2]" />
       </div>
 
-      <nav className="mt-5 grid grid-cols-2 gap-1 rounded-2xl bg-[#EEF2F1] p-1 sm:grid-cols-4">
+      <nav className={`mt-5 grid grid-cols-2 gap-1 rounded-2xl bg-[#EEF2F1] p-1 ${canAssignPlans ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
         {([["overview", "Обзор"], ["clients", "Хозяйства"], ["deals", "Сделки"], ["tasks", "Задачи"]] as const).map(([value, label]) => <button key={value} type="button" onClick={() => setTab(value)} className={`rounded-xl px-2 py-2.5 text-xs font-extrabold transition sm:text-sm ${tab === value ? "bg-white text-[#526B76] shadow-sm" : "text-[#829097] hover:text-[#5F747C]"}`}>{label}</button>)}
+        {canAssignPlans && <button type="button" onClick={() => setTab("plans")} className={`rounded-xl px-2 py-2.5 text-xs font-extrabold transition sm:text-sm ${tab === "plans" ? "bg-white text-[#526B76] shadow-sm" : "text-[#829097] hover:text-[#5F747C]"}`}>Планы</button>}
       </nav>
 
       {isLoading ? <div className="mt-5 rounded-2xl bg-white p-8 text-sm text-[#7D8E94] shadow-sm">Загружаем рабочее пространство…</div> : <>
@@ -294,12 +338,35 @@ export default function Sales() {
         {tab === "clients" && <ClientsView farms={filteredFarms} search={search} setSearch={setSearch} onOpen={(farmId) => setLocation(`/farms?farmId=${farmId}`)} />}
         {tab === "deals" && <DealsView deals={deals} farms={farms} onCreate={() => setIsDealOpen(true)} onStageChange={(id, stage) => updateDealStage.mutate({ id, stage })} onOpenFarm={(farmId) => setLocation(`/farms?farmId=${farmId}`)} draggedDealId={draggedDealId} setDraggedDealId={setDraggedDealId} />}
         {tab === "tasks" && <TasksView tasks={tasks} onStatus={(id, status) => updateStatus.mutate({ id, status })} />}
+        {tab === "plans" && canAssignPlans && <PlansView plans={plans} managers={planManagers} periodKey={planPeriodKey} setPeriodKey={setPlanPeriodKey} managerOpenId={planManagerOpenId} setManagerOpenId={setPlanManagerOpenId} amount={planAmount} setAmount={setPlanAmount} isPending={assignPlan.isPending} onSubmit={submitPlan} />}
       </>}
 
       {isDealOpen && <DealModal farms={farms} isPending={createDeal.isPending} dealFarmId={dealFarmId} setDealFarmId={setDealFarmId} title={dealTitle} setTitle={setDealTitle} crop={dealCrop} setCrop={setDealCrop} area={dealArea} setArea={setDealArea} value={dealValue} setValue={setDealValue} probability={dealProbability} setProbability={setDealProbability} onClose={() => setIsDealOpen(false)} onSubmit={submitDeal} />}
       {isTaskOpen && <TaskModal workspaces={workspaces} members={workspaceMembers} deals={deals} workspaceId={taskWorkspaceId} setWorkspaceId={(value) => { setTaskWorkspaceId(value); setTaskAssigneeOpenId(""); }} assigneeOpenId={taskAssigneeOpenId} setAssigneeOpenId={setTaskAssigneeOpenId} dealId={taskDealId} setDealId={setTaskDealId} title={taskTitle} setTitle={setTaskTitle} description={taskDescription} setDescription={setTaskDescription} dueAt={taskDueAt} setDueAt={setTaskDueAt} priority={taskPriority} setPriority={setTaskPriority} isPending={createTask.isPending} onClose={() => setIsTaskOpen(false)} onSubmit={submitTask} />}
     </section>
   );
+}
+
+function PlansView({ plans, managers, periodKey, setPeriodKey, managerOpenId, setManagerOpenId, amount, setAmount, isPending, onSubmit }: {
+  plans: SalesPlanItem[];
+  managers: Array<{ user: { openId: string; displayName: string | null; name: string | null; email: string | null }; membership: { membershipRole: string } }>;
+  periodKey: string;
+  setPeriodKey: (value: string) => void;
+  managerOpenId: string;
+  setManagerOpenId: (value: string) => void;
+  amount: string;
+  setAmount: (value: string) => void;
+  isPending: boolean;
+  onSubmit: (event: React.FormEvent) => void;
+}) {
+  return <div className="mt-5 grid gap-5 lg:grid-cols-[.84fr_1.16fr]">
+    <form onSubmit={onSubmit} className="rounded-2xl bg-white p-5 shadow-[0_10px_30px_rgba(85,107,114,.07)]">
+      <div className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#FFF0C9] text-[#92723A]"><Target className="h-5 w-5" /></span><div><p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[#A18C6E]">Управление планом</p><h3 className="mt-1 text-xl font-extrabold text-[#53666D]">План менеджера</h3><p className="mt-1 text-xs leading-5 text-[#829097]">Назначьте сумму на месяц. Факт подтягивается только из выигранных CRM-сделок.</p></div></div>
+      <div className="mt-5 grid gap-3"><label><span className="mb-1.5 block text-xs font-bold text-[#71838A]">Период</span><input required type="month" value={periodKey} onChange={event => setPeriodKey(event.target.value)} className="h-10 w-full rounded-xl border border-[#DCE5E7] px-3 text-sm" /></label><label><span className="mb-1.5 block text-xs font-bold text-[#71838A]">Менеджер</span><select required value={managerOpenId} onChange={event => setManagerOpenId(event.target.value)} className="h-10 w-full rounded-xl border border-[#DCE5E7] px-3 text-sm"><option value="" disabled>Выберите менеджера</option>{managers.map(item => <option key={item.user.openId} value={item.user.openId}>{memberName(item.user)}</option>)}</select></label><label><span className="mb-1.5 block text-xs font-bold text-[#71838A]">План, ₽</span><input required type="number" min="0" step="1000" value={amount} onChange={event => setAmount(event.target.value)} placeholder="Например, 2500000" className="h-10 w-full rounded-xl border border-[#DCE5E7] px-3 text-sm" /></label></div>
+      <button type="submit" disabled={isPending || !managers.length} className="mt-5 h-11 w-full rounded-xl bg-[#D9EDE8] text-sm font-extrabold text-[#527A70] disabled:cursor-not-allowed disabled:opacity-60">{isPending ? "Сохраняем…" : "Сохранить план"}</button>
+    </form>
+    <section className="rounded-2xl border border-[#DCE5E7] bg-[#F5F8F7] p-4 shadow-[0_10px_30px_rgba(85,107,114,.06)]"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[#91A1A6]">Контроль выполнения</p><h3 className="mt-1 text-xl font-extrabold text-[#53666D]">Планы на {periodKey}</h3></div><span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#71838A]">{plans.length}</span></div><div className="mt-4 grid gap-2">{plans.length ? plans.map(item => { const plan = Number(item.plan.planAmount); const actual = Number(item.actualAmount); const percent = plan > 0 ? Math.min(100, Math.round(actual / plan * 100)) : 0; return <article key={item.plan.id} className="rounded-xl border border-[#E7EEEC] bg-white p-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><strong className="block truncate text-sm font-extrabold text-[#53666D]">{memberName(item.manager)}</strong><span className="mt-1 block text-[11px] text-[#91A0A5]">{item.workspace.name}</span></div><strong className="shrink-0 text-sm font-extrabold text-[#527A70]">{percent}%</strong></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-[#EEF2F1]"><span className="block h-full rounded-full bg-[#78A88B]" style={{ width: `${percent}%` }} /></div><div className="mt-2 flex flex-wrap justify-between gap-2 text-[11px] font-semibold text-[#829097]"><span>{money(actual)} факт</span><span>{money(plan)} план</span></div><p className="mt-2 text-[10px] text-[#A0ACAF]">Источник факта: {item.actualSource === "crm_deals" ? "выигранные сделки CRM" : "не подключён"}</p></article>; }) : <EmptyState text="Планы ещё не назначены" detail="После сохранения план появится здесь. Нулевые суммы не создаются автоматически." />}</div></section>
+  </div>;
 }
 
 function OverviewView({ tasks, openDeals, weightedPipeline, workspaceName, onTaskStatus, onDeals }: { tasks: SalesTaskItem[]; openDeals: DealItem[]; weightedPipeline: number; workspaceName?: string; onTaskStatus: (id: number, status: TaskStatus) => void; onDeals: () => void }) {

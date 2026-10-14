@@ -10,6 +10,7 @@ vi.mock("./db", () => ({
   listWorkspaceMembers: vi.fn(),
   listSalesFarms: vi.fn(),
   listSalesDeals: vi.fn(),
+  listSalesPlans: vi.fn(),
   getDealById: vi.fn(),
   createDeal: vi.fn(),
   updateDealStage: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock("./db", () => ({
   createSalesTask: vi.fn(),
   getSalesTaskById: vi.fn(),
   updateSalesTaskStatus: vi.fn(),
+  upsertSalesPlan: vi.fn(),
 }));
 
 import * as db from "./db";
@@ -38,7 +40,10 @@ function task(id: number, assigneeOpenId = manager.openId) {
 }
 
 describe("regional sales workspace", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(db.listSalesPlans).mockResolvedValue([]);
+  });
 
   it("limits a manager overview to tasks assigned to that manager", async () => {
     vi.mocked(db.getUserPermissions).mockResolvedValue(["sales.read"]);
@@ -97,6 +102,19 @@ describe("regional sales workspace", () => {
     expect(result.tasks[0]?.task.id).toBe(3);
     expect(db.listWorkspaces).toHaveBeenCalledTimes(1);
     expect(db.listWorkspaceTasks).toHaveBeenCalledWith([workspace.id]);
+  });
+
+  it("allows a ROP to assign a monthly plan only to a manager in the same workspace", async () => {
+    const rop = { ...manager, openId: "rop-1", displayName: "РОП" };
+    const ropMembership = { ...membership, userOpenId: rop.openId, membershipRole: "rop" as const };
+    const managerMembership = { ...membership, userOpenId: manager.openId, membershipRole: "manager" as const };
+    vi.mocked(db.getUserPermissions).mockResolvedValue(["sales.assign"]);
+    vi.mocked(db.getWorkspaceMember).mockImplementation(async (_workspaceId, openId) => openId === rop.openId ? ropMembership : managerMembership);
+    vi.mocked(db.upsertSalesPlan).mockResolvedValue({ id: 30, workspaceId: workspace.id, managerOpenId: manager.openId, periodKey: "2026-10", planAmount: "2500000.00", assignedByOpenId: rop.openId, createdAt: new Date(), updatedAt: new Date() } as never);
+    const caller = appRouter.createCaller(context(rop));
+
+    await expect(caller.sales.assignPlan({ workspaceId: workspace.id, managerOpenId: manager.openId, periodKey: "2026-10", planAmount: 2500000 })).resolves.toMatchObject({ managerOpenId: manager.openId, planAmount: "2500000.00" });
+    expect(db.upsertSalesPlan).toHaveBeenCalledWith(expect.objectContaining({ workspaceId: workspace.id, managerOpenId: manager.openId, periodKey: "2026-10", assignedByOpenId: rop.openId }));
   });
 
   it("creates a deal only for an accessible farm", async () => {
